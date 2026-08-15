@@ -1,0 +1,463 @@
+% lectures/bib/references.bib
+%
+% Единая библиография курса. Сведена из четырёх независимых bibliography.bib
+% репозитория articles (Конечные Автоматы, Машина Тьюринга, Регулярные события,
+% Автоматное программирование) с устранением дублей TIS, DH_1976 и
+% Kacaran_MT_Recursion_Function.
+%
+% Исправлено при сведении:
+%   - MT_And_Recursion_Functions: запись состояла из знаков вопроса в полях
+%     author/year/publisher и печаталась в списке литературы как «?»;
+%     заменена на реальный сборник переводов под редакцией Успенского;
+%   - Kuz_5 (Harel, Statecharts): была оформлена как @book с названием журнала
+%     внутри title и пустым publisher; переоформлена в @article;
+%   - Psycho: в journal стояли babel-кавычки <<...>>.
+%
+% Дополнено источниками, отсутствие которых отмечено в REPORT.md §3.5:
+% Хопкрофт—Мотвани—Ульман, Сипсер, Ахо «Дракон», Шалыто, Поликарпова—Шалыто,
+% а также источниками для лекций 4, 6, 8, 9, 10.
+
+% ===========================================================================
+% Теория автоматов и формальных языков
+% ===========================================================================
+
+@book{TIS,
+  author    = {Кудрявцев, В. Б. and Гасанов, Э. Э. and Подколзин, А. С.},
+  title     = {Теория интеллектуальных систем. Книга 4. Теория автоматов},
+  publisher = {Издательские решения},
+  year      = {2018},
+}
+
+@book{Hopcroft,
+  author    = {Хопкрофт, Джон and Мотвани, Раджив and Ульман, Джеффри},
+  title     = {Введение в теорию автоматов, языков и вычислений},
+  edition   = {2},
+  publisher = {Вильямс},
+  address   = {Москва},
+  year      = {2008},
+  isbn      = {978-5-8459-1347-0},
+}
+
+@book{Sipser,
+  author    = {Sipser, Michael},
+  title     = {Introduction to the Theory of Computation},
+  edition   = {3},
+  publisher = {Cengage Learning},
+  year      = {2012},
+  isbn      = {978-1-133-18779-0},
+}
+
+@book{Dragon,
+  author    = {Ахо, Альфред and Лам, Моника and Сети, Рави and Ульман, Джеффри},
+  title     = {Компиляторы: принципы, технологии и инструментарий},
+  edition   = {2},
+  publisher = {Вильямс},
+  address   = {Москва},
+  year      = {2008},
+  isbn      = {978-5-8459-1349-4},
+}
+
+@book{Kuz_3,
+  author    = {Ахо, А. and Ульман, Дж.},
+  title     = {Теория синтаксического анализа, перевода и компиляции. В 2 томах},
+  publisher = {Мир},
+  year      = {1978},
+}
+
+@book{Kuz_11,
+  author    = {Кузнецов, О. П. and Адельсон-Вельский, Г. М.},
+  title     = {Дискретная математика для инженера},
+  publisher = {Энергоатомиздат},
+  year      = {1988},
+}
+
+@book{Baranov,
+  author    = {Баранов, С. И.},
+  title     = {Синтез микропрограммных автоматов},
+  publisher = {Энергия},
+  year      = {1979},
+}
+
+@book{Kuz_10,
+  author    = {Баранов, С. И.},
+  title     = {Синтез микропрограммных автоматов},
+  publisher = {Энергия},
+  year      = {1979},
+}
+
+@book{Kuz_4,
+  author    = {Срибнер, Л. А.},
+  title     = {Программируемые устройства автоматики},
+  publisher = {Технiка},
+  year      = {1982},
+}
+
+% ===========================================================================
+% Машина Тьюринга, вычислимость, сложность
+% ===========================================================================
+
+@misc{Shen_Postnauka_Article,
+  author = {Шень, Александр},
+  title  = {Машина Тьюринга},
+  url    = {https://postnauka.ru/faq/13137},
+  note   = {ПостНаука},
+}
+
+@book{MT_And_Recursion_Functions,
+  editor    = {Успенский, В. А.},
+  title     = {Машины Тьюринга и рекурсивные функции: сборник переводов},
+  publisher = {Мир},
+  address   = {Москва},
+  year      = {1972},
+}
+
+@book{Turing_Machine_And_Recursion_Function,
+  author    = {Якобс, К.},
+  title     = {Машины Тьюринга и рекурсивные функции},
+  publisher = {Мир},
+  year      = {1972},
+}
+
+@book{Uspensky_MP,
+  author    = {Успенский, В. А.},
+  title     = {Машина Поста},
+  publisher = {Наука},
+  year      = {1979},
+}
+
+@book{Vereshagen_Shen_C_Functions,
+  author    = {Верещагин, Н. К. and Шень, А.},
+  title     = {Вычислимые функции},
+  publisher = {МЦНМО},
+  year      = {2012},
+}
+
+@book{Karmen_Layzerson_Rivest_Algorithm_Analyze,
+  author    = {Кормен, Т. and Лейзерсон, Ч. and Ривест, Р. and Штайн, К.},
+  title     = {Алгоритмы: построение и анализ},
+  publisher = {Вильямс},
+  year      = {2019},
+  isbn      = {978-5-907114-11-1},
+}
+
+@book{Kitaev_Shen_Vyalyi_Quantum_C,
+  author    = {Китаев, А. and Шень, А. and Вялый, М.},
+  title     = {Классические и квантовые вычисления},
+  publisher = {МЦНМО},
+  year      = {1999},
+}
+
+@book{Marchenkov_Recursion_Function,
+  author    = {Марченков, С. С.},
+  title     = {Рекурсивные функции},
+  publisher = {Физматлит},
+  year      = {2007},
+  isbn      = {978-5-9221-0825-6},
+}
+
+@article{Kacaran_MT_Recursion_Function,
+  author    = {Кацаран, Т. К. and Строева, Л. Н.},
+  title     = {Машина Тьюринга и рекурсивные функции},
+  journal   = {Вестник Воронежского государственного университета},
+  publisher = {Издательство Воронежского государственного университета},
+  year      = {2008},
+}
+
+@misc{DH_1976,
+  author = {Diffie, Whitfield and Hellman, Martin},
+  title  = {New Directions in Cryptography},
+  url    = {https://ee.stanford.edu/~hellman/publications/24.pdf},
+  year   = {1976},
+}
+
+@article{RSA_1978,
+  author  = {Rivest, R. L. and Shamir, A. and Adleman, L.},
+  title   = {A Method for Obtaining Digital Signatures and Public-Key Cryptosystems},
+  journal = {Communications of the ACM},
+  volume  = {21},
+  number  = {2},
+  pages   = {120--126},
+  year    = {1978},
+}
+
+@article{Rado_BusyBeaver,
+  author  = {Radó, Tibor},
+  title   = {On Non-Computable Functions},
+  journal = {Bell System Technical Journal},
+  volume  = {41},
+  number  = {3},
+  pages   = {877--884},
+  year    = {1962},
+}
+
+@misc{BBChallenge,
+  author = {The {bbchallenge} Collaboration},
+  title  = {Determination of {BB(5)}},
+  year   = {2024},
+  url    = {https://bbchallenge.org/},
+}
+
+% ===========================================================================
+% Автоматное программирование
+% ===========================================================================
+
+@article{Psycho,
+  author  = {Кузнецов, Б. П.},
+  title   = {Психология автоматного программирования},
+  journal = {BYTE/Россия},
+  year    = {2000},
+}
+
+@misc{Kuz_8,
+  author = {Кузнецов, Б. П.},
+  title  = {Стандартная реализация управляющих программ},
+  year   = {1974},
+}
+
+@book{Kuz_9,
+  author    = {Шалыто, А. А.},
+  title     = {SWITCH-технология. Алгоритмизация и программирование задач логического управления},
+  publisher = {Наука},
+  address   = {Санкт-Петербург},
+  year      = {1998},
+}
+
+@book{Shalyto_Switch,
+  author    = {Шалыто, А. А.},
+  title     = {SWITCH-технология. Алгоритмизация и программирование задач логического управления},
+  publisher = {Наука},
+  address   = {Санкт-Петербург},
+  year      = {1998},
+}
+
+@book{Polikarpova_Shalyto,
+  author    = {Поликарпова, Н. И. and Шалыто, А. А.},
+  title     = {Автоматное программирование},
+  edition   = {2},
+  publisher = {Питер},
+  address   = {Санкт-Петербург},
+  year      = {2011},
+  isbn      = {978-5-459-00580-7},
+}
+
+@book{Kuz_1,
+  author    = {Шнейдерман, Б.},
+  title     = {Психология программирования},
+  publisher = {Радио и связь},
+  year      = {1984},
+}
+
+@book{Kuz_2,
+  author    = {Байцер, Б.},
+  title     = {Архитектура вычислительных комплексов},
+  publisher = {Мир},
+  year      = {1974},
+}
+
+@book{Kuz_6,
+  author    = {Буч, Г.},
+  title     = {Объектно-ориентированный анализ и проектирование с примерами приложений на C++},
+  publisher = {Бином},
+  year      = {1998},
+}
+
+@book{Kuz_7,
+  author    = {Буч, Г. and Рамбо, Д. and Джекобсон, А.},
+  title     = {Язык UML. Руководство пользователя},
+  publisher = {ДМК},
+  year      = {2000},
+}
+
+@book{Kuz_12,
+  author    = {Джамп, Д.},
+  title     = {AutoCAD. Программирование},
+  publisher = {Радио и связь},
+  year      = {1992},
+}
+
+@book{GoF,
+  author    = {Гамма, Э. and Хелм, Р. and Джонсон, Р. and Влиссидес, Дж.},
+  title     = {Приёмы объектно-ориентированного проектирования. Паттерны проектирования},
+  publisher = {Питер},
+  year      = {2001},
+  isbn      = {978-5-459-01703-9},
+}
+
+@book{Samek,
+  author    = {Samek, Miro},
+  title     = {Practical {UML} Statecharts in {C/C++}: Event-Driven Programming for Embedded Systems},
+  edition   = {2},
+  publisher = {Newnes},
+  year      = {2008},
+  isbn      = {978-0-7506-8706-5},
+}
+
+% ===========================================================================
+% Statecharts, UML, промышленные стандарты
+% ===========================================================================
+
+@article{Kuz_5,
+  author  = {Harel, David},
+  title   = {Statecharts: A Visual Formalism for Complex Systems},
+  journal = {Science of Computer Programming},
+  volume  = {8},
+  number  = {3},
+  pages   = {231--274},
+  year    = {1987},
+}
+
+@article{Harel_Statecharts,
+  author  = {Harel, David},
+  title   = {Statecharts: A Visual Formalism for Complex Systems},
+  journal = {Science of Computer Programming},
+  volume  = {8},
+  number  = {3},
+  pages   = {231--274},
+  year    = {1987},
+}
+
+@misc{SCXML,
+  author = {{W3C}},
+  title  = {State Chart {XML} ({SCXML}): State Machine Notation for Control Abstraction},
+  year   = {2015},
+  url    = {https://www.w3.org/TR/scxml/},
+}
+
+@misc{IEC61131,
+  author = {{IEC}},
+  title  = {{IEC} 61131-3: Programmable Controllers --- Part 3: Programming Languages},
+  edition = {3},
+  year   = {2013},
+}
+
+@misc{RFC793,
+  author = {Postel, J.},
+  title  = {Transmission Control Protocol. {RFC} 793},
+  year   = {1981},
+  url    = {https://www.rfc-editor.org/rfc/rfc793},
+}
+
+% ===========================================================================
+% Регулярные выражения
+% ===========================================================================
+
+@misc{RE_Cpp,
+  author = {Мюллер, Оливер},
+  title  = {Реализация механизма обработки регулярных выражений на языке C++},
+  url    = {http://rus-linux.net/nlib.php?name=/MyLDP/algol/cpattern/Regular_Expressions_in_C_ru.html},
+  year   = {1998},
+}
+
+@misc{Cox_RegexpFast,
+  author = {Cox, Russ},
+  title  = {Regular Expression Matching Can Be Simple And Fast},
+  year   = {2007},
+  url    = {https://swtch.com/~rsc/regexp/regexp1.html},
+}
+
+@article{Thompson_1968,
+  author  = {Thompson, Ken},
+  title   = {Programming Techniques: Regular Expression Search Algorithm},
+  journal = {Communications of the ACM},
+  volume  = {11},
+  number  = {6},
+  pages   = {419--422},
+  year    = {1968},
+}
+
+@incollection{Kleene_1951,
+  author    = {Kleene, S. C.},
+  title     = {Representation of Events in Nerve Nets and Finite Automata},
+  booktitle = {Automata Studies},
+  publisher = {Princeton University Press},
+  pages     = {3--41},
+  year      = {1956},
+}
+
+@misc{RFC4180,
+  author = {Shafranovich, Y.},
+  title  = {Common Format and {MIME} Type for Comma-Separated Values ({CSV}) Files. {RFC} 4180},
+  year   = {2005},
+  url    = {https://www.rfc-editor.org/rfc/rfc4180},
+}
+
+% ===========================================================================
+% Верификация и тестирование
+% ===========================================================================
+
+@book{Holzmann_Spin,
+  author    = {Holzmann, Gerard J.},
+  title     = {The {SPIN} Model Checker: Primer and Reference Manual},
+  publisher = {Addison-Wesley},
+  year      = {2003},
+  isbn      = {978-0-321-22862-8},
+}
+
+@book{Clarke_ModelChecking,
+  author    = {Clarke, E. M. and Grumberg, O. and Peled, D. A.},
+  title     = {Model Checking},
+  publisher = {MIT Press},
+  year      = {1999},
+}
+
+@book{Baier_Katoen,
+  author    = {Baier, Christel and Katoen, Joost-Pieter},
+  title     = {Principles of Model Checking},
+  publisher = {MIT Press},
+  year      = {2008},
+  isbn      = {978-0-262-02649-9},
+}
+
+@book{Velder_Verification,
+  author    = {Вельдер, С. Э. and Лукин, М. А. and Шалыто, А. А. and Яминов, Б. Р.},
+  title     = {Верификация автоматных программ},
+  publisher = {Наука},
+  address   = {Санкт-Петербург},
+  year      = {2011},
+}
+
+@article{Chow_WMethod,
+  author  = {Chow, T. S.},
+  title   = {Testing Software Design Modeled by Finite-State Machines},
+  journal = {IEEE Transactions on Software Engineering},
+  volume  = {SE-4},
+  number  = {3},
+  pages   = {178--187},
+  year    = {1978},
+}
+
+% ===========================================================================
+% Клеточные автоматы
+% ===========================================================================
+
+@book{TheorySelfBuildingSystem,
+  author    = {фон Нейман, Дж.},
+  title     = {Теория самовоспроизводящихся автоматов},
+  publisher = {Мир},
+  year      = {1971},
+}
+
+@book{Coss_And_Zeros,
+  author    = {Гарднер, М.},
+  title     = {Крестики-нолики},
+  publisher = {Мир},
+  year      = {1988},
+}
+
+@article{Cook_Rule110,
+  author  = {Cook, Matthew},
+  title   = {Universality in Elementary Cellular Automata},
+  journal = {Complex Systems},
+  volume  = {15},
+  number  = {1},
+  pages   = {1--40},
+  year    = {2004},
+}
+
+@book{Wolfram_NKS,
+  author    = {Wolfram, Stephen},
+  title     = {A New Kind of Science},
+  publisher = {Wolfram Media},
+  year      = {2002},
+  isbn      = {978-1-57955-008-0},
+}
