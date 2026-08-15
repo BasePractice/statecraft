@@ -1,5 +1,5 @@
 #import "/template/lecture.typ": *
-#import "/template/diagrams.typ": fsm-diagram
+#import "/template/diagrams.typ": cetz, fsm-diagram, scheme
 
 #sources[
   Основа --- лекция «Конечные автоматы» репозитория `articles` (§ 3.8--3.12,
@@ -73,12 +73,70 @@ $ cases(delim: "{", q(1)= 0, q(t + 1)=(q(t)+ x(t)) mod  3, y(t)= floor.l(q(t)+ x
 
 Одна из реализаций разменного аппарата в виде автоматной схемы приведена на @fig:KA_Structurly_MoneyAutomate. Здесь блок «+» это автомат без памяти, реализующий сумму четырехбитного и двухбитного чисел; блок «/3» - это автомат без памяти, выдающий целую часть от деления четырехбитного числа на 3; блок $mod 3$ это автомат без памяти, вычисляющий остаток от деления четырехбитного числа на 3.
 
-#figure([#image("images/KA_Structurly_MoneyAutomate.png") \
+#scheme(
+  {
+    import cetz.draw: *
+    set-style(stroke: 0.6pt)
+    let arr = (mark: (end: "stealth", fill: black, scale: 0.5))
 
-  ],
-  caption: [
-    Автоматная схема разменного аппарата
-  ]
+    // сумматор четырёхбитного входа и двухбитного состояния
+    rect((0, 4.2), (6.0, 5.2), name: "sum")
+    content("sum.center", $+$)
+
+    // входные разряды
+    let xin = (0.7, 1.5, 2.3, 3.1)
+    for (i, x) in xin.enumerate() {
+      line((x, 6.3), (x, 5.2), ..arr)
+    }
+    content((1.9, 6.45), $x_1 x_2 x_3 x_4$, anchor: "south")
+
+    // входы обратной связи
+    line((4.3, 6.3), (4.3, 5.2), ..arr)
+    line((5.2, 5.9), (5.2, 5.2), ..arr)
+
+    // разводка выхода сумматора на оба комбинационных блока
+    let taps = (1.0, 2.0, 3.0, 4.0)
+    let div-in = (0.5, 1.15, 1.8, 2.45)
+    let mod-in = (3.6, 4.3, 5.0, 5.7)
+    for (i, x) in taps.enumerate() {
+      line((x, 4.2), (x, 3.5))
+      line((x, 3.5), (div-in.at(i), 2.6), ..arr)
+      line((x, 3.5), (mod-in.at(i), 2.6), ..arr)
+    }
+
+    // целая часть от деления на 3 и остаток от деления на 3
+    rect((0, 1.6), (2.9, 2.6), name: "div")
+    content("div.center", $\/3$)
+    rect((3.3, 1.6), (6.0, 2.6), name: "mod")
+    content("mod.center", $mod 3$)
+
+    // выходные разряды
+    let yout = (0.6, 1.45, 2.3)
+    let ylbl = ($y_1$, $y_2$, $y_3$)
+    for (i, x) in yout.enumerate() {
+      line((x, 1.6), (x, 0.7), ..arr)
+      content((x, 0.45), ylbl.at(i))
+    }
+
+    // разряды состояния возвращаются в регистры
+    line((4.2, 1.6), (4.2, 0.9), (7.0, 0.9))
+    line((7.0, 0.9), (7.0, 1.8), ..arr)
+    line((5.4, 1.6), (5.4, 0.3), (8.3, 0.3))
+    line((8.3, 0.3), (8.3, 1.8), ..arr)
+
+    // элементы задержки
+    rect((6.4, 1.8), (7.6, 3.4), name: "g2")
+    content("g2.center", $G_0$)
+    rect((7.7, 1.8), (8.9, 3.4), name: "g1")
+    content("g1.center", $G_0$)
+    content((6.3, 3.6), $q_2$, anchor: "east")
+    content((9.0, 3.6), $q_1$, anchor: "west")
+
+    // обратные связи на входы сумматора
+    line((7.0, 3.4), (7.0, 5.9), (5.2, 5.9))
+    line((8.3, 3.4), (8.3, 6.3), (4.3, 6.3))
+  },
+  caption: [Автоматная схема разменного аппарата],
 ) <fig:KA_Structurly_MoneyAutomate>
 
 Надо отметить, что автомат, реализуемый автоматной схемой, изображенной на @fig:KA_Structurly_MoneyAutomate, не эквивалентен автомату, реализуемому диаграммой Мура, изображенной на @fig:KA_Moore_MoneyAutomate, поскольку автоматная схема будет правильно функционировать и в том случае, когда на ее вход будут поступать любые числа от 0 до 13, т.е. если бы существовали все монеты достоинством от 0 до 13 копеек, то разменный аппарат, реализованный в виде схемы с @fig:KA_Structurly_MoneyAutomate, правильно разменивал бы их. Тогда как разменный аппарат, полученный из диаграммы Мура с @fig:KA_Moore_MoneyAutomate, рассчитан только на монеты достоинством 1, 3, 5 и 10 копеек.
@@ -326,19 +384,69 @@ $ psi_2 = x_1 and x_2 and macron(q_1) or x_1 and q_2 or x_1 and macron(x_2) and 
 $ psi_3 = macron(x_1) and q_1 or x_2 and macron(q_1) or x_1 and macron(q_1) and macron(q_2) $
 
 Окончательно система канонических уравнений разменного автомата примет следующий вид
-$ cases(delim: "{", q_1(1)= 0, q_2(1)= 0, q_1(t + 1)=(x_1(t)tilde.op x_2(t))q_2(t)or macron(x_1)(t)x_2(t)q_1(t)or x_1(t)macron(x_2)(t)macron(q_1)(t)macron(q_2)(t), q_2(t + 1)=(x_1(t)tilde.op x_2(t))macron(q_1)(t)macron(q_2)(t)or (x_1(t)xor x_2(t))q_2(t), y_1(t)= x_1(t)x_2(t)q_1(t), y_2(t)= x_1(t)(q_2(t)or(x_2(t)xor q_1(t))), y_3(t)= macron(x_1)(t)q_1(t)or x_2(t)macron(q_1)(t)or x_1(t)macron(q_1)(t)macron(q_2)(t)) $
+$ cases(delim: "{", q_1(1)= 0, q_2(1)= 0, q_1(t + 1)=(x_1(t)tilde.op x_2(t))q_2(t)or macron(x_1)(t)x_2(t)q_1(t)or x_1(t)macron(x_2)(t)macron(q_1)(t)macron(q_2)(t), q_2(t + 1)=(x_1(t)tilde.op x_2(t))macron(q_1)(t)macron(q_2)(t)or macron(x_1)(t)x_2(t)q_2(t)or x_1(t)macron(x_2)(t)q_1(t), y_1(t)= x_1(t)x_2(t)q_1(t), y_2(t)= x_1(t)(q_2(t)or(x_2(t)xor q_1(t))), y_3(t)= macron(x_1)(t)q_1(t)or x_2(t)macron(q_1)(t)or x_1(t)macron(q_1)(t)macron(q_2)(t)) $
 
 Автоматная схема, соответствующая каноническим уравнениям, изображена на @fig:KA_Structurly_MoneyAutomate_Simplified, где комбинаторный блок $С$ реализует функции $phi_1, phi_2, psi_1, psi_2, psi_3$ в соответствии с формулами.
 
-#figure([#image("images/KA_Structurly_MoneyAutomate_Simplified.png") \
+#scheme(
+  {
+    import cetz.draw: *
+    set-style(stroke: 0.6pt)
+    let arr = (mark: (end: "stealth", fill: black, scale: 0.5))
 
-  ],
+    // комбинационная часть
+    rect((0, 1.4), (6.0, 4.4), name: "c")
+    content((3.0, 3.2), $C$)
+
+    // внешние входы
+    line((1.0, 5.7), (1.0, 4.4), ..arr)
+    line((2.0, 5.7), (2.0, 4.4), ..arr)
+    content((1.0, 5.9), $x_1$)
+    content((2.0, 5.9), $x_2$)
+
+    // входы обратной связи
+    line((3.6, 6.3), (3.6, 4.4), ..arr)
+    line((4.6, 5.8), (4.6, 4.4), ..arr)
+
+    // обозначения функций на нижней грани блока
+    let outs = (0.7, 1.7, 2.7, 4.0, 5.0)
+    let lbls = ($psi_1$, $psi_2$, $psi_3$, $phi_1$, $phi_2$)
+    for (i, x) in outs.enumerate() {
+      content((x, 1.75), lbls.at(i))
+    }
+
+    // выходы автомата
+    let ylbl = ($y_1$, $y_2$, $y_3$)
+    for i in range(3) {
+      let x = outs.at(i)
+      line((x, 1.4), (x, 0.6), ..arr)
+      content((x, 0.35), ylbl.at(i))
+    }
+
+    // функции переходов — в регистры
+    line((4.0, 1.4), (4.0, 0.25), (8.3, 0.25))
+    line((8.3, 0.25), (8.3, 1.9), ..arr)
+    line((5.0, 1.4), (5.0, 0.75), (7.0, 0.75))
+    line((7.0, 0.75), (7.0, 1.9), ..arr)
+
+    // элементы задержки
+    rect((6.4, 1.9), (7.6, 3.4), name: "g2")
+    content("g2.center", $G_0$)
+    rect((7.7, 1.9), (8.9, 3.4), name: "g1")
+    content("g1.center", $G_0$)
+    content((6.3, 3.6), $q_2$, anchor: "east")
+    content((9.0, 3.6), $q_1$, anchor: "west")
+
+    // обратные связи
+    line((7.0, 3.4), (7.0, 5.8), (4.6, 5.8))
+    line((8.3, 3.4), (8.3, 6.3), (3.6, 6.3))
+  },
   caption: [
-    Карта Карно
-  ]
-)
+    Автоматная схема разменного аппарата после перекодировки алфавитов
+  ],
+) <fig:KA_Structurly_MoneyAutomate_Simplified>
 
-= Анализ поведения автоматов <fig:KA_Structurly_MoneyAutomate_Simplified>
+= Анализ поведения автоматов
 Приведенные выше примеры являются примерами задачи синтеза автоматов по некоторому описанию их функционирования. В том числе в последнем примере мы рассмотрели задачу синтеза автоматных схем, являющуюся важным этапом при производстве интегральных схем (чипов).
 
 Другой важной задачей в теории автоматов является задача анализа поведения автоматов, в которой по схеме автомата надо описать в указанных наперед терминах словарное отображение, которое реализует автомат.
@@ -369,9 +477,9 @@ $ cases(delim: "{", q_1(1)= 0, q_2(1)= 0, q_1(t + 1)=(x_1(t)tilde.op x_2(t))q_2(
   caption: [
     Автомат акцептор
   ]
-)
+) <fig:KA_Moore_AnalyzeAutomata_2>
 
-== Пример 3 <fig:KA_Moore_AnalyzeAutomata_2>
+== Пример 3
 #emph[Задание]. Автомат задан диаграммой Мура, изображенной на @fig:KA_Moore_AnalyzeAutomata_3. Описать множество слов, распознаваемых автоматом появлением на его выходе символа 0.
 
 #figure([#image("images/KA_Moore_AnalyzeAutomata_3.png") \

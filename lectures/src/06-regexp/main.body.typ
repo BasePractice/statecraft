@@ -29,9 +29,9 @@ Perl на столько суров, что производит необрат�
   caption: [
     Логотип языка Perl6
   ]
-)
+) <fig:RE_Raku_Camelia>
 
-== Интересное <fig:RE_Raku_Camelia>
+== Интересное
 + Утилита для работы с регулярными выражениями #link("https://regexr.com/")[RegExr]\;
 
 + Утилита построения автомата по регулярному выражению \ #link("https://cyberzhg.github.io/toolbox/nfa2dfa")[NFA2DFA].

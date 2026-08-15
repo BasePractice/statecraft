@@ -73,3 +73,26 @@
   )
   figure(body, caption: caption)
 }
+
+// ---------------------------------------------------------------------------
+// Структурные (автоматные) схемы: блоки, шины, обратные связи.
+// Рисуются на CeTZ; функции draw доступны через `cetz.draw`.
+// ---------------------------------------------------------------------------
+
+#import "@preview/cetz:0.3.4"
+
+// Обёртка: холст CeTZ внутри figure с подписью.
+#let scheme(body, caption: none, length: 1cm, label: none) = {
+  let f = figure(
+    cetz.canvas(length: length, body),
+    caption: caption,
+  )
+  if label == none { f } else { [#f #label] }
+}
+
+// Прямоугольный функциональный элемент с подписью внутри.
+#let block(sw, ne, name: none, label: none, ..style) = {
+  import cetz.draw: content, rect
+  rect(sw, ne, name: name, ..style)
+  if label != none { content(name + ".center", label) }
+}
