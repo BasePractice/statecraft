@@ -74,7 +74,7 @@ out/               собранные PDF (в .gitignore)
 - `#sources[…]` — врезка о происхождении материала и внесённых правках;
 - `#code-file("/src/<id>/code/foo.c", lang: "c", from: 1, to: 40)` — листинг
   из файла (путь **абсолютный от корня** `lectures/`);
-- `#img(...)`, `#subfigures(...)`, `#listing(...)`;
+- `#img(...)`, `#subfigures(...)`, `#listing(...)`, `#karnaugh-map(...)`;
 - `#nota.*` — единая нотация курса из `shared/notation.typ`;
 - `#show: appendix` — дальше заголовки нумеруются «Приложение А».
 

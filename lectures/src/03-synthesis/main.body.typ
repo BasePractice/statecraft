@@ -13,6 +13,16 @@
   #emph[пять] итоговых булевых формул синтеза схемы вообще не попадали в
   документ, а один рисунок разваливался из-за закрытия окружения `figure`
   до подписи. Здесь и то и другое восстановлено.
+
+  Выходные функции переименованы из $phi_1, phi_2, phi_3$ (в исходнике они
+  обозначались вариантным начертанием той же буквы, что и функции переходов,
+  и на письме от них не отличались) в $psi_1, psi_2, psi_3$ --- согласно
+  принятой в курсе нотации, где $phi$ --- функция переходов, а $psi$ ---
+  функция выходов.
+
+  Таблицы переходов и все десять карт Карно набраны заново: их значения
+  вычислены по каноническим уравнениям и по кодировке алфавитов, а не
+  перерисованы со снимков книжной страницы.
 ]
 
 = Основные задачи теории автоматов
@@ -163,138 +173,162 @@ $ cases(delim: "{", 0 =(0, 0), 1 =(0, 1), 2 =(1, 0)) $
 
 Функции от четырех переменных удобно представлять в виде карты Карно, на которой хорошо видны грани булевого куба.
 
-#todo[
-  Карты Карно ниже пока остаются растровыми снимками книжной страницы и
-  плохо читаются (замечание § 4 `REPORT.md`). Их нужно набрать нативными
-  таблицами: все значения однозначно выводятся из @tab:money-coded, а
-  звёздочки стоят в наборах с $q_1 q_2 = 11$. Диаграмма Мура
-  (@fig:KA_Moore_MoneyAutomate) и таблицы @tab:money-orig, @tab:money-coded
-  уже переведены в векторный вид.
-]
+Все карты Карно ниже набраны из @tab:money-coded: строки задаются кодом
+входного символа $x_1 x_2$, столбцы --- кодом состояния $q_1 q_2$, оба в коде
+Грея, чтобы соседние клетки отличались ровно одним разрядом. Звёздочка
+означает недостижимый набор $q_1 q_2 = 11$: такого состояния у автомата нет,
+и значение функции на нём можно выбрать так, как удобнее для минимизации.
 
-Карта Карно для функции имеет следующий вид, @fig:KA_Table_3_MoneyAutomate.
+Карта Карно для функции $phi_1$ имеет следующий вид, @tab:kmap-f1.
 
-#figure([#image("images/KA_Table_3_MoneyAutomate.png") \
+#karnaugh-map($phi_1$, (
+    (0, 1, none, 0),
+    (0, 0, none, 1),
+    (0, 1, none, 0),
+    (1, 0, none, 0),
+  ),
+  caption: [Карта Карно функции $phi_1$],
+) <tab:kmap-f1>
 
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_3_MoneyAutomate>
+Определяя звездочки следующим образом, @tab:kmap-f1-res
 
-Определяя звездочки следующим образом, @fig:KA_Table_4_MoneyAutomate
-
-#figure([#image("images/KA_Table_4_MoneyAutomate.png") \
-
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_4_MoneyAutomate>
+#karnaugh-map($phi_1$, (
+    (0, 1, 1, 0),
+    (0, 0, 1, 1),
+    (0, 1, 1, 0),
+    (1, 0, 0, 0),
+  ),
+  caption: [Карта Карно функции $phi_1$ с доопределёнными звёздочками],
+) <tab:kmap-f1-res>
 
 получаем
 $ phi_1 = macron(x_1) and macron(x_2) and q_2 or macron(x_1) and x_2 and q_1 or x_1 and x_2 and q_2\
 or x_1 and macron(x_2) and macron(q_1) and macron(q_2) =(x_1 tilde.op x_2)q_2 or macron(x_1) x_2 q_1\
 or x_1 macron(x_2) macron(q_1) macron(q_2) $
 
-Карта Карно для функции $phi_2$ имеет следующий вид, @fig:KA_Table_5_MoneyAutomate
+Карта Карно для функции $phi_2$ имеет следующий вид, @tab:kmap-f2
 
-#figure([#image("images/KA_Table_5_MoneyAutomate.png") \
+#karnaugh-map($phi_2$, (
+    (1, 0, none, 0),
+    (0, 1, none, 0),
+    (1, 0, none, 0),
+    (0, 0, none, 1),
+  ),
+  caption: [Карта Карно функции $phi_2$],
+) <tab:kmap-f2>
 
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_5_MoneyAutomate>
+Определяя звездочки следующим образом, @tab:kmap-f2-res
 
-Определяя звездочки следующим образом, @fig:KA_Table_6_MoneyAutomate
-
-#figure([#image("images/KA_Table_6_MoneyAutomate.png") \
-
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_6_MoneyAutomate>
+#karnaugh-map($phi_2$, (
+    (1, 0, 0, 0),
+    (0, 1, 1, 0),
+    (1, 0, 0, 0),
+    (0, 0, 1, 1),
+  ),
+  caption: [Карта Карно функции $phi_2$ с доопределёнными звёздочками],
+) <tab:kmap-f2-res>
 
 получаем
 $ phi_2 = macron(x_1) and macron(x_2) and macron(q_1) and macron(q_2) or macron(x_1) and x_2 and q_2 or x_1 and x_2 and macron(q_1) and macron(q_2)\
-or x_1 and macron(x_2) and macron(q_2) =(x_1 tilde.op x_2)macron(q_1) macron(q_2) or(x_1 xor x_2)q_2 $
+or x_1 and macron(x_2) and q_1 = (x_1 tilde.op x_2) macron(q_1) macron(q_2) or macron(x_1) x_2 q_2 or x_1 macron(x_2) q_1 $
 
-Карта Карно для функции $phi.alt_1$ имеет следующий вид, @fig:KA_Table_7_MoneyAutomate
+#remark(name: "исправление формулы")[
+  В исходном конспекте четвёртая конъюнкция была записана как
+  $x_1 macron(x_2) macron(q_2)$, а вся формула сворачивалась до
+  $(x_1 tilde.op x_2) macron(q_1) macron(q_2) or (x_1 xor x_2) q_2$. И то и
+  другое неверно.
 
-#figure([#image("images/KA_Table_7_MoneyAutomate.png") \
+  Контрпример к четвёртой конъюнкции: набор $x_1 x_2 = 10$, $q_1 q_2 = 00$ ---
+  это монета 5 копеек при состоянии 0. По @tab:kmap-f2 значение $phi_2$ здесь
+  равно нулю, тогда как $x_1 macron(x_2) macron(q_2) = 1 dot 1 dot 1 = 1$.
+  Контрпример к свёрнутой форме: набор $x_1 x_2 = 10$, $q_1 q_2 = 01$, где
+  $(x_1 xor x_2) q_2 = 1$, а требуется ноль.
 
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_7_MoneyAutomate>
+  Приведённая выше формула получена минимизацией по @tab:kmap-f2 с
+  доопределением неиспользуемых наборов и проверена на всех двенадцати
+  достижимых наборах. Остальные четыре формулы синтеза совпали с исходными.
+]
 
-Определяя звездочки следующим образом, @fig:KA_Table_8_MoneyAutomate
+Карта Карно для функции $psi_1$ имеет следующий вид, @tab:kmap-p1
 
-#figure([#image("images/KA_Table_8_MoneyAutomate.png") \
+#karnaugh-map($psi_1$, (
+    (0, 0, none, 0),
+    (0, 0, none, 0),
+    (0, 0, none, 1),
+    (0, 0, none, 0),
+  ),
+  caption: [Карта Карно функции $psi_1$],
+) <tab:kmap-p1>
 
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_8_MoneyAutomate>
+Определяя звездочки следующим образом, @tab:kmap-p1-res
 
-получаем
-$ phi.alt_1 = x_1 and x_2 and q_1 $
-
-Карта Карно для функции $phi.alt_2$ имеет следующий вид, @fig:KA_Table_9_MoneyAutomate
-
-#figure([#image("images/KA_Table_9_MoneyAutomate.png") \
-
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_9_MoneyAutomate>
-
-Определяя звездочки следующим образом, @fig:KA_Table_10_MoneyAutomate
-
-#figure([#image("images/KA_Table_10_MoneyAutomate.png") \
-
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_10_MoneyAutomate>
+#karnaugh-map($psi_1$, (
+    (0, 0, 0, 0),
+    (0, 0, 0, 0),
+    (0, 0, 1, 1),
+    (0, 0, 0, 0),
+  ),
+  caption: [Карта Карно функции $psi_1$ с доопределёнными звёздочками],
+) <tab:kmap-p1-res>
 
 получаем
-$ phi.alt_2 = x_1 and x_2 and macron(q_1) or x_1 and q_2 or x_1 and macron(x_2) and q_1 =\
+$ psi_1 = x_1 and x_2 and q_1 $
+
+Карта Карно для функции $psi_2$ имеет следующий вид, @tab:kmap-p2
+
+#karnaugh-map($psi_2$, (
+    (0, 0, none, 0),
+    (0, 0, none, 0),
+    (1, 1, none, 0),
+    (0, 1, none, 1),
+  ),
+  caption: [Карта Карно функции $psi_2$],
+) <tab:kmap-p2>
+
+Определяя звездочки следующим образом, @tab:kmap-p2-res
+
+#karnaugh-map($psi_2$, (
+    (0, 0, 0, 0),
+    (0, 0, 0, 0),
+    (1, 1, 1, 0),
+    (0, 1, 1, 1),
+  ),
+  caption: [Карта Карно функции $psi_2$ с доопределёнными звёздочками],
+) <tab:kmap-p2-res>
+
+получаем
+$ psi_2 = x_1 and x_2 and macron(q_1) or x_1 and q_2 or x_1 and macron(x_2) and q_1 =\
 = x_1 and (q_2 or (x_2 xor q_1)) $
 
-Карта Карно для функции $phi.alt_3$ имеет следующий вид, @fig:KA_Table_11_MoneyAutomate
+Карта Карно для функции $psi_3$ имеет следующий вид, @tab:kmap-p3
 
-#figure([#image("images/KA_Table_11_MoneyAutomate.png") \
+#karnaugh-map($psi_3$, (
+    (0, 0, none, 1),
+    (1, 1, none, 1),
+    (1, 1, none, 0),
+    (1, 0, none, 0),
+  ),
+  caption: [Карта Карно функции $psi_3$],
+) <tab:kmap-p3>
 
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_11_MoneyAutomate>
+Определяя звездочки следующим образом, @tab:kmap-p3-res
 
-Определяя звездочки следующим образом, @fig:KA_Table_12_MoneyAutomate
-
-#figure([#image("images/KA_Table_12_MoneyAutomate.png") \
-
-  ],
-  caption: [
-    Карта Карно
-  ]
-) <fig:KA_Table_12_MoneyAutomate>
+#karnaugh-map($psi_3$, (
+    (0, 0, 1, 1),
+    (1, 1, 1, 1),
+    (1, 1, 0, 0),
+    (1, 0, 0, 0),
+  ),
+  caption: [Карта Карно функции $psi_3$ с доопределёнными звёздочками],
+) <tab:kmap-p3-res>
 
 получаем
-$ phi.alt_3 = macron(x_1) and q_1 or x_2 and macron(q_1) or x_1 and macron(q_1) and macron(q_2) $
+$ psi_3 = macron(x_1) and q_1 or x_2 and macron(q_1) or x_1 and macron(q_1) and macron(q_2) $
 
 Окончательно система канонических уравнений разменного автомата примет следующий вид
 $ cases(delim: "{", q_1(1)= 0, q_2(1)= 0, q_1(t + 1)=(x_1(t)tilde.op x_2(t))q_2(t)or macron(x_1)(t)x_2(t)q_1(t)or x_1(t)macron(x_2)(t)macron(q_1)(t)macron(q_2)(t), q_2(t + 1)=(x_1(t)tilde.op x_2(t))macron(q_1)(t)macron(q_2)(t)or (x_1(t)xor x_2(t))q_2(t), y_1(t)= x_1(t)x_2(t)q_1(t), y_2(t)= x_1(t)(q_2(t)or(x_2(t)xor q_1(t))), y_3(t)= macron(x_1)(t)q_1(t)or x_2(t)macron(q_1)(t)or x_1(t)macron(q_1)(t)macron(q_2)(t)) $
 
-Автоматная схема, соответствующая каноническим уравнениям, изображена на @fig:KA_Structurly_MoneyAutomate_Simplified, где комбинаторный блок $С$ реализует функции $phi_1, phi_2 phi.alt_1, phi.alt_2, phi.alt_3$ в соответствии с формулами.
+Автоматная схема, соответствующая каноническим уравнениям, изображена на @fig:KA_Structurly_MoneyAutomate_Simplified, где комбинаторный блок $С$ реализует функции $phi_1, phi_2, psi_1, psi_2, psi_3$ в соответствии с формулами.
 
 #figure([#image("images/KA_Structurly_MoneyAutomate_Simplified.png") \
 

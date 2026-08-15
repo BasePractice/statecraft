@@ -58,3 +58,36 @@
   )
   if label == none { f } else { [#f #label] }
 }
+
+// Карта Карно функции четырёх переменных.
+//
+// name  — обозначение функции, например $phi_1$
+// cells — 4×4 массив значений в порядке строк (x1 x2) = 00, 01, 11, 10
+//         и столбцов (q1 q2) = 00, 01, 11, 10 (код Грея);
+//         значение none печатается звёздочкой (набор недостижим).
+#let karnaugh-map(name, cells, caption: none, label: none) = {
+  let cell(v) = if v == none { $*$ } else { [#v] }
+  let gray-q1 = (0, 0, 1, 1)
+  let gray-q2 = (0, 1, 1, 0)
+  let gray-x = ((0, 0), (0, 1), (1, 1), (1, 0))
+  let f = figure(
+    table(
+      columns: (auto, auto, auto, auto, auto, auto),
+      align: center,
+      stroke: none,
+      inset: 5pt,
+      table.vline(x: 2, stroke: 0.5pt),
+      name, [$q_1$], ..gray-q1.map(v => [#v]),
+      [], [$q_2$], ..gray-q2.map(v => [#v]),
+      [$x_1$], [$x_2$], table.cell(colspan: 4)[],
+      table.hline(y: 3, stroke: 0.5pt),
+      ..gray-x
+        .enumerate()
+        .map(((i, x)) => ([#x.at(0)], [#x.at(1)], ..cells.at(i).map(cell)))
+        .flatten(),
+    ),
+    caption: caption,
+    kind: table,
+  )
+  if label == none { f } else { [#f #label] }
+}

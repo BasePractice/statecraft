@@ -12,7 +12,7 @@
 #import "blocks.typ": *
 #import "blocks.typ" as blocks
 #import "code.typ": raw-show-rules, code-file, listing
-#import "figures.typ": figure-rules, img, subfigures
+#import "figures.typ": figure-rules, img, karnaugh-map, subfigures
 #import "frontmatter.typ": title-page, front-outlines
 #import "appendix.typ": appendix
 #import "/shared/glossary.typ": glossary-section
