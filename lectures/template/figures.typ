@@ -16,6 +16,22 @@
   ]
   // Ссылка @eq:canon печатается как «(1)», а не «Уравнение 1».
   set math.equation(numbering: "(1)", supplement: none)
+
+  // В подписи стоит полное слово («Рисунок 3 — …»), а в ссылке — сокращение,
+  // чтобы фразы вида «приведена на рис. 3» и «см. в табл. 2» оставались
+  // грамматичными. При полном слове получалось «приведена на Рисунок 3».
+  show ref: it => {
+    let el = it.element
+    if el == none or el.func() != figure { return it }
+    let short = if el.kind == image { L.figure-short } else if el.kind == table {
+      L.table-short
+    } else if el.kind == raw { L.listing-short } else { none }
+    if short == none { return it }
+    link(
+      el.location(),
+      [#short~#numbering(el.numbering, ..counter(figure.where(kind: el.kind)).at(el.location()))],
+    )
+  }
   doc
 }
 

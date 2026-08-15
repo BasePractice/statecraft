@@ -23,7 +23,9 @@ mkdir -p "$PKG_CACHE"
 info "пакеты, найденные в исходниках:"
 printf '%s\n' "$PKGS" | sed 's/^/       /'
 
-tmp="$(mktemp -d "${TMPDIR:-/tmp}/typst-vendor.XXXXXX")"
+# Пробный файл кладём внутрь --root: typst требует, чтобы исходник лежал
+# в корне проекта.
+tmp="$(mktemp -d "$ROOT/.warm.XXXXXX")"
 trap 'rm -rf "$tmp"' EXIT
 
 {
@@ -35,7 +37,7 @@ trap 'rm -rf "$tmp"' EXIT
 } >"$tmp/warm.typ"
 
 typst_args
-if "$TYPST_BIN" compile "${TYPST_ARGS[@]}" "$tmp/warm.typ" /dev/null 2>"$tmp/log"; then
+if "$TYPST_BIN" compile "${TYPST_ARGS[@]}" -f pdf "$tmp/warm.typ" /dev/null 2>"$tmp/log"; then
   ok "кэш прогрет: $PKG_CACHE"
 else
   sed 's/^/       /' "$tmp/log" >&2
