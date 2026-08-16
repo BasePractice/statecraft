@@ -1,0 +1,62 @@
+# Какой файл практикума какому листингу лекции соответствует.
+#
+# Формат:  <путь от корня репозитория>  <путь от корня репозитория>
+#          источник (practices/…)       копия (lectures/src/…/code/…)
+#
+# Копия нужна потому, что typst читает файлы только из своего --root
+# (каталога lectures/). Скрипт sync-code.sh поддерживает копии в актуальном
+# состоянии, а с ключом --check проверяет, что они не разошлись, — эта же
+# проверка стоит в CI.
+#
+# Чего здесь намеренно нет:
+#   practices/08-fsm-control-pneumo/generated/*.inc и *.log — в CP1251,
+#   копии в лекции 8 перекодированы в UTF-8, побайтовое сравнение
+#   неприменимо;
+#   lectures/src/12-takt/code/driver.c — написан для лекции, в практикуме
+#   исходника нет.
+
+practices/02-fsm-delay/delay_fsm.c              lectures/src/02-fsm/code/delay_fsm.c
+practices/02-fsm-delay/delay_fsm.h              lectures/src/02-fsm/code/delay_fsm.h
+
+practices/06-lexical-analyze/mathematics_lang.c lectures/src/06-regexp/code/mathematics_lang.c
+practices/06-lexical-analyze/mathematics_lang.h lectures/src/06-regexp/code/mathematics_lang.h
+practices/06-regular-expression/simple_regexp.c lectures/src/06-regexp/code/simple_regexp.c
+practices/06-regular-expression/simple_regexp.h lectures/src/06-regexp/code/simple_regexp.h
+
+practices/07-simple-program/simple_main.c       lectures/src/07-automata-prog/code/simple_main.c
+practices/07-fsm-insert-element/inserting_fsm.c lectures/src/07-automata-prog/code/inserting_fsm.c
+practices/07-fsm-insert-element/inserting_fsm.h lectures/src/07-automata-prog/code/inserting_fsm.h
+practices/07-fsm-insert-element/inserting_main.c lectures/src/07-automata-prog/code/inserting_main.c
+practices/07-three-ways/barrier.h               lectures/src/07-automata-prog/code/barrier.h
+practices/07-three-ways/barrier_switch.c        lectures/src/07-automata-prog/code/barrier_switch.c
+practices/07-three-ways/barrier_table.c         lectures/src/07-automata-prog/code/barrier_table.c
+practices/07-three-ways/barrier_state.c         lectures/src/07-automata-prog/code/barrier_state.c
+
+practices/08-fsm-control-pneumo/pneumo_ctrl.c   lectures/src/08-statecharts/code/pneumo_ctrl.c
+practices/08-fsm-control-pneumo/pneumo_ctrl.h   lectures/src/08-statecharts/code/pneumo_ctrl.h
+practices/08-fsm-control-pneumo/simulate.process lectures/src/08-statecharts/code/simulate.process
+
+practices/09-promela/00.HelloWorld.pml          lectures/src/09-verification/code/00.HelloWorld.pml
+practices/09-promela/01.InitProcess.pml         lectures/src/09-verification/code/01.InitProcess.pml
+practices/09-promela/02.CallProcess.pml         lectures/src/09-verification/code/02.CallProcess.pml
+practices/09-promela/03.RunProcess.pml          lectures/src/09-verification/code/03.RunProcess.pml
+practices/09-promela/04.StrongSynchronization.pml lectures/src/09-verification/code/04.StrongSynchronization.pml
+practices/09-promela/05.WaitExpression.pml      lectures/src/09-verification/code/05.WaitExpression.pml
+practices/09-promela/06.DoAndProduceConsume.pml lectures/src/09-verification/code/06.DoAndProduceConsume.pml
+practices/09-promela/07.ResourceExclude.pml     lectures/src/09-verification/code/07.ResourceExclude.pml
+practices/09-promela/08.MutexAlgorithm.pml      lectures/src/09-verification/code/08.MutexAlgorithm.pml
+practices/09-promela/09.Semaphore.pml           lectures/src/09-verification/code/09.Semaphore.pml
+
+practices/10-turing-machine/turing_machine.c    lectures/src/10-limits/code/mt/turing_machine.c
+practices/10-turing-machine/turing_machine.h    lectures/src/10-limits/code/mt/turing_machine.h
+practices/10-turing-machine/turing_machine_test.cpp lectures/src/10-limits/code/mt/turing_machine_test.cpp
+practices/10-turing-machine/change_sharp_algorithm.c lectures/src/10-limits/code/mt/change_sharp_algorithm.c
+practices/10-turing-machine/main.c              lectures/src/10-limits/code/mt/main.c
+
+practices/12-takt/model/button_led.takt         lectures/src/12-takt/code/button_led.takt
+practices/12-takt/model/cooling_bad.takt        lectures/src/12-takt/code/cooling_bad.takt
+practices/12-takt/model/cooling_good.takt       lectures/src/12-takt/code/cooling_good.takt
+practices/12-takt/model/pump.takt               lectures/src/12-takt/code/pump.takt
+practices/12-takt/model/recovery.takt           lectures/src/12-takt/code/recovery.takt
+practices/12-takt/model/traffic.takt            lectures/src/12-takt/code/traffic.takt
+practices/12-takt/model/watchdog.takt           lectures/src/12-takt/code/watchdog.takt

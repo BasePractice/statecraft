@@ -38,8 +38,16 @@
 - `shared/` — единая нотация, глоссарий, банк контрольных вопросов и задачник.
 - `src/<id>/main.typ` + `main.body.typ` — лекция. Разделение нужно, чтобы
   `scripts/tex2typ.sh` можно было перезапускать, не теряя ручной обвязки.
-- `scripts/` — `check.sh`, `build.sh`, `clean.sh`, `fetch-fonts.sh`,
-  `vendor-packages.sh`, `tex2typ.sh`.
+- `scripts/` — `check.sh`, `build.sh`, `clean.sh`, `sync-code.sh`,
+  `fetch-fonts.sh`, `vendor-packages.sh`, `tex2typ.sh`.
+- Сборка лекций описана **только** в `lectures/Makefile` и `scripts/`:
+  `lectures/CMakeLists.txt` вызывает `make pretty OUT=<build>/lectures`, а не
+  повторяет логику компиляции. Поэтому лекции собираются и без CMake
+  (`cd lectures && make`), и порядок сборки в обоих случаях один.
+- `scripts/sync-code.sh` держит листинги лекций (`src/<id>/code/`) равными
+  файлам практикума; соответствие — в `scripts/code-map.txt`, проверка
+  `make sync-check` стоит в CI. Копии нужны потому, что typst читает файлы
+  только из своего `--root`.
 - `template/diagrams.typ` — единственный файл с `@preview`-зависимостями
   (fletcher для диаграмм состояний, CeTZ для структурных схем). Подключается
   только теми лекциями, где есть векторные рисунки; кэш прогревается
@@ -51,7 +59,8 @@ cmake -S . -B build && cmake --build build -j   # весь курс: PDF + пр�
 ctest --test-dir build                          # тесты примеров
 ./scripts/check-style.sh                        # оформление кода
 
-cd lectures && ./scripts/check.sh --fix && ./scripts/build.sh   # только лекции
+cd lectures && make fix && make                  # только лекции (make = make pretty)
+cd lectures && make sync-check                  # листинги лекций против practices/
 ```
 
 ### Ловушки typst 0.15, на которые уже наступили
@@ -235,6 +244,7 @@ Catch2, зарегистрированы в `ctest`.
 | `06-regular-expression`, `06-lexical-analyze` | движок регулярных выражений и лексер | 6 |
 | `07-simple-program` | вложенные switch/if как контрпример | 7 |
 | `07-fsm-insert-element` | автомат поиска вставки, 3 состояния | 7 |
+| `07-three-ways` | один автомат тремя способами, покрытие переходов | 7 |
 | `08-fsm-control-pneumo` | циклограмма пневмоцилиндров, кодогенерация SimInTech | 8 |
 | `09-promela` | 10 примеров Promela от HelloWorld до семафоров | 9 |
 | `10-turing-machine` | интерпретатор машины Тьюринга | 10 |

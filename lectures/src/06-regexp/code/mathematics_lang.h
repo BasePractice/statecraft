@@ -1,8 +1,8 @@
 #ifndef MATHEMATICS_LANG_H
 #define MATHEMATICS_LANG_H
+#include "base_types.h"
 
 #include <stdlib.h>
-#include <stdbool.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -14,10 +14,15 @@ extern "C" {
  * */
 
 enum LexerTokenType {
-    TokenLPar, TokenRPar,
-    TokenInt, TokenReal,
+    TokenLPar,
+    TokenRPar,
+    TokenInt,
+    TokenReal,
     TokenId,
-    TokenDiv, TokenMul, TokenMinus, TokenPlus,
+    TokenDiv,
+    TokenMul,
+    TokenMinus,
+    TokenPlus,
     TokenPol,
     End
 };
@@ -28,7 +33,7 @@ struct LexerToken {
     size_t it_end;
     size_t line_no;
     enum LexerTokenType type;
-    char *error;
+    const char *error;
 };
 
 struct LexerContext;
@@ -48,4 +53,3 @@ bool lexer_eof(struct LexerContext *ctx);
 #endif
 
 #endif
-

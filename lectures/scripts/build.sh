@@ -10,6 +10,8 @@
 #   -d, --draft      водяной знак «ЧЕРНОВИК»
 #   -p, --pretty     дополнительно положить копию под читаемым именем
 #                    «03 — Синтез автоматов и автоматные схемы.pdf»
+#       --out DIR    каталог результата (по умолчанию lectures/out);
+#                    этим ключом пользуется сборка из CMake
 #   -h, --help       эта справка
 
 . "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/lib.sh"
@@ -47,6 +49,7 @@ while [ $# -gt 0 ]; do
     -d|--draft)  DRAFT=1 ;;
     -p|--pretty) PRETTY=1 ;;
     -j)          JOBS="${2:-}"; shift ;;
+    --out)       OUT_DIR="${2:-}"; shift ;;
     --all)       ;;
     -h|--help)   sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     -*)          die "неизвестный ключ: $1" ;;
@@ -94,6 +97,7 @@ fi
 
 # Каждый вызов typst однопоточен по документу, поэтому параллелим по документам.
 FAILED=0
+export OUT_DIR
 printf '%s\0' "${IDS[@]}" | xargs -0 -P "$JOBS" -I{} \
   bash "$0" --build-one {} "$DRAFT" || FAILED=1
 
@@ -101,7 +105,7 @@ if [ "$PRETTY" = 1 ]; then
   for id in "${IDS[@]}"; do
     [ -f "$OUT_DIR/$id.pdf" ] && cp -f "$OUT_DIR/$id.pdf" "$OUT_DIR/$(pretty_name "$id")"
   done
-  ok "копии под читаемыми именами в out/"
+  ok "копии под читаемыми именами: ${OUT_DIR#"$ROOT/"}"
 fi
 
 if [ "$OPEN" = 1 ]; then
@@ -114,5 +118,5 @@ if [ "$OPEN" = 1 ]; then
 fi
 
 echo
-ok "собрано PDF в out/: $(ls -1 "$OUT_DIR"/*.pdf 2>/dev/null | wc -l | tr -d ' ')"
+ok "собрано PDF в ${OUT_DIR#"$ROOT/"}: $(ls -1 "$OUT_DIR"/*.pdf 2>/dev/null | wc -l | tr -d ' ')"
 [ "$FAILED" = 0 ] || die "часть лекций не собралась"
