@@ -90,9 +90,19 @@ for model in "${FILES[@]}"; do
     continue
   fi
 
-  # Полная проверка: собрать pan и прогнать. Модели учебные и маленькие,
-  # поэтому обход пространства состояний занимает доли секунды.
-  if ! (cd "$WORK" && cc -DSAFETY -o pan pan.c >"$WORK/cc.log" 2>&1); then
+  # Модель с LTL-свойствами проверяется иначе: -DSAFETY отключает поиск
+  # ациклических нарушений, а именно им проверяется живость. Такие модели
+  # собираются без -DSAFETY и прогоняются по одному свойству за запуск
+  # (`pan -N имя`), с предположением о слабой справедливости (`-f`) —
+  # без него любое свойство живости нарушается тривиально: процесс просто
+  # никогда не выполняется.
+  LTL_NAMES="$(grep -oE '^[[:space:]]*ltl[[:space:]]+[A-Za-z_][A-Za-z_0-9]*' "$model" \
+    | awk '{print $2}' || true)"
+
+  cc_flags="-DSAFETY"
+  [ -n "$LTL_NAMES" ] && cc_flags=""
+
+  if ! (cd "$WORK" && cc $cc_flags -o pan pan.c >"$WORK/cc.log" 2>&1); then
     bad "$rel: не собрался верификатор pan"
     sed 's/^/       /' "$WORK/cc.log" >&2
     ERRORS=$((ERRORS + 1))
@@ -112,11 +122,28 @@ for model in "${FILES[@]}"; do
     continue
   fi
 
-  (cd "$WORK" && ./pan >"$WORK/pan.log" 2>&1) || true
-  if grep -qiE "errors: [1-9]" "$WORK/pan.log"; then
-    found="violation"
-  else
+  if [ -n "$LTL_NAMES" ]; then
     found="ok"
+    for claim in $LTL_NAMES; do
+      (cd "$WORK" && ./pan -a -f -N "$claim" >"$WORK/pan.log" 2>&1) || true
+      if grep -qiE "errors: [1-9]" "$WORK/pan.log"; then
+        found="violation"
+        warn "$rel: свойство «$claim» нарушено"
+        break
+      fi
+      ok "$rel — свойство «$claim» выполняется"
+    done
+    # Итоговую строку печатать не нужно: по свойству на строку уже напечатано.
+    if [ "$found" = "$expect" ]; then
+      continue
+    fi
+  else
+    (cd "$WORK" && ./pan >"$WORK/pan.log" 2>&1) || true
+    if grep -qiE "errors: [1-9]" "$WORK/pan.log"; then
+      found="violation"
+    else
+      found="ok"
+    fi
   fi
 
   if [ "$found" = "$expect" ]; then
