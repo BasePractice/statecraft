@@ -17,7 +17,7 @@ jobs:
       - name: Установить clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format
 
-      - name: Проверить оформление по _1.CodeStyle
+      - name: Проверить оформление кода
         run: ./scripts/check-style.sh
 
   practice:
