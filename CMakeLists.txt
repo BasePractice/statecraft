@@ -47,6 +47,20 @@ add_custom_target(style-check
         COMMENT "Проверка оформления кода по .clang-format"
         USES_TERMINAL)
 
+# --- проверка моделей Promela ----------------------------------------------
+# SPIN внешний: при его отсутствии цель успешно завершается с предупреждением.
+add_custom_target(promela-check
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check-promela.sh"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Разбор моделей Promela (spin -a)"
+        USES_TERMINAL)
+
+add_custom_target(promela-verify
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check-promela.sh" --verify
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Верификация моделей Promela (spin -a + pan)"
+        USES_TERMINAL)
+
 add_custom_target(style-fix
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check-style.sh" --fix
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

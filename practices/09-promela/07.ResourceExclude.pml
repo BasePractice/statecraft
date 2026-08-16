@@ -1,6 +1,10 @@
-//spin -a 07.ResourceExclude.pml
-//gcc -DSAFETY -o pan pan.c
-//spin -t -p 07.ResourceExclude.pml
+/* verify: violation
+ *
+ * Наивная защита разделяемого ресурса переменной busy. Проверка и установка
+ * не атомарны, поэтому оба процесса проходят (!busy) до того, как первый
+ * успел выставить busy, и оказываются в критической секции одновременно —
+ * assert(mutex <= 1) нарушается. Работающий алгоритм — в 08.MutexAlgorithm.
+ */
 bool busy;
 byte mutex;
 

@@ -1,4 +1,4 @@
-# 11-takt — модели на языке Takt
+# 12-takt — модели на языке Takt
 
 Практика к лекции 11. Модели автоматов описаны на [Takt](https://github.com/BasePractice/BuT)
 (DSL для конечных автоматов, компилятор на Rust), компилируются в C и
@@ -23,11 +23,11 @@
 
 ```bash
 cmake -S . -B build -DSTATECRAFT_TAKTC=/путь/к/BuT/target/release
-cmake --build build --target 11-takt-watchdog
-ctest --test-dir build -R 11-takt
+cmake --build build --target 12-takt-watchdog
+ctest --test-dir build -R 12-takt
 ```
 
-Цель `11-takt-models` компилирует все модели каталога — она же служит
+Цель `12-takt-models` компилирует все модели каталога — она же служит
 проверкой, что примеры лекции не разошлись с языком.
 
 ## Почему этот код не C90

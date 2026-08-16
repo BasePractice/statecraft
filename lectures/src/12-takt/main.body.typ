@@ -5,7 +5,7 @@
   репозиторий компилятора Takt (`README.md`, документ `book/`, каталог
   `examples/`) и собственные прогоны: каждый фрагмент кода в лекции
   скомпилирован `taktc` и прогнан `takt-sim`, трассы приведены в том виде, в
-  каком их печатает симулятор. Модели лежат в `practices/11-takt/model/`
+  каком их печатает симулятор. Модели лежат в `practices/12-takt/model/`
   и собираются вместе с остальным практикумом.
 ]
 
@@ -69,7 +69,7 @@
 Светофор: три состояния, выдержка в каждом задана числом тактов.
 
 #code-file(
-  "/src/11-takt/code/traffic.takt",
+  "/src/12-takt/code/traffic.takt",
   lang: "takt",
   caption: [Светофор с выдержками],
 ) <lst:traffic>
@@ -165,7 +165,7 @@
 прочитать выходной порт --- ошибка `SE-027`, а не молчаливая работа с мусором.
 
 #code-file(
-  "/src/11-takt/code/button_led.takt",
+  "/src/12-takt/code/button_led.takt",
   lang: "takt",
   caption: [Порты, функция языка и внешняя функция],
 ) <lst:button>
@@ -182,7 +182,7 @@
 начинает, когда первая завершилась).
 
 #code-file(
-  "/src/11-takt/code/pump.takt",
+  "/src/12-takt/code/pump.takt",
   lang: "takt",
   caption: [Параллельная композиция: насос и сигнализация],
 ) <lst:pump>
@@ -207,7 +207,7 @@
 сделало работу.
 
 #code-file(
-  "/src/11-takt/code/cooling_bad.takt",
+  "/src/12-takt/code/cooling_bad.takt",
   lang: "takt",
   caption: [Контрпример: состояние покидается на первом же такте],
 ) <lst:cool-bad>
@@ -229,7 +229,7 @@
 покрывающими], и оба потребовать завершения работы:
 
 #code-file(
-  "/src/11-takt/code/cooling_good.takt",
+  "/src/12-takt/code/cooling_good.takt",
   lang: "takt",
   caption: [Состояние удерживает управление, пока не выполнит работу],
 ) <lst:cool-good>
@@ -249,7 +249,7 @@
 Разберём, во что превращается сторожевой таймер.
 
 #code-file(
-  "/src/11-takt/code/watchdog.takt",
+  "/src/12-takt/code/watchdog.takt",
   lang: "takt",
   caption: [Сторожевой таймер],
 ) <lst:watchdog>
@@ -306,7 +306,7 @@
 на Си:
 
 #code-file(
-  "/src/11-takt/code/driver.c",
+  "/src/12-takt/code/driver.c",
   lang: "c",
   from: 15,
   to: 50,
@@ -316,7 +316,7 @@
 #remark[
   Порождённый код --- C99: в нём `uint8_t`, `bool` и комментарии `//`.
   Практикум курса собирается как ISO C90, поэтому подпроект
-  `practices/11-takt` --- единственный, где это требование ослаблено, и
+  `practices/12-takt` --- единственный, где это требование ослаблено, и
   ослаблено оно к чужому выходу, а не к учебному коду.
 ]
 
@@ -345,7 +345,7 @@
 держится» --- доказательство.
 
 #code-file(
-  "/src/11-takt/code/recovery.takt",
+  "/src/12-takt/code/recovery.takt",
   lang: "takt",
   caption: [Свойство «после аварии система обязана вернуться в рабочий режим»],
 ) <lst:recovery>
@@ -429,7 +429,7 @@
 
 = Практикум
 
-Модели лекции лежат в `practices/11-takt/model/` и собираются вместе с
+Модели лекции лежат в `practices/12-takt/model/` и собираются вместе с
 остальным практикумом: цель `12.Takt_Models` компилирует каждую модель,
 цель `12.Takt_Watchdog` собирает драйвер @lst:driver с порождённым кодом и
 проверяется в `ctest`.
