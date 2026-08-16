@@ -1,0 +1,19 @@
+/* КОНТРПРИМЕР: состояние не удерживает управление.
+   Условия рёбер проверяются каждый такт, поэтому ребро, истинное сразу после
+   входа, выпускает управление раньше, чем состояние сделало работу. */
+type u8 = [bit;8];
+
+var temperature: u8 := 101;
+
+start Cooling {
+    always {
+        for var i: u8 := 0; i < 3; i := i + 1 {
+            if temperature > 0 { temperature := temperature - 1; }
+        }
+    }
+    ref Done: temperature = 0;   /* недостижимо при любом нагреве */
+    ref Idle: temperature > 0;   /* сработает на ПЕРВОМ такте: 101 -> 98 > 0 */
+}
+
+state Done;
+state Idle;

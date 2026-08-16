@@ -1,0 +1,83 @@
+%YAML 1.2
+---
+# Подсветка языка Takt для typst (#set raw(syntaxes: ...)).
+#
+# Список ключевых слов и предопределённых типов взят из таблицы лексера
+# компилятора: BuT/book/keywords.lua. Готового sublime-syntax в репозитории
+# языка нет (есть takt.kate.xml и плагины IntelliJ/Zed), поэтому файл
+# написан для курса; при изменении лексера сверяться с keywords.lua.
+name: Takt
+file_extensions: [takt]
+scope: source.takt
+
+contexts:
+  main:
+    - include: comments
+    - include: keywords
+    - include: types
+    - include: literals
+    - include: operators
+
+  comments:
+    - match: //
+      scope: punctuation.definition.comment.takt
+      push:
+        - meta_scope: comment.line.double-slash.takt
+        - match: $\n?
+          pop: true
+    - match: /\*
+      scope: punctuation.definition.comment.takt
+      push:
+        - meta_scope: comment.block.takt
+        - match: \*/
+          pop: true
+
+  keywords:
+    # Объявления верхнего уровня и структура модели
+    - match: \b(model|state|start|import|type|const|var|fn|extern|enum|struct|cond|parameter)\b
+      scope: keyword.declaration.takt
+    # Переходы и именованные блоки
+    - match: \b(ref|next|enter|exit|always|invariant|formula|assembly|address|from|as)\b
+      scope: keyword.control.takt
+    # Управляющие конструкции
+    - match: \b(if|else|match|loop|while|for|break|continue|return)\b
+      scope: keyword.control.flow.takt
+    # Направления портов
+    - match: \b(in|out|inout)\b
+      scope: storage.modifier.takt
+    # Верификация
+    - match: \b(LTL|Guard)\b
+      scope: support.constant.takt
+
+  types:
+    - match: \b(bit|bool|float|unit|u8|u16|u32|u64|i8|i16|i32|i64)\b
+      scope: storage.type.takt
+    - match: \bq\s*(?=\()
+      scope: storage.type.takt
+
+  literals:
+    - match: \b(true|false)\b
+      scope: constant.language.takt
+    - match: \b0[xX][0-9a-fA-F_]+\b
+      scope: constant.numeric.integer.hexadecimal.takt
+    - match: \b0[bB][01_]+\b
+      scope: constant.numeric.integer.binary.takt
+    - match: \b[0-9][0-9_]*(\.[0-9_]+)?\b
+      scope: constant.numeric.takt
+    - match: '"'
+      scope: punctuation.definition.string.begin.takt
+      push:
+        - meta_scope: string.quoted.double.takt
+        - match: \\.
+          scope: constant.character.escape.takt
+        - match: '"'
+          scope: punctuation.definition.string.end.takt
+          pop: true
+
+  operators:
+    - match: ':='
+      scope: keyword.operator.assignment.takt
+    - match: '->'
+      scope: keyword.operator.takt
+    - match: '(<=|>=|<<|>>|[=<>+\-*/%&|^~!])'
+      scope: keyword.operator.takt
