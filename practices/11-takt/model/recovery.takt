@@ -1,0 +1,13 @@
+/* Свойство проверяется model checking'ом по графу переходов:
+   после аварии автомат обязан вернуться в рабочий режим. */
+: [LTL] G (Fault -> F Idle);
+
+var error: bit := false;
+
+start Idle {
+    ref Fault: error = 1;
+    ref Idle: error = 0;
+}
+
+state Fault { ref Recovery; }
+state Recovery { ref Idle; }

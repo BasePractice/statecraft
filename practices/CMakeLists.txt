@@ -1,0 +1,91 @@
+# practices — примеры лекций и практические проекты курса.
+#
+# Подключается из корневого CMakeLists.txt. Автономная сборка тоже работает:
+#   cmake -S practices -B build-practice && cmake --build build-practice
+#
+# Весь C-код собирается как ISO C90 без расширений и без предупреждений
+# (см. cmake/StatecraftStrictC.cmake). Тесты — C++11 + Catch2.
+
+cmake_minimum_required(VERSION 3.16)
+project(statecraft_practice
+        DESCRIPTION "Практикум курса АПСУ на C90"
+        LANGUAGES C CXX)
+
+# Автономный запуск: подтянуть общие модули и опции корня.
+if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake")
+    option(STATECRAFT_BUILD_TESTS "Собирать тесты практикума (Catch2)" ON)
+    option(STATECRAFT_STRICT "Предупреждения компилятора = ошибки" ON)
+    include(StatecraftStrictC)
+    if (STATECRAFT_BUILD_TESTS)
+        enable_testing()
+    endif ()
+endif ()
+
+add_definitions(-DEMPLOYEE="Student")
+
+include_directories(common)
+
+# --- общая часть тестов -----------------------------------------------------
+if (STATECRAFT_BUILD_TESTS)
+    add_library(tests_main STATIC common/tests_main.cpp common/catch2/catch.hpp)
+    target_include_directories(tests_main PUBLIC common)
+    statecraft_test_cxx(tests_main)
+endif ()
+
+# Пример или практический проект: statecraft_example(<цель> SOURCES ...)
+function(statecraft_example target)
+    cmake_parse_arguments(ARG "" "" "SOURCES;INCLUDES;LIBS;DEFINES" ${ARGN})
+    add_executable(${target} ${ARG_SOURCES})
+    if (ARG_INCLUDES)
+        target_include_directories(${target} PRIVATE ${ARG_INCLUDES})
+    endif ()
+    if (ARG_LIBS)
+        target_link_libraries(${target} PRIVATE ${ARG_LIBS})
+    endif ()
+    if (ARG_DEFINES)
+        target_compile_definitions(${target} PRIVATE ${ARG_DEFINES})
+    endif ()
+    statecraft_strict_c(${target})
+endfunction()
+
+# Библиотека примера (когда её же используют тесты и main).
+function(statecraft_library target)
+    cmake_parse_arguments(ARG "" "" "SOURCES;INCLUDES;DEFINES" ${ARGN})
+    add_library(${target} STATIC ${ARG_SOURCES})
+    target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${ARG_INCLUDES})
+    if (ARG_DEFINES)
+        target_compile_definitions(${target} PUBLIC ${ARG_DEFINES})
+    endif ()
+    statecraft_strict_c(${target})
+endfunction()
+
+# Тесты примера + регистрация в ctest.
+function(statecraft_tests target)
+    if (NOT STATECRAFT_BUILD_TESTS)
+        return()
+    endif ()
+    cmake_parse_arguments(ARG "" "WORKDIR" "SOURCES;INCLUDES;LIBS" ${ARGN})
+    add_executable(${target} ${ARG_SOURCES})
+    target_link_libraries(${target} PRIVATE tests_main ${ARG_LIBS})
+    if (ARG_INCLUDES)
+        target_include_directories(${target} PRIVATE ${ARG_INCLUDES})
+    endif ()
+    statecraft_test_cxx(${target})
+    add_test(NAME ${target} COMMAND ${target})
+    if (ARG_WORKDIR)
+        set_tests_properties(${target} PROPERTIES WORKING_DIRECTORY "${ARG_WORKDIR}")
+    endif ()
+endfunction()
+
+# Каталоги названы по номеру лекции, к которой относится практика.
+add_subdirectory(02-fsm-delay)
+add_subdirectory(03-control-program)
+add_subdirectory(06-regular-expression)
+add_subdirectory(06-lexical-analyze)
+add_subdirectory(07-simple-program)
+add_subdirectory(07-fsm-insert-element)
+add_subdirectory(08-fsm-control-pneumo)
+add_subdirectory(10-turing-machine)
+add_subdirectory(11-takt)
+# 09-promela собирается внешним инструментом (SPIN), см. PLAN.md § 5.8

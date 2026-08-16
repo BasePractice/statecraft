@@ -1,0 +1,76 @@
+name: build
+
+# Одна сборка проверяет весь курс: PDF лекций, примеры на C90 и оформление кода.
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  style:
+    name: Оформление кода
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить clang-format
+        run: sudo apt-get update && sudo apt-get install -y clang-format
+
+      - name: Проверить оформление по _1.CodeStyle
+        run: ./scripts/check-style.sh
+
+  practice:
+    name: Практикум (C90, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Конфигурация
+        run: >
+          cmake -S . -B build
+          -DSTATECRAFT_BUILD_LECTURES=OFF
+          -DSTATECRAFT_STRICT=ON
+          -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Сборка примеров
+        run: cmake --build build -j 4
+
+      - name: Тесты
+        run: ctest --test-dir build --output-on-failure
+
+  lectures:
+    name: Лекции (typst)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить typst
+        uses: typst-community/setup-typst@v5
+        with:
+          typst-version: '0.15.1'
+
+      - name: Проверить окружение лекций
+        run: cd lectures && ./scripts/check.sh
+
+      - name: Собрать PDF
+        run: >
+          cmake -S . -B build -DSTATECRAFT_BUILD_PRACTICE=OFF &&
+          cmake --build build -j 4
+
+      - name: Незакрытые блоки #todo
+        run: |
+          count=$(grep -rn '#todo\[' lectures/src/ | wc -l | tr -d ' ')
+          echo "Незакрытых блоков #todo: $count"
+          echo "todo=$count" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Выложить PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: lectures-pdf
+          path: build/lectures/*.pdf
+          if-no-files-found: error

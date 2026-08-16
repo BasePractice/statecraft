@@ -1,0 +1,62 @@
+# Формализация требований _1.CodeStyle/-1.CodeStyle.md.
+#
+# Проверка: scripts/check-style.sh, автоформат: scripts/check-style.sh --fix
+#
+# Соответствие пунктам документа:
+#   Отступы 1–2   → UseTab: Never, IndentWidth: 4
+#   Отступы 4     → MaxEmptyLinesToKeep: 1
+#   Отступы 5     → SpaceBeforeParens: ControlStatements, BreakBeforeBraces: Attach
+#   Отступы 6     → PointerAlignment: Right (int *p, а не int* p)
+#   Отступы 7     → пробелы вокруг бинарных операций (умолчание clang-format)
+#   Отступы 8     → SpaceAfterCStyleCast: false ((int)x, а не (int) x)
+#   Скобки 1      → BreakBeforeBraces: Attach
+#   Скобки 4      → AllowShortBlocksOnASingleLine: Empty (while (a) {})
+#   switch 1      → IndentCaseLabels: false
+#   Разрыв 1      → ColumnLimit: 100
+#   Разрыв 2      → BreakBeforeBinaryOperators: All
+#
+# ЕДИНСТВЕННОЕ расхождение с документом: § «Отступы», п. 2 требует четырёх
+# пробелов, а примеры кода в самом документе набраны двумя. Здесь принято
+# правило (4), а не примеры: на четырёх пробелах написан весь существующий код
+# практикума. Пункт документа стоит поправить в примерах.
+#
+# Правила именования (CamelCase для struct/enum/union, under_score для
+# переменных и функций) и требования к объявлению переменных clang-format не
+# проверяет — они остаются предметом ревью.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+UseTab: Never
+IndentWidth: 4
+TabWidth: 4
+ContinuationIndentWidth: 8
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+
+IndentCaseLabels: false
+
+ColumnLimit: 100
+BreakBeforeBinaryOperators: All
+BreakBeforeTernaryOperators: true
+
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+SpaceAfterCStyleCast: false
+
+PointerAlignment: Right
+DerivePointerAlignment: false
+
+# Порядок включений не переставляем: в C90-коде он значим
+SortIncludes: Never
+IndentPPDirectives: None
+AlignTrailingComments: true
+ReflowComments: false
+InsertNewlineAtEOF: true
