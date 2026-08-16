@@ -3,14 +3,20 @@
 // ---------------------------------------------------------------------------
 // ПЕРЕКЛЮЧАТЕЛЬ ОСНОВНОГО ШРИФТА
 //
-// false — основной текст набирается PT Serif (по умолчанию);
-// true  — основной текст тоже набирается Fira Code.
+// true  — весь текст лекции набирается Fira Code (требование заказчика курса);
+// false — основной текст набирается PT Serif, Fira Code остаётся только у кода.
 //
-// Fira Code — моноширинная гарнитура; на объёме лекции сплошной моноширинный
-// набор читается заметно хуже, поэтому по умолчанию она используется для кода,
-// листингов и акцентов. Если нужен Fira Code во всём документе — поставьте true.
+// Fira Code моноширинная, поэтому при true кегль и интерлиньяж основного текста
+// берутся из `mono-body-*` ниже: та же полоса набора вмещает сопоставимое число
+// знаков, а строки не слипаются.
 // ---------------------------------------------------------------------------
-#let body-in-mono = false
+#let body-in-mono = true
+
+// Кегль и интерлиньяж основного текста при `body-in-mono: true`. Средняя ширина
+// знака Fira Code — 0.6em против 0.47em у PT Serif, поэтому 11pt дают строку
+// примерно на четверть короче; 9.6pt возвращают привычные ~72 знака в строке.
+#let mono-body-size = 9.6pt
+#let mono-body-leading = 0.85em
 
 // Fira Code — variable-шрифт, Weight 300–700, Default 300. Без явного
 // weight: 400 весь код выйдет в начертании Light.
@@ -44,15 +50,18 @@
 )
 
 #let sizes = (
-  body: 11pt,
-  small: 9.5pt,
+  body: if body-in-mono { mono-body-size } else { 11pt },
+  small: if body-in-mono { 8.4pt } else { 9.5pt },
   code: 8.8pt,
-  h1: 16pt,
-  h2: 13pt,
-  h3: 11.5pt,
-  title: 24pt,
-  subtitle: 15pt,
+  h1: if body-in-mono { 14pt } else { 16pt },
+  h2: if body-in-mono { 11.5pt } else { 13pt },
+  h3: if body-in-mono { 10.2pt } else { 11.5pt },
+  title: if body-in-mono { 20pt } else { 24pt },
+  subtitle: if body-in-mono { 13pt } else { 15pt },
 )
+
+// Начертание основного текста: у Fira Code вес по умолчанию — Light (300).
+#let body-weight = if body-in-mono { mono-weight } else { 400 }
 
 #let page-setup = (
   paper: "a4",
@@ -60,8 +69,11 @@
 )
 
 #let par-setup = (
-  justify: true,
-  leading: 0.72em,
+  // Моноширинный набор не сжимается и не растягивается по ширине знака, поэтому
+  // выключка по формату при `body-in-mono` даёт дыры между словами — оставляем
+  // выключку влево.
+  justify: not body-in-mono,
+  leading: if body-in-mono { mono-body-leading } else { 0.72em },
   spacing: 0.95em,
   first-line-indent: (amount: 1.25em, all: true),
 )

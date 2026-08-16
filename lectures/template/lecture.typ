@@ -6,7 +6,7 @@
 // Всё остальное — номер, название, дата, автор, институт — берётся из course.typ.
 
 #import "/course.typ": course as _course, lecture-meta
-#import "theme.typ": fonts, palette, sizes, page-setup, par-setup
+#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight
 #import "i18n.typ" as i18n
 #import "i18n.typ": L, ru-date
 #import "blocks.typ": *
@@ -80,6 +80,7 @@
     lang: "ru",
     region: "RU",
     size: sizes.body,
+    weight: body-weight,
     fill: palette.ink,
     hyphenate: true,
   )
