@@ -6,7 +6,7 @@
 # зависеть от наличия чужого репозитория.
 #
 #   cmake -S . -B build -DSTATECRAFT_TAKTC=/путь/к/taktc
-project(11-takt)
+project(12-takt)
 
 find_program(TAKTC_BIN
         NAMES taktc

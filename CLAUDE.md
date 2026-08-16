@@ -12,8 +12,9 @@
 | `CMakeLists.txt` | Корень сборки: одной командой собираются и PDF лекций, и примеры |
 | `cmake/StatecraftStrictC.cmake` | Общий режим компиляции: ISO C90, `-Werror` |
 | `scripts/check-style.sh`, `.clang-format` | Оформление кода: формат и его проверка |
+| `scripts/check-promela.sh` | Разбор и верификация моделей Promela (SPIN внешний, при отсутствии — мягкий пропуск) |
 | `.github/workflows/ci.yml` | CI: оформление, практикум (ubuntu + macOS × Debug + Release), лекции с выкладкой PDF |
-| `lectures/` | **Основное**: 11 лекций на typst под единым шаблоном. См. `lectures/README.md` |
+| `lectures/` | **Основное**: 12 лекций на typst под единым шаблоном. См. `lectures/README.md` |
 | `practices/` | Практикум на C90: каталоги названы `<номер лекции>-<тема>` в kebab-case, см. `practices/README.md` |
 | `practices/common/` | Общий код практикума: `base_types.h`, точка входа тестов, `network/`, заголовок Catch2 |
 | `practices/resources/` | Сторонние ресурсы (сборки SPIN под Windows) |
@@ -161,6 +162,11 @@ Debug и санитайзеры молчали (мусор оказывался 
 `y(t) = x(t-1), t = 2, 3, …` typst разбирает как четыре строки системы.
 Лечится скобками: `y(t) = x(t-1) quad (t = 2, 3, dots)`.
 
+**Модели Promela заявляют ожидаемый исход сами.** Строка
+`verify: ok|violation|skip` в шапке модели: часть примеров курса
+демонстрирует именно нарушение, и для них отсутствие нарушения — тоже
+ошибка. Проверка: `./scripts/check-promela.sh --verify`.
+
 **Копипаста типов между проектами практикума.** `02-fsm-delay` объявлял
 `InsertingEngine` — тип из `07-fsm-insert-element` с другим содержимым.
 При заведении нового проекта имена типов проверять по всему `practices/`.
@@ -225,7 +231,7 @@ Catch2, зарегистрированы в `ctest`.
 | `08-fsm-control-pneumo` | циклограмма пневмоцилиндров, кодогенерация SimInTech | 8 |
 | `09-promela` | 10 примеров Promela от HelloWorld до семафоров | 9 |
 | `10-turing-machine` | интерпретатор машины Тьюринга | 10 |
-| `11-takt` | модели на языке Takt, порождение C, драйвер | 11 |
+| `12-takt` | модели на языке Takt, порождение C, драйвер | 11 |
 | `20-welding-line` | сквозной проект: линия сварки, покрытие переходов, экспорт в Promela | 3, 7, 8, 9 |
 
 Файлы `practices/08-fsm-control-pneumo/generated/*.inc` и `*.log` — в
@@ -248,5 +254,8 @@ windows-путь `E:\GitHub\automata_programming\...`.
 - `practices/common/catch2/catch.hpp` — Catch2 v2.3.0 с локальной правкой
   `CATCH_TRAP` (в оригинале безусловная x86-вставка `int $3`, из-за которой
   заголовок не собирался на Apple Silicon).
+- Нумерация лекций менялась 16.08.2026: клеточные автоматы выделены из
+  лекции 10 в лекцию 11 (`11-cells`), Takt стал лекцией 12 (`12-takt`),
+  каталог практики — `practices/12-takt`.
 - Работа идёт в ветке `develop` (она же на origin); `master` — отдельная
   линия истории, в неё ничего не сливалось.

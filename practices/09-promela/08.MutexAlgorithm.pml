@@ -1,7 +1,17 @@
-//spin -a 08.MutexAlgorithm.pml
-//gcc -DSAFETY -o pan pan.c
-//spin -t -p 08.MutexAlgorithm.pml
-byte turn[2];
+/* verify: ok
+ *
+ * Алгоритм Петерсона: взаимное исключение двух процессов без атомарных
+ * операций «проверить и установить». Верификатор обходит все чередования
+ * и подтверждает, что в критической секции всегда не более одного процесса.
+ *
+ *     spin -a 08.MutexAlgorithm.pml && cc -DSAFETY -o pan pan.c && ./pan
+ *
+ * Прежняя версия модели содержала turn[i + 1] при i = 1 — обращение за
+ * границу массива из двух элементов; проверка её никогда не проходила,
+ * потому что SPIN на моделях курса не запускали.
+ */
+bool flag[2];
+byte turn;
 byte mutex;
 
 active proctype invariant() {
@@ -11,12 +21,11 @@ active proctype invariant() {
 active [2] proctype P() {
     bit i = _pid;
     L:
-    //turn[i] = 1;
-    turn[i] = turn[i + 1];
-    (turn[1 - i] == 0 || (turn[i] < turn[1 - i])) ->
-      mutex++;
-    mutex--;
-    turn[i] = 0;
+    flag[i] = true;       /* «я хочу войти» */
+    turn = 1 - i;         /* уступаю очередь другому */
+    (flag[1 - i] == false || turn == i) ->
+      mutex++;            /* критическая секция */
+      mutex--;
+    flag[i] = false;
     goto L;
 }
-

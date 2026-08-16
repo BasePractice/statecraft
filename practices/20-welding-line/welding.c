@@ -213,7 +213,7 @@ enum WeldingState welding_step(struct WeldingEngine *engine, enum WeldingEvent e
      * Внутреннее событие возникает только по истечении выдержки или
      * таймаута. Без этой проверки TICK срабатывал бы каждый такт, и
      * состояние не удерживало бы управление — ошибка, разобранная в
-     * лекции 11 на примере охлаждения.
+     * лекции 12 на примере охлаждения.
      */
     if (event == WELDING_EV_TICK) {
         int limit = state_limit(engine->state);

@@ -46,6 +46,18 @@ jobs:
       - name: Тесты
         run: ctest --test-dir build --output-on-failure
 
+  promela:
+    name: Модели Promela (SPIN)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить SPIN
+        run: sudo apt-get update && sudo apt-get install -y spin
+
+      - name: Разбор и верификация моделей
+        run: ./scripts/check-promela.sh --verify
+
   lectures:
     name: Лекции (typst)
     runs-on: ubuntu-latest

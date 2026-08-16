@@ -14,5 +14,5 @@ active proctype consumer() {
     :: (turn == Consume) -> 
        printf("Consume\n");
        turn = Produce
-    do
+    od
 }
