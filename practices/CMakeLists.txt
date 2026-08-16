@@ -26,6 +26,13 @@ add_definitions(-DEMPLOYEE="Student")
 
 include_directories(common)
 
+# --- общее представление автоматов -----------------------------------------
+# Структуры НКА и ДКА плюс ввод-вывод: практики лекций 4 и 5 обмениваются
+# автоматами через них, алгоритмы живут в самих практиках.
+add_library(fsm STATIC common/fsm.c common/fsm.h)
+target_include_directories(fsm PUBLIC common)
+statecraft_strict_c(fsm)
+
 # --- общая часть тестов -----------------------------------------------------
 if (STATECRAFT_BUILD_TESTS)
     add_library(tests_main STATIC common/tests_main.cpp common/catch2/catch.hpp)
@@ -79,8 +86,11 @@ function(statecraft_tests target)
 endfunction()
 
 # Каталоги названы по номеру лекции, к которой относится практика.
+add_subdirectory(01-words)
 add_subdirectory(02-fsm-delay)
 add_subdirectory(03-control-program)
+add_subdirectory(04-dfa-nfa)
+add_subdirectory(05-kleene)
 add_subdirectory(06-regular-expression)
 add_subdirectory(06-lexical-analyze)
 add_subdirectory(07-simple-program)
