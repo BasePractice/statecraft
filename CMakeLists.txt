@@ -44,13 +44,13 @@ endif ()
 add_custom_target(style-check
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check-style.sh"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMENT "Проверка оформления кода по _1.CodeStyle"
+        COMMENT "Проверка оформления кода по .clang-format"
         USES_TERMINAL)
 
 add_custom_target(style-fix
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check-style.sh" --fix
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMENT "Переформатирование кода по _1.CodeStyle"
+        COMMENT "Переформатирование кода по .clang-format"
         USES_TERMINAL)
 
 message(STATUS "statecraft: лекции=${STATECRAFT_BUILD_LECTURES} "

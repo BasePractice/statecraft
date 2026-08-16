@@ -11,14 +11,13 @@
 |---|---|
 | `CMakeLists.txt` | Корень сборки: одной командой собираются и PDF лекций, и примеры |
 | `cmake/StatecraftStrictC.cmake` | Общий режим компиляции: ISO C90, `-Werror` |
-| `scripts/check-style.sh`, `.clang-format` | Проверка оформления кода по `_1.CodeStyle` |
+| `scripts/check-style.sh`, `.clang-format` | Оформление кода: формат и его проверка |
 | `.github/workflows/ci.yml` | CI: оформление, практикум (ubuntu + macOS), лекции с выкладкой PDF |
 | `lectures/` | **Основное**: 11 лекций на typst под единым шаблоном. См. `lectures/README.md` |
 | `practices/` | Практикум на C90: каталоги названы `<номер лекции>-<тема>` в kebab-case, см. `practices/README.md` |
 | `practices/common/` | Общий код практикума: `base_types.h`, точка входа тестов, `network/`, заголовок Catch2 |
 | `practices/resources/` | Сторонние ресурсы (сборки SPIN под Windows) |
-| `_1.CodeStyle/` | Требования к оформлению кода для сдачи лабораторных |
-| `00.History/` … `08.Promela_Spin/` | Старые md-лекции. Частично перенесены в `lectures/`, частично пустые |
+| `docs/` | Материалы курса вне лекций: справка по Git (`version-control.md`) |
 | `Description.md` | Фактический README курса: цели, требования, порядок приёма лабораторных |
 | `КР_15.11.2019.txt` | 30+ тем курсовых работ — источник прикладных примеров |
 
@@ -77,7 +76,8 @@ cd lectures && ./scripts/check.sh --fix && ./scripts/build.sh   # только �
    (classicthesis): «Конечные автоматы», «Машина Тьюринга», «Регулярные
    события», «Автоматное программирование», плюс методичка курсовой работы
    на 188 вариантов. Курсовая в `lectures/` **не** перенесена.
-2. Md-лекции этого репозитория (`00.History` и далее).
+2. Md-лекции этого репозитория (каталоги `00.History` … `08.Promela_Spin`,
+   удалены 16.08.2026 после переноса содержимого).
 3. `~/Yandex.Disk.localized/Учеба/Лекции/АПСУ` — `REPORT.md` (856 строк,
    разбор содержательных ошибок и план курса из 10 лекций),
    `SOURCE-REPORT.md` (288 строк, разбор LaTeX-исходников с точностью до
@@ -186,11 +186,8 @@ windows-путь `E:\GitHub\automata_programming\...`.
 
 ## Известные шероховатости репозитория
 
-- Битая ссылка в `Description.md`: `-1.CodeStyle/` вместо `_1.CodeStyle/`.
 - Директории `07.*` на уровне лекций нет: нумерация 00–06, затем 08.
-- `06.Model_Checking.md` пуст (3 байта), `08.Promela_Spin.md` — 20 строк
-  команд, `05.Lexical_Analyze.md` — 12 строк BNF, `01.Environment.md` —
-  скелет с `????`, `TODO.md` — 0 байт.
+- `TODO.md` в корне — 0 байт.
 - В git закоммичены бинарники: `spin.exe`, `pan.exe`, 21.5 МБ `.mkv`,
   около 60 файлов бэкапов SimInTech (`.prt.1` … `.prt.30`).
 - `practices/09-promela` вне сборки: SPIN — внешний инструмент (см.

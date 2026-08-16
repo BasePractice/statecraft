@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # scripts/check-style.sh [--fix] [путь ...]
 #
-# Проверка оформления кода практикума по _1.CodeStyle/-1.CodeStyle.md.
+# Проверка оформления кода практикума по .clang-format и правилам курса
+# (см. practices/README.md, раздел «Требования к коду»).
 # Запускается вручную, целью CMake style-check и в CI.
 #
 #   без аргументов   проверить весь код в practices/
@@ -161,8 +162,8 @@ if [ "$FIX" = 1 ]; then
   exit 0
 fi
 
-report "табуляция в отступах (§ Отступы, п. 1)"        "$TMP/tabs"
-report "строки длиннее $MAX_LINE символов (§ Разрыв строк, п. 1)" "$TMP/long"
+report "табуляция в отступах"                          "$TMP/tabs"
+report "строки длиннее $MAX_LINE символов"             "$TMP/long"
 report "комментарии // (в ISO C90 их нет)"             "$TMP/slashes"
 report "BOM в начале файла"                            "$TMP/bom"
 report "концы строк CRLF"                              "$TMP/crlf"
@@ -174,4 +175,4 @@ if [ "$ERRORS" -gt 0 ]; then
   bad "проверок с нарушениями: $ERRORS"
   exit 1
 fi
-ok "оформление кода соответствует _1.CodeStyle"
+ok "оформление кода соответствует правилам курса"
