@@ -226,6 +226,7 @@ Catch2, зарегистрированы в `ctest`.
 | `09-promela` | 10 примеров Promela от HelloWorld до семафоров | 9 |
 | `10-turing-machine` | интерпретатор машины Тьюринга | 10 |
 | `11-takt` | модели на языке Takt, порождение C, драйвер | 11 |
+| `20-welding-line` | сквозной проект: линия сварки, покрытие переходов, экспорт в Promela | 3, 7, 8, 9 |
 
 Файлы `practices/08-fsm-control-pneumo/generated/*.inc` и `*.log` — в
 **CP1251**, не UTF-8. В `lectures/src/08-statecharts/code/generated/` лежат

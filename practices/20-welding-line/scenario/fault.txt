@@ -1,0 +1,22 @@
+# Отказ концевика зажима: линия уходит в аварию по таймауту,
+# оператор сбрасывает её и запускает изделие заново.
+POWER_ON
+OBJECT
+TICK
+TICK
+TICK
+TICK
+TICK
+RESET
+OBJECT
+CLAMPED
+ARRIVED
+TICK
+TICK
+TICK
+ARRIVED
+TICK
+TICK
+TICK
+RELEASED
+STOP

@@ -99,4 +99,5 @@ add_subdirectory(07-fsm-insert-element)
 add_subdirectory(08-fsm-control-pneumo)
 add_subdirectory(10-turing-machine)
 add_subdirectory(11-takt)
+add_subdirectory(20-welding-line)
 # 09-promela собирается внешним инструментом (SPIN), см. PLAN.md § 5.8
