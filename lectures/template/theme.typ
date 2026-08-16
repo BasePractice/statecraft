@@ -26,6 +26,12 @@
 #let _sans = ("PT Sans", "PT Serif", "Libertinus Serif")
 #let _mono = ("Fira Code", "PT Mono", "DejaVu Sans Mono")
 
+// Надписи внутри рисунков набираются чертёжным шрифтом по ГОСТ 2.304-81
+// (ISO 3098): osifont — свободная реализация, ставится `make fonts`.
+// Список намеренно из одного имени: typst предупреждает о каждом
+// неустановленном семействе, и «GOST type A/B» шумели бы на каждой сборке.
+#let _draw = ("osifont",)
+
 #let fonts = (
   // Libertinus Serif ВСТРОЕН в typst и полностью покрывает кириллицу,
   // поэтому документ соберётся и без единого установленного шрифта.
@@ -33,6 +39,10 @@
   head: if body-in-mono { _mono } else { _sans },
   mono: _mono,
   math: ("New Computer Modern Math",),
+  // Подписи состояний, метки дуг и надписи на структурных схемах. Запасной
+  // вариант — тот же, что у основного текста: без ГОСТ-шрифта рисунок должен
+  // остаться читаемым, а не рассыпаться.
+  diagram: _draw + (if body-in-mono { _mono } else { _sans }),
 )
 
 #let palette = (

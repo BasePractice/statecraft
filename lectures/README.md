@@ -23,10 +23,13 @@ make fix && make
 |---|---|---|
 | `typst` ≥ 0.15 | сборка | `brew install typst` |
 | `pandoc` | только для `tex2typ.sh` | `brew install pandoc` |
-| Fira Code, PT Serif, PT Sans | шрифты | `./scripts/fetch-fonts.sh` |
+| Fira Code, PT Serif, PT Sans, osifont | шрифты | `make fonts` |
 
 Основной шрифт лекций — **Fira Code**: им набирается весь текст, а не только
-листинги (переключатель `body-in-mono` в `template/theme.typ`). Шрифты не
+листинги (переключатель `body-in-mono` в `template/theme.typ`). Надписи внутри
+рисунков — подписи состояний, метки дуг, тексты на схемах — набираются
+чертёжным шрифтом по ГОСТ 2.304-81 (ISO 3098): семейство `fonts.diagram`,
+сейчас это свободный `osifont`. Шрифты не
 обязательны — при отсутствии Fira Code шаблон падает на PT Mono и далее на
 встроенный в typst DejaVu Sans Mono, покрывающий кириллицу, — но для
 воспроизводимой сборки (`STRICT_FONTS=1`) их стоит положить в `fonts/`

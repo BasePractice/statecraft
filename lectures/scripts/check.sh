@@ -33,8 +33,13 @@ echo
 echo "== 2. шрифты =="
 mkdir -p "$FONT_DIR"
 need_fonts=0
-for f in "Fira Code" "PT Serif" "PT Sans"; do
-  if "$TYPST_BIN" fonts --font-path "$FONT_DIR" | grep -qxF "$f"; then
+# Список берётся один раз: `typst fonts | grep -q` роняет конвейер по SIGPIPE
+# (rc=141), а при `set -o pipefail` это читается как «шрифт не найден» —
+# проверка молча врала.
+FONTS_AVAILABLE="$("$TYPST_BIN" fonts --font-path "$FONT_DIR")"
+# osifont — чертёжный шрифт по ГОСТ 2.304-81 для надписей в диаграммах.
+for f in "Fira Code" "PT Serif" "PT Sans" "osifont"; do
+  if printf '%s\n' "$FONTS_AVAILABLE" | grep -qxF "$f"; then
     ok "$f найден"
   else
     warn "$f не найден"
@@ -45,10 +50,10 @@ if [ "$need_fonts" = 1 ]; then
   if [ "$FIX" = 1 ]; then
     "$SCRIPT_DIR/fetch-fonts.sh"
   else
-    warn "недостающие шрифты ставятся так: scripts/fetch-fonts.sh (или check.sh --fix)"
+    warn "недостающие шрифты ставятся так: make fonts (или make fix)"
   fi
 fi
-if "$TYPST_BIN" fonts --ignore-system-fonts | grep -qx 'Libertinus Serif'; then
+if "$TYPST_BIN" fonts --ignore-system-fonts | grep -x 'Libertinus Serif' >/dev/null; then
   ok "встроенный запасной шрифт Libertinus Serif доступен"
 else
   fail "у typst нет встроенных шрифтов — сборка невозможна"

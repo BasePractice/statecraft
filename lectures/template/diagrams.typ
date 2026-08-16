@@ -41,7 +41,7 @@
         node(
           s.pos,
           // Перенос внутри узла («за-крыт») читается как две строки шума.
-          text(font: fonts.text, size: 11pt, hyphenate: false, s.label),
+          text(font: fonts.diagram, size: 11pt, hyphenate: false, s.label),
           name: label(s.id),
           // Длинная подпись («G_REQ», «закрыт») не влезает в круг стандартного
           // радиуса — такому состоянию радиус задаётся полем `radius`.
@@ -86,15 +86,19 @@
   // Ширину диаграммы задают координаты узлов и `spacing`, о полосе набора
   // fletcher ничего не знает: цепочка из пяти-шести состояний при spacing 3.2cm
   // уезжает за поля. Вписываем в полосу, если не помещается.
+  // Все надписи рисунка — чертёжным шрифтом (ГОСТ 2.304-81): и подписи
+  // состояний, и метки дуг, которые приходят готовым content. Шрифт
+  // навешивается на содержимое figure, а не `set` на выходе функции: иначе
+  // метка <fig:…> цепляется к styled-контенту, и ссылка на рисунок ломается.
   figure(
-    layout(area => context {
+    text(font: fonts.diagram, layout(area => context {
       let w = measure(body).width
       if w > area.width {
         scale(x: area.width / w * 100%, y: area.width / w * 100%, reflow: true, body)
       } else {
         body
       }
-    }),
+    })),
     caption: caption,
   )
 }
@@ -109,7 +113,7 @@
 // Обёртка: холст CeTZ внутри figure с подписью.
 #let scheme(body, caption: none, length: 1cm, label: none) = {
   let f = figure(
-    cetz.canvas(length: length, body),
+    text(font: fonts.diagram, cetz.canvas(length: length, body)),
     caption: caption,
   )
   if label == none { f } else { [#f #label] }
