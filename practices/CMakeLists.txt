@@ -88,6 +88,7 @@ endfunction()
 # Каталоги названы по номеру лекции, к которой относится практика.
 add_subdirectory(01-words)
 add_subdirectory(02-fsm-delay)
+add_subdirectory(03-synthesis)
 add_subdirectory(03-control-program)
 add_subdirectory(04-dfa-nfa)
 add_subdirectory(05-kleene)
