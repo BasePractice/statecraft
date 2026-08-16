@@ -6,23 +6,23 @@
 extern "C" {
 #endif
 
-enum InsertingState { DELAY_STATE_ZERO, DELAY_STATE_ONE };
+enum DelayState { DELAY_STATE_ZERO, DELAY_STATE_ONE };
 
 enum DelayInputSymbol { DELAY_INPUT_ZERO = 0, DELAY_INPUT_ONE = 1 };
 
-enum InsertingEvent { DELAY_OUTPUT_ZERO = 0, DELAY_OUTPUT_ONE = 1 };
+enum DelayOutputSymbol { DELAY_OUTPUT_ZERO = 0, DELAY_OUTPUT_ONE = 1 };
 
-struct InsertingEngine {
-    enum InsertingState state;
+struct DelayEngine {
+    enum DelayState state;
 };
 
 #define DEFAULT_DELAY_STATE DELAY_STATE_ZERO
 
-bool delay_init(struct InsertingEngine *engine);
+bool delay_init(struct DelayEngine *engine);
 
-bool delay_reset(struct InsertingEngine *engine);
+bool delay_reset(struct DelayEngine *engine);
 
-enum InsertingEvent delay_engine(struct InsertingEngine *engine, enum DelayInputSymbol symbol);
+enum DelayOutputSymbol delay_engine(struct DelayEngine *engine, enum DelayInputSymbol symbol);
 
 #if defined(__cplusplus)
 }
