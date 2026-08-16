@@ -1,8 +1,7 @@
 # statecraft — контекст репозитория
 
 Учебный курс «Автоматное программирование систем управления» (АПСУ): лекции,
-практикум на C89, модели SimInTech, примеры Promela/SPIN, библиотека
-первоисточников. Origin — <https://github.com/BasePractice/statecraft>.
+практикум на C90, модели SimInTech, примеры Promela/SPIN. Origin — <https://github.com/BasePractice/statecraft>.
 Исторически репозиторий назывался `automata_programming` (следы остались в
 абсолютных путях внутри сгенерированного кода).
 
@@ -10,9 +9,14 @@
 
 | Путь | Что это |
 |---|---|
-| `lectures/` | **Основное**: 10 лекций на typst под единым шаблоном. См. `lectures/README.md` |
-| `_2.Practice/` | Практикум на C89, единый CMake-проект, тесты на Catch2 |
-| `_3.Documents/` | 21 PDF первоисточников (Шалыто, Кузнецов, model checking, LTL, Promela) |
+| `CMakeLists.txt` | Корень сборки: одной командой собираются и PDF лекций, и примеры |
+| `cmake/StatecraftStrictC.cmake` | Общий режим компиляции: ISO C90, `-Werror` |
+| `scripts/check-style.sh`, `.clang-format` | Проверка оформления кода по `_1.CodeStyle` |
+| `.github/workflows/ci.yml` | CI: оформление, практикум (ubuntu + macOS), лекции с выкладкой PDF |
+| `lectures/` | **Основное**: 11 лекций на typst под единым шаблоном. См. `lectures/README.md` |
+| `practices/` | Практикум на C90: каталоги названы `<номер лекции>-<тема>` в kebab-case, см. `practices/README.md` |
+| `practices/common/` | Общий код практикума: `base_types.h`, точка входа тестов, `network/`, заголовок Catch2 |
+| `practices/resources/` | Сторонние ресурсы (сборки SPIN под Windows) |
 | `_1.CodeStyle/` | Требования к оформлению кода для сдачи лабораторных |
 | `00.History/` … `08.Promela_Spin/` | Старые md-лекции. Частично перенесены в `lectures/`, частично пустые |
 | `Description.md` | Фактический README курса: цели, требования, порядок приёма лабораторных |
@@ -23,7 +27,7 @@
 Полное описание в `lectures/README.md`. Коротко:
 
 - `course.typ` — **единственное** место правки автора, института, кафедры,
-  даты, версии и реестра из 10 лекций. Этот же файл читают bash-скрипты
+  даты, версии и реестра лекций. Этот же файл читают bash-скрипты
   через `typst eval`, поэтому список лекций нигде не дублируется.
 - `template/` — шаблон: `theme`, `i18n`, `blocks`, `code`, `figures`,
   `frontmatter`, `appendix`, `lecture`. Базовый шаблон не зависит ни от
@@ -40,7 +44,11 @@
   не требуют и живут в `template/figures.typ`.
 
 ```bash
-cd lectures && ./scripts/check.sh --fix && ./scripts/build.sh
+cmake -S . -B build && cmake --build build -j   # весь курс: PDF + примеры
+ctest --test-dir build                          # тесты примеров
+./scripts/check-style.sh                        # оформление кода
+
+cd lectures && ./scripts/check.sh --fix && ./scripts/build.sh   # только лекции
 ```
 
 ### Ловушки typst 0.15, на которые уже наступили
@@ -75,7 +83,7 @@ cd lectures && ./scripts/check.sh --fix && ./scripts/build.sh
    `SOURCE-REPORT.md` (288 строк, разбор LaTeX-исходников с точностью до
    строки), `docs/` (402 источника, `bibliography.bib` на 406 записей).
 
-**Нумерация 10 лекций провизорная**: она сведена из трёх источников и
+**Нумерация лекций провизорная**: она сведена из трёх источников и
 подлежит согласованию. Перенумерация — правка реестра в `course.typ` плюс
 `git mv` каталога в `src/`.
 
@@ -148,20 +156,30 @@ grep -rn '#todo\[' lectures/src/
 
 ## Практикум
 
-`_2.Practice/` — один CMake-проект, `CMAKE_C_STANDARD 90`, тесты на Catch2.
+`practices/` — часть общей сборки. Каждая цель проходит через
+`statecraft_strict_c()`: ISO C90 без расширений, `-Wall -Wextra -pedantic`
+и `-Werror` (отключается `-DSTATECRAFT_STRICT=OFF`). Вместо `<stdbool.h>` и
+`<stdint.h>`, которых в C90 нет, подключается `common/base_types.h`. Тесты —
+Catch2, зарегистрированы в `ctest`.
+
 Подпроекты, на которые ссылаются лекции:
+
+Каталоги названы `<номер лекции>-<тема>` в kebab-case; полный список и
+соответствие лекциям — `practices/README.md`.
 
 | Каталог | Что демонстрирует | Лекция |
 |---|---|---|
-| `08.Simple_Program` | вложенные switch/if как контрпример | 7 |
-| `09.FSM_SimInTech_Program` | автомат Мили «Задержка» + модель SimInTech | 2 |
-| `10.FSM_InsertElement` | автомат поиска вставки, 3 состояния | 7 |
-| `11.FSM_ControlPneumo` | циклограмма пневмоцилиндров, кодогенерация SimInTech | 8 |
-| `07.Promela` | 10 примеров Promela от HelloWorld до семафоров | 9 |
-| `04.Regular_Expression`, `05.Lexical_Analyze` | движок регулярных выражений и лексер | 6 |
-| `06.Control_Program` | датчики, движок, эмуляция по сети и из файла | прикладные примеры |
+| `02-fsm-delay` | автомат Мили «Задержка» + модель SimInTech | 2 |
+| `03-control-program` | датчики, движок, эмуляция по сети и из файла | 3, 7, 8 |
+| `06-regular-expression`, `06-lexical-analyze` | движок регулярных выражений и лексер | 6 |
+| `07-simple-program` | вложенные switch/if как контрпример | 7 |
+| `07-fsm-insert-element` | автомат поиска вставки, 3 состояния | 7 |
+| `08-fsm-control-pneumo` | циклограмма пневмоцилиндров, кодогенерация SimInTech | 8 |
+| `09-promela` | 10 примеров Promela от HelloWorld до семафоров | 9 |
+| `10-turing-machine` | интерпретатор машины Тьюринга | 10 |
+| `11-takt` | модели на языке Takt, порождение C, драйвер | 11 |
 
-Файлы `_2.Practice/11.FSM_ControlPneumo/generated/*.inc` и `*.log` — в
+Файлы `practices/08-fsm-control-pneumo/generated/*.inc` и `*.log` — в
 **CP1251**, не UTF-8. В `lectures/src/08-statecharts/code/generated/` лежат
 перекодированные копии. В `generated/PneumoAutomate.h` вшит абсолютный
 windows-путь `E:\GitHub\automata_programming\...`.
@@ -175,5 +193,10 @@ windows-путь `E:\GitHub\automata_programming\...`.
   скелет с `????`, `TODO.md` — 0 байт.
 - В git закоммичены бинарники: `spin.exe`, `pan.exe`, 21.5 МБ `.mkv`,
   около 60 файлов бэкапов SimInTech (`.prt.1` … `.prt.30`).
+- `practices/09-promela` вне сборки: SPIN — внешний инструмент (см.
+  `PLAN.md` § 5.8).
+- `practices/common/catch2/catch.hpp` — Catch2 v2.3.0 с локальной правкой
+  `CATCH_TRAP` (в оригинале безусловная x86-вставка `int $3`, из-за которой
+  заголовок не собирался на Apple Silicon).
 - Ветки `develop` и `reformat` указывают на один коммит; `origin/master`
   отстаёт более чем на 70 коммитов.
