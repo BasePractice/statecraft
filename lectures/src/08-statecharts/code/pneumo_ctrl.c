@@ -3,15 +3,15 @@
 #include "pneumo_ctrl.h"
 
 #if defined(PNEUMO_SIMULATE)
-#define TIMEOUT_DELTA(timeout)  1
-#define DELAY_DELTA(delay)      1
+#define TIMEOUT_DELTA(timeout) 1
+#define DELAY_DELTA(delay) 1
 #else
-#define TIMEOUT_DELTA(timeout)  ((timeout) * 1000)
-#define DELAY_DELTA(delay)      ((delay) * 1000)
+#define TIMEOUT_DELTA(timeout) ((timeout) * 1000)
+#define DELAY_DELTA(delay) ((delay) * 1000)
 #endif
 
 #if defined(PNEUMO_DEBUG)
-static char *state_names[] = {
+static const char *state_names[] = {
         "PneumoState_I", "PneumoState_1", "PneumoState_2", "PneumoState_3",
         "PneumoState_4", "PneumoState_5", "PneumoState_6", "PneumoState_7",
         "PneumoState_8", "PneumoState_9", "PneumoState_E",
@@ -54,8 +54,8 @@ void pneumo_engine_init(struct PneumoEngine *engine) {
     }
 }
 
-#define TIMEOUT_GE(engine) ( (engine)->timeout > (engine)->timeouts[(engine)->state] )
-#define DELAY_GE(engine) ( (engine)->delay > (engine)->delays[(engine)->state] )
+#define TIMEOUT_GE(engine) ((engine)->timeout > (engine)->timeouts[(engine)->state])
+#define DELAY_GE(engine) ((engine)->delay > (engine)->delays[(engine)->state])
 
 bool pneumo_engine_tick(struct PneumoEngine *engine) {
     bool ret = true;
@@ -69,187 +69,186 @@ bool pneumo_engine_tick(struct PneumoEngine *engine) {
             engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
             engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
             engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal,
-            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal
-    );
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal);
     fflush(stdout);
 #endif
     switch (engine->state) {
-        case PneumoState_Init: {
-            engine->state = PneumoState_1;
+    case PneumoState_Init: {
+        engine->state = PneumoState_1;
+        engine->delay = 0;
+        engine->timeout = 0;
+        break;
+    }
+    case PneumoState_1: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+        engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]
+            && engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_2;
+                engine->delay = 0;
+                engine->timeout = 0;
+            }
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_6;
+            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
             engine->delay = 0;
             engine->timeout = 0;
-            break;
         }
-        case PneumoState_1: {
+        break;
+    }
+    case PneumoState_2: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 1;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_3;
+                engine->delay = 0;
+                engine->timeout = 0;
+            }
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
             engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
             engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN] &&
-                engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
+            engine->delay = 0;
+            engine->timeout = 0;
+        }
+        break;
+    }
+    case PneumoState_3: {
+        engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 1;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_4;
+                engine->delay = 0;
                 engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_2;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
+            }
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
+            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
+        }
+        break;
+    }
+    case PneumoState_4: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_5;
+                engine->delay = 0;
+                engine->timeout = 0;
+            }
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
+            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
+        }
+        break;
+    }
+    case PneumoState_5: {
+        engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
                 engine->state = PneumoState_6;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
                 engine->delay = 0;
                 engine->timeout = 0;
             }
-            break;
-        }
-        case PneumoState_2: {
-            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 1;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_3;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-                engine->delay = 0;
-                engine->timeout = 0;
-            }
-            break;
-        }
-        case PneumoState_3: {
-            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 1;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_4;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-                engine->delay = 0;
-                engine->timeout = 0;
-            }
-            break;
-        }
-        case PneumoState_4: {
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
             engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_5;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-                engine->delay = 0;
-                engine->timeout = 0;
-            }
-            break;
-        }
-        case PneumoState_5: {
             engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_6;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
+        }
+        break;
+    }
+    case PneumoState_6: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 1;
+        engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 1;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]
+            && engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_7;
                 engine->delay = 0;
                 engine->timeout = 0;
             }
-            break;
-        }
-        case PneumoState_6: {
-            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 1;
-            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 1;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP] &&
-                engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_7;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-                engine->delay = 0;
-                engine->timeout = 0;
-            }
-            break;
-        }
-        case PneumoState_7: {
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
             engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_8;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
+        }
+        break;
+    }
+    case PneumoState_7: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_8;
                 engine->delay = 0;
                 engine->timeout = 0;
             }
-            break;
-        }
-        case PneumoState_8: {
-            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 1;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_9;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
-                engine->delay = 0;
-                engine->timeout = 0;
-            }
-            break;
-        }
-        case PneumoState_9: {
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
             engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-            if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
-                engine->timeout = 0;
-                if (DELAY_GE(engine)) {
-                    engine->state = PneumoState_1;
-                    engine->delay = 0;
-                    engine->timeout = 0;
-                }
-            } else if (TIMEOUT_GE(engine)) {
-                engine->state = PneumoState_FatalException;
-                engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
-                engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
+        }
+        break;
+    }
+    case PneumoState_8: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 1;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_9;
                 engine->delay = 0;
                 engine->timeout = 0;
             }
-            break;
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
+            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
         }
-        case PneumoState_FatalException: {
-            ret = false;
-            break;
+        break;
+    }
+    case PneumoState_9: {
+        engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+        if (engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN]) {
+            engine->timeout = 0;
+            if (DELAY_GE(engine)) {
+                engine->state = PneumoState_1;
+                engine->delay = 0;
+                engine->timeout = 0;
+            }
+        } else if (TIMEOUT_GE(engine)) {
+            engine->state = PneumoState_FatalException;
+            engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal = 0;
+            engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal = 0;
+            engine->delay = 0;
+            engine->timeout = 0;
         }
+        break;
+    }
+    case PneumoState_FatalException: {
+        ret = false;
+        break;
+    }
     }
     engine->timeout++;
     engine->delay++;
@@ -258,6 +257,6 @@ bool pneumo_engine_tick(struct PneumoEngine *engine) {
 
 void pneumo_engine_destroy(struct PneumoEngine *engine) {
     if (0 != engine) {
-        //Освобождаем ресурсы, если есть
+        /* Освобождаем ресурсы, если есть */
     }
 }

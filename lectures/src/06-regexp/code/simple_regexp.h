@@ -1,16 +1,13 @@
-﻿#ifndef SIMPLE_REGEXP_H_
+#ifndef SIMPLE_REGEXP_H_
 #define SIMPLE_REGEXP_H_
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "base_types.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-enum Type {
-    ONE_ZERO_PLUS, XYZ, OTHER
-};
+enum Type { ONE_ZERO_PLUS, XYZ, OTHER };
 
 bool match(enum Type type, const char *text);
 
@@ -18,4 +15,4 @@ bool match(enum Type type, const char *text);
 }
 #endif
 
-#endif //SIMPLE_REGEXP_H_
+#endif /* SIMPLE_REGEXP_H_ */

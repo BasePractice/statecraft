@@ -9,9 +9,17 @@ extern "C" {
 #define EMPTY_SYMBOL 'E'
 #define STOP_STATE '$'
 
-enum Direct {
-    Left, Right, Stay
-};
+/*
+ 1. Имена состояний в строку
+ 2. Вывод в стандартный поток переходы
+ 3. Загрузка ленты и таблицы переходов из файла
+ 4. Снять ограничения с размера ленты
+ 5. Снять ограничения с порядка загрузки состояний и словаря (убрать предварительную инициализацию)
+ 6. Добавить порты ввода вывода(опционально)
+ 7. Добавить свои улучшения
+ */
+
+enum Direct { Left, Right, Stay };
 
 struct Engine;
 
@@ -21,9 +29,8 @@ void engine_symbol_add(struct Engine *engine, char symbol);
 
 void engine_state_add(struct Engine *engine, char state);
 
-void engine_reference_add(struct Engine *engine,
-                          char c_symbol, char c_state,
-                          char symbol, char state, enum Direct direct);
+void engine_reference_add(struct Engine *engine, char c_symbol, char c_state, char symbol,
+                          char state, enum Direct direct);
 
 void engine_tape_copy(struct Engine *engine, int offset, const char *tape);
 
@@ -41,4 +48,4 @@ void machine(struct Engine *engine);
 }
 #endif
 
-#endif //CONDITIONER_TURING_MACHINE_H
+#endif /* CONDITIONER_TURING_MACHINE_H */

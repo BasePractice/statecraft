@@ -7,7 +7,9 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
 
 SRC_DIR="$ROOT/src"
-OUT_DIR="$ROOT/out"
+# Каталог результата переопределяется извне: так сборка из CMake кладёт PDF в
+# build/lectures, а ручная — в lectures/out, и обе идут по одному коду.
+OUT_DIR="${OUT_DIR:-$ROOT/out}"
 FONT_DIR="$ROOT/fonts"
 PKG_CACHE="$ROOT/.typst-packages"
 

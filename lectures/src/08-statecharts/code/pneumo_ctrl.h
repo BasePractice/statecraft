@@ -1,7 +1,6 @@
 #ifndef LITTLE_COURSE_PNEUMO_CTRL_H
 #define LITTLE_COURSE_PNEUMO_CTRL_H
-
-#include <stdbool.h>
+#include "base_types.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -9,14 +8,20 @@ extern "C" {
 
 enum PneumoState {
     PneumoState_Init = 0,
-    PneumoState_1, PneumoState_2, PneumoState_3,
-    PneumoState_4, PneumoState_5, PneumoState_6,
-    PneumoState_7, PneumoState_8, PneumoState_9,
+    PneumoState_1,
+    PneumoState_2,
+    PneumoState_3,
+    PneumoState_4,
+    PneumoState_5,
+    PneumoState_6,
+    PneumoState_7,
+    PneumoState_8,
+    PneumoState_9,
     PneumoState_FatalException
 };
 
-#define PNEUMO_CYLINDER_SIGNAL_UP     0
-#define PNEUMO_CYLINDER_SIGNAL_DOWN   1
+#define PNEUMO_CYLINDER_SIGNAL_UP 0
+#define PNEUMO_CYLINDER_SIGNAL_DOWN 1
 struct PneumoCylinder {
     int input_signal[2];
     int output_signal;
@@ -43,4 +48,4 @@ void pneumo_engine_destroy(struct PneumoEngine *engine);
 }
 #endif
 
-#endif //LITTLE_COURSE_PNEUMO_CTRL_H
+#endif /* LITTLE_COURSE_PNEUMO_CTRL_H */

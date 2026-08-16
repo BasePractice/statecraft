@@ -35,16 +35,25 @@ make fix && make
 
 ## Команды
 
+Вход один — `make`; CMake вызывает эти же цели, поэтому порядок сборки описан
+в одном месте.
+
 ```bash
-./scripts/build.sh                  # все лекции
-./scripts/build.sh 03-synthesis     # одну
-./scripts/build.sh -w 03-synthesis  # пересборка при изменении
-./scripts/build.sh --pretty         # копии под читаемыми именами
-./scripts/build.sh --draft          # с водяным знаком «ЧЕРНОВИК»
-./scripts/clean.sh                  # очистить out/
+make                     # все лекции + копии под читаемыми именами (= make pretty)
+make build               # только <id>.pdf, без читаемых копий
+make one L=03-synthesis  # одну лекцию
+make watch L=03-synthesis# пересборка при изменении
+make draft               # с водяным знаком «ЧЕРНОВИК»
+make sync                # подтянуть листинги из practices/
+make sync-check          # проверить, что листинги не разошлись (стоит в CI)
+make check               # проверить окружение
+make clean               # очистить out/
+make OUT=/tmp/pdf        # положить результат в другой каталог
 ```
 
-`make help` печатает то же самое.
+`make help` печатает то же самое. Цели `make` — тонкие обёртки над
+`scripts/*.sh`; при желании скрипты вызываются напрямую
+(`./scripts/build.sh --pretty`), но в CMake и CI ходит именно `make`.
 
 ## Структура
 
@@ -54,7 +63,8 @@ template/          шаблон: тема, подписи, блоки, лист�
 shared/            общая нотация, глоссарий, контрольные вопросы, задачник
 bib/references.bib единая библиография (стиль gost-r-705-2008-numeric)
 src/<id>/          лекция: main.typ, main.body.typ, images/, code/
-scripts/           check, build, clean, fetch-fonts, vendor-packages, tex2typ
+scripts/           check, build, clean, sync-code, fetch-fonts, vendor-packages, tex2typ
+scripts/code-map.txt соответствие «файл практикума → листинг лекции»
 out/               собранные PDF (в .gitignore)
 ```
 

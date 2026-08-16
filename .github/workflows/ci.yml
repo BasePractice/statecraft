@@ -70,7 +70,13 @@ jobs:
           typst-version: '0.15.1'
 
       - name: Проверить окружение лекций
-        run: cd lectures && ./scripts/check.sh
+        run: cd lectures && make check
+
+      # Листинги лекций — копии файлов практикума (typst читает только из
+      # своего --root). Копии молча расходятся с оригиналом, поэтому
+      # расхождение здесь — ошибка сборки.
+      - name: Листинги совпадают с практикумом
+        run: cd lectures && make sync-check
 
       - name: Собрать PDF
         run: >

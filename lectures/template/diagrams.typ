@@ -40,9 +40,12 @@
         let doubled = s.at("initial", default: false) or s.at("final", default: false)
         node(
           s.pos,
-          text(font: fonts.text, size: 11pt, s.label),
+          // Перенос внутри узла («за-крыт») читается как две строки шума.
+          text(font: fonts.text, size: 11pt, hyphenate: false, s.label),
           name: label(s.id),
-          radius: 0.42cm,
+          // Длинная подпись («G_REQ», «закрыт») не влезает в круг стандартного
+          // радиуса — такому состоянию радиус задаётся полем `radius`.
+          radius: s.at("radius", default: 0.42cm),
           extrude: if doubled { (0, 4) } else { (0,) },
         )
         // Свободная стрелка «вход»: начальное состояние акцептора, у которого

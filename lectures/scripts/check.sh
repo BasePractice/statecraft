@@ -151,5 +151,5 @@ echo
 if [ -s "$FAILFILE" ]; then
   die "проверка не пройдена: $(wc -l <"$FAILFILE" | tr -d ' ') замечаний"
 else
-  ok "окружение готово, можно собирать: scripts/build.sh"
+  ok "окружение готово, можно собирать: make"
 fi
