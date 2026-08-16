@@ -21,12 +21,15 @@ jobs:
         run: ./scripts/check-style.sh
 
   practice:
-    name: Практикум (C90, ${{ matrix.os }})
+    name: Практикум (C90, ${{ matrix.os }}, ${{ matrix.build_type }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        # Release нужен отдельно: с NDEBUG исчезают assert, и код, который
+        # «работал» за счёт срабатывания assert, ломается именно здесь.
+        build_type: [Debug, Release]
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +38,7 @@ jobs:
           cmake -S . -B build
           -DSTATECRAFT_BUILD_LECTURES=OFF
           -DSTATECRAFT_STRICT=ON
-          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Сборка примеров
         run: cmake --build build -j 4
