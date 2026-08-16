@@ -1,1 +1,13 @@
 yes.txt
+
+# сборка
+build/
+build-*/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+.cache/
+
+.DS_Store
+.idea/
