@@ -1,0 +1,27 @@
+/* ИСПРАВЛЕНИЕ: условия выхода непересекающиеся и покрывающие, и оба требуют
+   завершения работы. Состояние удерживает управление, пока не охладит. */
+type u8 = [bit;8];
+
+var temperature: u8 := 101;
+var count: u8 := 0;
+
+const MAX_COUNT: u8 := 2;
+
+cond Cooled = temperature = 0;
+cond CyclesDone = count >= MAX_COUNT;
+
+start Cooling {
+    always {
+        for var i: u8 := 0; i < 3; i := i + 1 {
+            if temperature > 0 { temperature := temperature - 1; }
+        }
+    }
+    ref Done: Cooled & CyclesDone;
+    ref Idle: Cooled & !CyclesDone;
+}
+
+state Done;
+state Idle {
+    enter { count := count + 1; temperature := 101; }
+    next Cooling;
+}

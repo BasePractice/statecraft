@@ -1,0 +1,26 @@
+/* Сторожевой таймер: пока приходит сигнал «система жива», счётчик простоя
+   обнуляется; после LIMIT тактов молчания автомат уходит в аварию. */
+type u8 = [bit;8];
+
+model Watchdog {
+    in  kick:  bit := 0;        /* вход: сигнал «система жива» */
+    out alarm: bit := 0;        /* выход: авария */
+    var idle:  u8  := 0;        /* тактов без сигнала */
+
+    const LIMIT: u8 := 5;
+
+    start Watching {
+        enter { alarm := 0; }
+        always {
+            if kick { idle := 0; } else { idle := idle + 1; }
+        }
+        ref Tripped: idle >= LIMIT;
+    }
+
+    state Tripped {
+        enter  { alarm := 1; }
+        ref Watching: kick = 1;
+    }
+}
+
+start Root = Watchdog;

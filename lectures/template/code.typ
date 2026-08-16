@@ -5,6 +5,8 @@
 
 // Применяется show-правилами в lecture().
 #let raw-show-rules(doc) = {
+  // Языки, которых typst не знает из коробки. Путь абсолютный от --root.
+  set raw(syntaxes: "/syntaxes/takt.sublime-syntax")
   // Fira Code — variable-шрифт с Default weight 300, поэтому вес задаётся явно.
   // calt: 0 гасит лигатуры (!= → ≠): в лекции по Си они мешают читать код.
   show raw: set text(

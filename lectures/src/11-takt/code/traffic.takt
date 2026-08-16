@@ -1,0 +1,32 @@
+/* Светофор с выдержками. Такт — шаг логики автомата, а не единица времени:
+   выдержки заданы числом тактов, частоту задаёт вызывающая сторона. */
+type u8 = [bit;8];
+
+model TrafficLight {
+    out lamp: u8 := 0;          /* 0 — красный, 1 — зелёный, 2 — жёлтый */
+    var timer: u8 := 0;
+
+    const RED_TIME: u8 := 20;
+    const GREEN_TIME: u8 := 10;
+    const YELLOW_TIME: u8 := 5;
+
+    start Red {
+        enter  { timer := 0; lamp := 0; }
+        always { timer := timer + 1; }
+        ref Green: timer = RED_TIME;
+    }
+
+    state Green {
+        enter  { timer := 0; lamp := 1; }
+        always { timer := timer + 1; }
+        ref Yellow: timer = GREEN_TIME;
+    }
+
+    state Yellow {
+        enter  { timer := 0; lamp := 2; }
+        always { timer := timer + 1; }
+        ref Red: timer = YELLOW_TIME;
+    }
+}
+
+start Entry = TrafficLight;
