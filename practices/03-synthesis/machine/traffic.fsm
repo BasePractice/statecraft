@@ -1,0 +1,13 @@
+# Светофор из лекции 2, записанный как автомат Мили: вход — «сработал
+# таймер» (t) или «нет» (n), выход — цвет лампы.
+name traffic
+inputs n t
+outputs red green yellow
+states Red Green Yellow
+
+Red n -> Red red
+Red t -> Green green
+Green n -> Green green
+Green t -> Yellow yellow
+Yellow n -> Yellow yellow
+Yellow t -> Red red
