@@ -35,13 +35,22 @@
     label-size: label-size,
     {
       for s in states {
+        // Двойной контур: у автоматов-преобразователей им отмечено начальное
+        // состояние (лекции 2 и 3), у акцепторов — заключительное (лекция 4).
+        let doubled = s.at("initial", default: false) or s.at("final", default: false)
         node(
           s.pos,
           text(font: fonts.text, size: 11pt, s.label),
           name: label(s.id),
           radius: 0.42cm,
-          extrude: if s.at("initial", default: false) { (0, 4) } else { (0,) },
+          extrude: if doubled { (0, 4) } else { (0,) },
         )
+        // Свободная стрелка «вход»: начальное состояние акцептора, у которого
+        // двойной контур уже занят под заключительные.
+        if s.at("entry", default: false) {
+          let (x, y) = s.pos
+          edge((x - 0.6, y), label(s.id), "-|>")
+        }
       }
       for a in arcs {
         // loop-angle принимается только для петель; для обычных дуг
@@ -71,7 +80,20 @@
       }
     },
   )
-  figure(body, caption: caption)
+  // Ширину диаграммы задают координаты узлов и `spacing`, о полосе набора
+  // fletcher ничего не знает: цепочка из пяти-шести состояний при spacing 3.2cm
+  // уезжает за поля. Вписываем в полосу, если не помещается.
+  figure(
+    layout(area => context {
+      let w = measure(body).width
+      if w > area.width {
+        scale(x: area.width / w * 100%, y: area.width / w * 100%, reflow: true, body)
+      } else {
+        body
+      }
+    }),
+    caption: caption,
+  )
 }
 
 // ---------------------------------------------------------------------------
