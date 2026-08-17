@@ -7492,7 +7492,19 @@ namespace Catch {
 
     // 32kb for the alternate stack seems to be sufficient. However, this value
     // is experimentally determined, so that's not guaranteed.
+    //
+    // ЛОКАЛЬНАЯ ПРАВКА (не из upstream Catch2 v2.3.0): начиная с glibc 2.34
+    // (Ubuntu 22.04 и новее) MINSIGSTKSZ — не константа, а вызов
+    // sysconf(_SC_MINSIGSTKSZ), поэтому выражение с ним перестало быть
+    // constexpr и заголовок не компилируется под GCC. Ветка по
+    // _SC_MINSIGSTKSZ взята из более поздних версий Catch2: там, где минимум
+    // определяется во время работы, размер задаётся константой — 32 Кбайт
+    // заведомо больше требуемого минимума на всех известных платформах.
+#if defined(_SC_MINSIGSTKSZ)
+    constexpr static std::size_t sigStackSize = 32768;
+#else
     constexpr static std::size_t sigStackSize = 32768 >= MINSIGSTKSZ ? 32768 : MINSIGSTKSZ;
+#endif
 
     static SignalDefs signalDefs[] = {
         { SIGINT,  "SIGINT - Terminal interrupt signal" },

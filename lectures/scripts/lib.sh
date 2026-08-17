@@ -65,3 +65,13 @@ list_lectures() {
 lecture_exists() {
   list_lectures | cut -f1 | grep -qxF -- "$1"
 }
+
+# Версия курса из course.typ. Она же версия релиза: тег v{MAJOR}.{MINOR}.{BUILD}
+# обязан совпадать с ней (ТД-3), и это проверяется при публикации.
+course_version() {
+  typst_args
+  "$TYPST_BIN" eval "${TYPST_ARGS[@]}" --format json '{
+    import "/course.typ": course
+    course.version
+  }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
+}

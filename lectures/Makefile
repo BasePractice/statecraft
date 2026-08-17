@@ -8,6 +8,8 @@
 #   make fonts      скачать шрифты в fonts/
 #   make sync       подтянуть листинги лекций из practices/
 #   make sync-check проверить, что листинги не разошлись с practices/
+#   make version    напечатать версию курса из course.typ (она же версия релиза)
+#   make pack       комплект для раздачи: PDF под читаемыми именами в zip
 #   make watch L=03-synthesis   пересборка одной лекции при изменении
 #   make one L=03-synthesis     собрать одну лекцию
 #   make pretty     собрать и разложить копии под читаемыми именами
@@ -27,7 +29,7 @@ S := ./scripts
 OUT ?= out
 export OUT_DIR := $(abspath $(OUT))
 
-.PHONY: all check fix fonts build one watch pretty draft sync sync-check clean distclean help
+.PHONY: all check fix fonts build one watch pretty draft sync sync-check version pack clean distclean help
 
 all: pretty
 
@@ -63,6 +65,12 @@ sync:
 sync-check:
 	@$(S)/sync-code.sh --check
 
+version:
+	@$(S)/course.sh --version
+
+pack:
+	@$(S)/pack.sh
+
 clean:
 	@$(S)/clean.sh
 
@@ -70,4 +78,4 @@ distclean:
 	@$(S)/clean.sh --all
 
 help:
-	@sed -n '3,21p' Makefile | sed 's/^# \{0,1\}//'
+	@sed -n '3,24p' Makefile | sed 's/^# \{0,1\}//'

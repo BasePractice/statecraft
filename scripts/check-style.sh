@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# scripts/check-style.sh [--fix] [путь ...]
+# scripts/check-style.sh [--fix] [--require-clang-format] [путь ...]
 #
 # Проверка оформления кода практикума по .clang-format и правилам курса
 # (см. practices/README.md, раздел «Требования к коду»).
 # Запускается вручную, целью CMake style-check и в CI.
 #
-#   без аргументов   проверить весь код в practices/
-#   --fix            переформатировать (clang-format) и нормализовать файлы
-#   путь ...         проверить только указанные файлы или каталоги
+#   без аргументов          проверить весь код в practices/
+#   --fix                   переформатировать (clang-format) и нормализовать
+#   --require-clang-format  падать, если подходящей версии clang-format нет
+#   путь ...                проверить только указанные файлы или каталоги
 #
 # Проверяется:
 #   1. форматирование по .clang-format (если clang-format установлен);
@@ -16,18 +17,30 @@
 #   4. отсутствие комментариев // — их нет в ISO C90;
 #   5. концы строк LF и отсутствие BOM;
 #   6. отсутствие пробелов в конце строки и перевод строки в конце файла.
+#
+# Проверки 2–6 выполняет scripts/style-scan.py — там же объяснено, почему не
+# grep.
 
 set -uo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 FIX=0
+REQUIRE_FORMAT=0
 PATHS=()
 MAX_LINE=100
+
+# Наименьшая пригодная версия clang-format. Начиная с 19-й завершающие
+# комментарии выравниваются в столбик и после `#define`, и в перечислениях;
+# 18-я и старее их сжимает до одного пробела, то есть та же команда --fix на
+# разных машинах даёт разный код. Проверять оформление такой версией нельзя:
+# она объявит расходящимися файлы, оформленные правильно.
+CLANG_FORMAT_MIN_MAJOR=19
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --fix) FIX=1 ;;
-    -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --require-clang-format) REQUIRE_FORMAT=1 ;;
+    -h|--help) sed -n '2,22p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) PATHS+=( "$1" ) ;;
   esac
   shift
@@ -72,14 +85,53 @@ echo "== файлов на проверке: ${#FILES[@]}"
 ERRORS=0
 
 # --- 1. clang-format --------------------------------------------------------
-# На macOS clang-format обычно есть в толчейне Xcode, но не в PATH.
+# Кандидаты в порядке предпочтения: заданный вручную, версия с номером в имени
+# (так пакеты называются в Debian и Ubuntu), просто clang-format, и наконец
+# толчейн Xcode — на macOS clang-format есть в ней, но не в PATH.
+format_major() { # format_major <бинарь> -> мажорная версия или пустая строка
+  "$1" --version 2>/dev/null | sed -n 's/.*version \([0-9][0-9]*\)\..*/\1/p' | head -1
+}
+
 CLANG_FORMAT="${CLANG_FORMAT:-}"
-if [ -z "$CLANG_FORMAT" ]; then
-  if command -v clang-format >/dev/null 2>&1; then
-    CLANG_FORMAT="clang-format"
-  elif command -v xcrun >/dev/null 2>&1 && xcrun -f clang-format >/dev/null 2>&1; then
-    CLANG_FORMAT="$(xcrun -f clang-format)"
+CLANG_FORMAT_MAJOR=""
+CLANG_FORMAT_OLD=0
+if [ -n "$CLANG_FORMAT" ]; then
+  CLANG_FORMAT_MAJOR="$(format_major "$CLANG_FORMAT")"
+else
+  CANDIDATES=( clang-format-21 clang-format-20 clang-format-19 clang-format )
+  if command -v xcrun >/dev/null 2>&1 && xcrun -f clang-format >/dev/null 2>&1; then
+    CANDIDATES+=( "$(xcrun -f clang-format)" )
   fi
+  for cand in "${CANDIDATES[@]}"; do
+    command -v "$cand" >/dev/null 2>&1 || continue
+    major="$(format_major "$cand")"
+    [ -n "$major" ] || continue
+    # Первый найденный запоминаем в любом случае: если подходящего так и не
+    # окажется, о нём будет сказано в предупреждении.
+    if [ -z "$CLANG_FORMAT" ]; then
+      CLANG_FORMAT="$cand"; CLANG_FORMAT_MAJOR="$major"
+    fi
+    if [ "$major" -ge "$CLANG_FORMAT_MIN_MAJOR" ]; then
+      CLANG_FORMAT="$cand"; CLANG_FORMAT_MAJOR="$major"
+      break
+    fi
+  done
+fi
+
+# Версия старше нужной проверку не выполняет, а сбивает с толку: она найдёт
+# «нарушения» в правильно оформленном коде. Поэтому такая же ситуация, как
+# отсутствие clang-format вовсе, — предупреждение и пропуск; в CI пропуск
+# запрещён ключом --require-clang-format.
+if [ -n "$CLANG_FORMAT" ] && [ -n "$CLANG_FORMAT_MAJOR" ] \
+    && [ "$CLANG_FORMAT_MAJOR" -lt "$CLANG_FORMAT_MIN_MAJOR" ]; then
+  warn "clang-format $CLANG_FORMAT_MAJOR старше требуемой $CLANG_FORMAT_MIN_MAJOR — проверка форматирования пропущена"
+  warn "  разные версии по-разному выравнивают завершающие комментарии"
+  if [ "$REQUIRE_FORMAT" = 1 ]; then
+    bad "нужен clang-format $CLANG_FORMAT_MIN_MAJOR или новее"
+    exit 1
+  fi
+  CLANG_FORMAT=""
+  CLANG_FORMAT_OLD=1
 fi
 
 if [ -n "$CLANG_FORMAT" ]; then
@@ -102,9 +154,14 @@ if [ -n "$CLANG_FORMAT" ]; then
       ok "clang-format: расхождений нет"
     fi
   fi
-else
+elif [ "$CLANG_FORMAT_OLD" = 0 ]; then
   warn "clang-format не установлен — проверка форматирования пропущена"
-  warn "  macOS: brew install clang-format, Debian/Ubuntu: apt install clang-format"
+  warn "  macOS: brew install llvm, Debian/Ubuntu: apt install clang-format-19"
+  warn "  где угодно: python3 -m venv .venv && .venv/bin/pip install clang-format"
+  if [ "$REQUIRE_FORMAT" = 1 ]; then
+    bad "нужен clang-format $CLANG_FORMAT_MIN_MAJOR или новее"
+    exit 1
+  fi
 fi
 
 # --- 2..6. собственные проверки --------------------------------------------
@@ -122,44 +179,22 @@ report() { # report <заголовок> <файл со списком нару�
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-for f in "${FILES[@]}"; do
-  rel="${f#$ROOT/}"
-
-  if [ "$FIX" = 1 ]; then
+if [ "$FIX" = 1 ]; then
+  for f in "${FILES[@]}"; do
     perl -pi -e 's/\r$//; s/[ \t]+$//;' "$f"
     perl -0pi -e 's/^\xEF\xBB\xBF//' "$f"
     tail -c1 "$f" | od -An -c | grep -q '\\n' || printf '\n' >> "$f"
-    continue
-  fi
-
-  grep -nP '\t' "$f" 2>/dev/null | head -3 | sed "s|^|$rel:|" >> "$TMP/tabs"
-  # Длина считается в символах, а не в байтах: комментарии на русском.
-  python3 -c '
-import sys
-path, rel, limit = sys.argv[1], sys.argv[2], int(sys.argv[3])
-with open(path, encoding="utf-8", errors="replace") as fh:
-    shown = 0
-    for n, line in enumerate(fh, 1):
-        text = line.rstrip("\n")
-        if len(text) > limit and shown < 3:
-            print("%s:%d: %d символов" % (rel, n, len(text)))
-            shown += 1
-' "$f" "$rel" "$MAX_LINE" >> "$TMP/long"
-  grep -nP '^(?:[^"'\''/\n]|"(?:[^"\\]|\\.)*"|'\''(?:[^'\''\\]|\\.)*'\'')*//' "$f" 2>/dev/null \
-      | head -3 | sed "s|^|$rel:|" >> "$TMP/slashes"
-  if head -c3 "$f" | grep -q $'\xEF\xBB\xBF'; then echo "$rel: BOM в начале файла" >> "$TMP/bom"; fi
-  if grep -qU $'\r' "$f" 2>/dev/null; then echo "$rel: концы строк CRLF" >> "$TMP/crlf"; fi
-  grep -n '[ 	]$' "$f" | head -3 | sed "s|^|$rel:|" >> "$TMP/trail"
-  if [ -s "$f" ] && [ "$(tail -c1 "$f" | wc -l | tr -d ' ')" = "0" ]; then
-    echo "$rel: нет перевода строки в конце файла" >> "$TMP/eof"
-  fi
-done
-
-if [ "$FIX" = 1 ]; then
+  done
   ok "нормализованы концы строк, BOM, пробелы в конце строк"
   echo
   ok "готово; проверить результат: scripts/check-style.sh"
   exit 0
+fi
+
+if ! printf '%s\n' "${FILES[@]}" \
+    | python3 "$ROOT/scripts/style-scan.py" "$ROOT" "$MAX_LINE" "$TMP"; then
+  bad "построчные проверки не отработали (scripts/style-scan.py)"
+  exit 1
 fi
 
 report "табуляция в отступах"                          "$TMP/tabs"

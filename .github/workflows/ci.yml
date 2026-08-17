@@ -14,11 +14,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Версия зафиксирована намеренно. clang-format 18 и старше сжимает
+      # завершающие комментарии, начиная с 19-й они выравниваются в столбик:
+      # одна и та же команда --fix на разных машинах давала разный код, и CI
+      # объявлял расходящимися файлы, оформленные правильно. Пакет из PyPI
+      # даёт одинаковый бинарь на любой системе, в отличие от apt.
       - name: Установить clang-format
-        run: sudo apt-get update && sudo apt-get install -y clang-format
+        run: |
+          python3 -m venv .cf-venv
+          .cf-venv/bin/pip install --quiet 'clang-format==20.1.8'
+          .cf-venv/bin/clang-format --version
 
       - name: Проверить оформление кода
-        run: ./scripts/check-style.sh
+        run: CLANG_FORMAT="$PWD/.cf-venv/bin/clang-format" ./scripts/check-style.sh --require-clang-format
 
   practice:
     name: Практикум (C90, ${{ matrix.os }}, ${{ matrix.build_type }})
@@ -95,3 +103,128 @@ jobs:
           name: lectures-pdf
           path: build/lectures/*.pdf
           if-no-files-found: error
+
+  # --- факультативные задания -----------------------------------------------
+  # Дальше идёт то, что зависит от внешних инструментов: компилятора Takt и
+  # raylib. Оба ставятся из исходников и к предмету курса отношения не имеют,
+  # поэтому их отказ не должен закрывать дорогу материалу — задания помечены
+  # continue-on-error.
+
+  takt:
+    name: Инструменты Takt (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Забрать исходники Takt
+        uses: actions/checkout@v4
+        with:
+          repository: Pastor/Takt
+          ref: v2
+          path: takt
+
+      # Версию компилятора Rust задаёт rust-toolchain.toml самого Takt —
+      # rustup поставит её сам при первой сборке.
+      - name: Кеш сборки Rust
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            takt/target
+          key: takt-${{ runner.os }}-${{ hashFiles('takt/Cargo.lock') }}
+          restore-keys: takt-${{ runner.os }}-
+
+      - name: Собрать taktc и takt-sim
+        working-directory: takt
+        run: |
+          cargo build --release -p takt-lang --bin taktc
+          cargo build --release -p takt-sim --bin takt-sim
+
+      - name: Выложить инструменты
+        uses: actions/upload-artifact@v4
+        with:
+          name: takt-${{ matrix.os }}
+          path: |
+            takt/target/release/taktc
+            takt/target/release/takt-sim
+          if-no-files-found: error
+
+  gui:
+    name: Графика погрузчика (raylib, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    needs: takt
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Взять инструменты Takt
+        uses: actions/download-artifact@v4
+        with:
+          name: takt-${{ matrix.os }}
+          path: takt-bin
+
+      - name: Права на запуск
+        run: chmod +x takt-bin/taktc takt-bin/takt-sim
+
+      - name: Установить raylib
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y libraylib-dev
+          else
+            brew install raylib
+          fi
+
+      - name: Конфигурация
+        run: >
+          cmake -S . -B build
+          -DSTATECRAFT_BUILD_LECTURES=OFF
+          -DSTATECRAFT_STRICT=ON
+          -DSTATECRAFT_BUILD_GUI=ON
+          -DSTATECRAFT_TAKT_DIR="$PWD/takt-bin"
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Сборка
+        run: cmake --build build -j 4
+
+      # Обе цели пропускаются молча, когда инструмента нет: проверяем, что
+      # задание действительно собрало графику, а не прошло вхолостую.
+      - name: Цели собраны, а не пропущены
+        run: |
+          test -x build/practices/21-additional/loader-gui/21-additional-gui
+          test -x build/practices/21-additional/loader/21-additional-run
+
+      # С taktc собираются и проверяются практики 12-takt и 21-additional,
+      # которых в основном задании нет.
+      - name: Тесты
+        run: ctest --test-dir build --output-on-failure
+
+      # Требование ТД-9: без дисплея приложение обязано завершиться внятным
+      # сообщением, а не падением. Запускать окно в CI негде, поэтому
+      # проверяется именно это; ключ --frames ограничивает прогон на случай,
+      # когда графический контекст всё же создан.
+      - name: Без дисплея — сообщение, а не падение
+        run: |
+          cd build/practices/21-additional/loader-gui
+          set +e
+          ./21-additional-gui --frames 2 --shot shot.png > out.txt 2> err.txt
+          code=$?
+          set -e
+          echo "код возврата: $code"
+          cat out.txt err.txt
+          if [ "$code" -ge 128 ]; then
+            echo "приложение снято сигналом $((code - 128))" >&2
+            exit 1
+          fi
+          if [ "$code" -ne 0 ] && ! grep -q "графический вывод недоступен" err.txt; then
+            echo "завершилось с ошибкой, но без объяснения" >&2
+            exit 1
+          fi

@@ -1,0 +1,93 @@
+name: release
+
+# Публикация версии курса (ТД-3).
+#
+# Задание срабатывает на тег вида v{MAJOR}.{MINOR}.{BUILD}. Тег обязан
+# совпадать с полем `version` из lectures/course.typ: номер печатается на
+# титульном листе каждой лекции, и расхождение означает, что выложены PDF не
+# той версии, которую обещает релиз.
+#
+# Релиз с файлами оформляется при изменении МИНОРНОЙ версии, то есть когда
+# сборочный номер равен нулю (v1.1.0). Теги вида v1.0.31 отмечают сборку:
+# PDF собираются и проверяются, но релиз не создаётся — иначе список релизов
+# заполнится промежуточными сборками.
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Версия курса ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить typst
+        uses: typst-community/setup-typst@v5
+        with:
+          typst-version: '0.15.1'
+
+      - name: Версия курса совпадает с тегом
+        if: startsWith(github.ref, 'refs/tags/')
+        run: cd lectures && ./scripts/course.sh --check "$GITHUB_REF_NAME"
+
+      # В отличие от обычной сборки здесь нужен --fix: он доустанавливает
+      # чертёжный шрифт по ГОСТ 2.304-81 (ТД-1) и прогревает кэш пакетов.
+      # Без шрифта надписи в диаграммах набираются основным шрифтом лекции —
+      # для раздаваемых PDF это брак.
+      - name: Окружение лекций и шрифты
+        run: cd lectures && make fix
+
+      # Комплект собирается той же целью, что и вручную: PDF под читаемыми
+      # именами, сложенные в архив. Имя архива — латиница и цифры: GitHub
+      # заменяет в именах файлов релиза пробелы точками.
+      - name: Собрать комплект
+        run: |
+          cd lectures && make OUT="$GITHUB_WORKSPACE/release" pack
+          echo "VERSION=$(./scripts/course.sh --version)" >> "$GITHUB_ENV"
+
+      - name: Заметки к релизу
+        run: |
+          {
+            echo "Курс «Автоматное программирование систем управления», версия $VERSION."
+            echo
+            echo "В архиве \`statecraft-lectures-$VERSION.zip\` — PDF всех лекций"
+            echo "под читаемыми именами."
+            echo
+            echo "## Лекции"
+            echo
+            ( cd lectures && ./scripts/course.sh --lectures ) \
+              | while IFS="$(printf '\t')" read -r n title; do
+                  printf -- '%d. %s\n' "$n" "$title"
+                done
+          } > release-notes.md
+          cat release-notes.md
+
+      # Артефакт прогона остаётся в любом случае: он нужен и для промежуточных
+      # сборок, где релиз не создаётся.
+      - name: Выложить PDF артефактом прогона
+        uses: actions/upload-artifact@v4
+        with:
+          name: lectures-pdf-${{ github.ref_name }}
+          path: release/statecraft-lectures-*.zip
+          if-no-files-found: error
+
+      - name: Оформить релиз (только при смене минорной версии)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          build="${VERSION##*.}"
+          if [ "$build" != "0" ]; then
+            echo "Сборочный номер $build — релиз не оформляется" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Курс АПСУ $VERSION" \
+            --notes-file release-notes.md \
+            "release/statecraft-lectures-$VERSION.zip"
+          echo "Релиз $GITHUB_REF_NAME оформлен" >> "$GITHUB_STEP_SUMMARY"
