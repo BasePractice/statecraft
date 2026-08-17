@@ -36,10 +36,23 @@ takt-sim model/watchdog.takt -s scenario/watchdog.json
 
 ## Сборка
 
-Компилятор `taktc` внешний: подпроект молча пропускается, если его нет.
+Инструменты Takt внешние: нужны `taktc` (порождает код) и `takt-sim`
+(прогоняет сценарии). Каталог с ними задаётся переменной
+`STATECRAFT_TAKT_DIR` — как переменной окружения, так и переменной CMake;
+по умолчанию это `~/.local/bin`, затем поиск идёт по `PATH`. Если `taktc` не
+найден, подпроект пропускается и остальная сборка курса не страдает; если
+найден только один из двух инструментов, CMake скажет об этом предупреждением.
 
 ```bash
-cmake -S . -B build -DSTATECRAFT_TAKTC=/путь/к/BuT/target/release
+# вариант 1: положить бинарники в ~/.local/bin — ничего указывать не нужно
+cmake -S . -B build
+
+# вариант 2: указать свой каталог
+export STATECRAFT_TAKT_DIR=~/github/BuT/target/release
+cmake -S . -B build
+#   либо
+cmake -S . -B build -DSTATECRAFT_TAKT_DIR=~/github/BuT/target/release
+
 cmake --build build --target 12-takt-watchdog
 ctest --test-dir build -R 12-takt
 ```

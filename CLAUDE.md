@@ -431,13 +431,25 @@ Catch2, зарегистрированы в `ctest`.
 | `08-fsm-control-pneumo` | циклограмма пневмоцилиндров, кодогенерация SimInTech | 8 |
 | `09-promela` | 10 примеров Promela от HelloWorld до семафоров | 9 |
 | `10-turing-machine` | интерпретатор машины Тьюринга | 10 |
-| `12-takt` | модели на языке Takt, порождение C, драйвер | 11 |
+| `12-takt` | модели на языке Takt, порождение C, драйвер | 12 |
 | `20-welding-line` | сквозной проект: линия сварки, покрытие переходов, экспорт в Promela | 3, 7, 8, 9 |
 
 Файлы `practices/08-fsm-control-pneumo/generated/*.inc` и `*.log` — в
 **CP1251**, не UTF-8. В `lectures/src/08-statecharts/code/generated/` лежат
 перекодированные копии. В `generated/PneumoAutomate.h` вшит абсолютный
 windows-путь `E:\GitHub\automata_programming\...`.
+
+## Внешние инструменты
+
+`taktc` и `takt-sim` (репозиторий [BuT](https://github.com/BasePractice/BuT))
+нужны практике `12-takt`. Каталог с ними задаётся переменной
+`STATECRAFT_TAKT_DIR` (переменная окружения или CMake), по умолчанию —
+`~/.local/bin`, затем `PATH`. Без `taktc` подпроект пропускается; если найден
+только один из двух инструментов, CMake предупреждает. Прежнее имя переменной
+`STATECRAFT_TAKTC` продолжает работать.
+
+SPIN нужен `scripts/check-promela.sh` и ищется в `PATH` (переопределяется
+переменной `SPIN`); при отсутствии проверка мягко пропускается.
 
 ## Известные шероховатости репозитория
 
