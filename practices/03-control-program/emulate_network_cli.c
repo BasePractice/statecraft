@@ -41,7 +41,9 @@ void send_registers(int s) {
 
     ret = (int)send(s, &registers, sizeof(registers), 0);
     if (ret != -1) {
-        fprintf(stdout, "Sent %d bytes, need %lu bytes\n", ret, sizeof(registers));
+        /* size_t печатается через приведение: в C90 нет %zu, а %lu без
+           приведения врёт на платформах, где size_t уже unsigned long. */
+        fprintf(stdout, "Sent %d bytes, need %lu bytes\n", ret, (unsigned long)sizeof(registers));
     } else {
         fprintf(stderr, "Can't send registers %d\n", get_network_error());
     }
@@ -49,8 +51,10 @@ void send_registers(int s) {
 
 int main(int argc, char **argv) {
     int s;
-    char *hostname = "127.0.0.1";
-    char *filename = "registers.txt";
+    /* Указатели на литералы объявлены const: писать в строковый литерал
+       нельзя, и тип обязан это отражать (MISRA 7.4). */
+    const char *hostname = "127.0.0.1";
+    const char *filename = "registers.txt";
     FILE *fd = 0;
 
     if (argc >= 2)

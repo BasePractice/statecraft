@@ -161,8 +161,12 @@ static void simulate_update(void) {
     }
 
     if (step_timeout > 0) {
-        fprintf(stdout, "[%05lu] Simulate step waiting %d ms\n", emulator.current_step,
-                step_timeout);
+        /* Спецификаторы приведены к фактическим типам: size_t печатается
+           через приведение к unsigned long (в C90 нет %zu), а выдержка
+           беззнаковая — %u, а не %d. Несоответствие нашёл анализатор:
+           на 32-разрядной платформе size_t и unsigned long различаются. */
+        fprintf(stdout, "[%05lu] Simulate step waiting %u ms\n",
+                (unsigned long)emulator.current_step, step_timeout);
         ms_sleep(step_timeout);
     }
 

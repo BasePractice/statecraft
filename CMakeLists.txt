@@ -76,6 +76,16 @@ add_custom_target(docs
         COMMENT "Doxygen: документация практикума"
         USES_TERMINAL)
 
+# --- оценка по правилам MISRA C:2012 ----------------------------------------
+# Проверка факультативная: она показывает, как промышленный набор правил
+# смотрит на учебный код, и её находки — предмет разбора (docs/misra-report.md),
+# а не запрет. Цель не падает от нарушений и мягко пропускается без cppcheck.
+add_custom_target(misra-check
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check-misra.sh"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "MISRA C:2012 (cppcheck): оценка кода практикума"
+        USES_TERMINAL)
+
 message(STATUS "statecraft: лекции=${STATECRAFT_BUILD_LECTURES} "
         "практикум=${STATECRAFT_BUILD_PRACTICE} "
         "тесты=${STATECRAFT_BUILD_TESTS} строгий режим=${STATECRAFT_STRICT}")

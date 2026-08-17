@@ -164,7 +164,10 @@ bool dfa_minimize(struct Dfa *out, const struct Dfa *in) {
     int class_of[FSM_MAX_DFA_STATES];
     int next_class[FSM_MAX_DFA_STATES];
     int representative[FSM_MAX_DFA_STATES];
-    int class_count;
+    /* Инициализация не для компилятора, а для читателя и анализатора:
+       значение задаётся первым же проходом цикла, но доказать это статически
+       нельзя, и cppcheck справедливо сообщает о чтении неинициализированного. */
+    int class_count = 0;
     int changed = 1;
     int i;
     int j;

@@ -126,6 +126,38 @@ jobs:
           path: build/lectures/*.pdf
           if-no-files-found: error
 
+  misra:
+    name: MISRA C:2012 (оценка)
+    runs-on: ubuntu-latest
+    # Проверка оценочная: она показывает, как промышленный набор правил
+    # смотрит на учебный код. Её находки разбираются в docs/misra-report.md,
+    # и падать от них сборка курса не должна.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Прогнать анализ
+        run: ./scripts/check-misra.sh --strict --raw misra-raw.txt | tee misra-summary.txt
+
+      - name: Сводка в отчёт прогона
+        run: |
+          {
+            echo '### MISRA C:2012'
+            echo '```'
+            cat misra-summary.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Выложить полный вывод
+        uses: actions/upload-artifact@v4
+        with:
+          name: misra-raw
+          path: misra-raw.txt
+          if-no-files-found: error
+
   # --- факультативные задания -----------------------------------------------
   # Дальше идёт то, что зависит от внешних инструментов: компилятора Takt и
   # raylib. Оба ставятся из исходников и к предмету курса отношения не имеют,
