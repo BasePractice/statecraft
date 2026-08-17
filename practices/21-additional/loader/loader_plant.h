@@ -68,15 +68,15 @@ struct LoaderCommands {
 
 /** Показания датчиков — то, что автомат читает на следующем такте. */
 struct LoaderSensors {
-    int line;     /* разметка под погрузчиком */
-    int point;    /* метка RFID под считывателем, 0 — метки нет */
-    int angle;    /* направление, enum RouteDirection */
-    int odometer; /* энкодер: пройденный путь, см */
-    int range;    /* дальномер: до препятствия впереди, см */
-    int motion;   /* акселерометр: погрузчик действительно едет */
-    int stack;    /* сканер места: код штабеля, 0 — не прочитан */
-    int pallet;   /* сканер вил: код паллеты, 0 — не прочитан */
-    int load;     /* тензодатчик вил: груз принят */
+    int line;     /**< разметка под погрузчиком */
+    int point;    /**< метка RFID под считывателем, 0 — метки нет */
+    int angle;    /**< направление, enum RouteDirection */
+    int odometer; /**< энкодер: пройденный путь, см */
+    int range;    /**< дальномер: до препятствия впереди, см */
+    int motion;   /**< акселерометр: погрузчик действительно едет */
+    int stack;    /**< сканер места: код штабеля, 0 — не прочитан */
+    int pallet;   /**< сканер вил: код паллеты, 0 — не прочитан */
+    int load;     /**< тензодатчик вил: груз принят */
 };
 
 struct LoaderPlant {
@@ -85,11 +85,11 @@ struct LoaderPlant {
     int col;
     int angle;
 
-    int travel_cm;       /* сколько пройдено в текущей клетке */
-    int odometer_cm;     /* энкодер: путь с момента включения */
-    int turn_elapsed_ms; /* сколько длится текущий поворот */
-    int fork_elapsed_ms; /* сколько длится текущий подъём вил */
-    int moved_this_tick; /* на этом такте погрузчик сдвинулся */
+    int travel_cm;       /**< сколько пройдено в текущей клетке */
+    int odometer_cm;     /**< энкодер: путь с момента включения */
+    int turn_elapsed_ms; /**< сколько длится текущий поворот */
+    int fork_elapsed_ms; /**< сколько длится текущий подъём вил */
+    int moved_this_tick; /**< на этом такте погрузчик сдвинулся */
 
     /*
      * Места хранения: у каждого свой код, читаемый сканером, и паллета, если
@@ -98,9 +98,9 @@ struct LoaderPlant {
      */
     int stack_point[LOADER_STACK_COUNT];
     int stack_code[LOADER_STACK_COUNT];
-    int stack_pallet[LOADER_STACK_COUNT]; /* 0 — место свободно */
+    int stack_pallet[LOADER_STACK_COUNT]; /**< 0 — место свободно */
 
-    int carried_pallet; /* код паллеты на вилах, 0 — вилы пусты */
+    int carried_pallet; /**< код паллеты на вилах, 0 — вилы пусты */
 
     /*
      * Заклинивание привода: с этой клетки погрузчик перестаёт двигаться, хотя
@@ -122,9 +122,9 @@ struct LoaderPlant {
     /** Автомат выдал взаимоисключающие команды (оба поворота сразу). */
     int conflicts;
 
-    unsigned long ticks;    /* сколько раз стенд был протикан */
-    unsigned long clock_ms; /* модельное время установки */
-    unsigned long cells;    /* сколько клеток проехал погрузчик */
+    unsigned long ticks;    /**< сколько раз стенд был протикан */
+    unsigned long clock_ms; /**< модельное время установки */
+    unsigned long cells;    /**< сколько клеток проехал погрузчик */
 };
 
 /**

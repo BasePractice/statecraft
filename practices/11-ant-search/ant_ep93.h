@@ -1,7 +1,8 @@
 #ifndef STATECRAFT_ANT_EP93_H
 #define STATECRAFT_ANT_EP93_H
 
-/*
+/**
+ * @file
  * Внутренний заголовок практики: эволюционное программирование по статье
  * Angeline P. J., Pollack J. B. «Evolutionary Module Acquisition» (Proc. of
  * the 2nd Annual Conference on Evolutionary Programming, 1993).
@@ -17,6 +18,7 @@
 extern "C" {
 #endif
 
+/** Поиск по алгоритму статьи; вызывается из #ant_search_run. */
 bool ant_ep93_run(const struct AntSearch *cfg, const struct AntFsm *start,
                   struct AntSearchResult *out, const struct AntSearchLog *log);
 

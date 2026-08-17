@@ -1,7 +1,8 @@
 #ifndef STATECRAFT_ANT_RANDOM_H
 #define STATECRAFT_ANT_RANDOM_H
 
-/*
+/**
+ * @file
  * Датчик случайных чисел поиска.
  *
  * Своя реализация нужна по одной причине: поиск обязан воспроизводиться по
@@ -17,19 +18,20 @@
 extern "C" {
 #endif
 
+/** Состояние датчика: своё у каждого поиска. */
 struct AntRandom {
     uint32_t state;
 };
 
 void ant_random_init(struct AntRandom *r, uint32_t seed);
 
-/* Равномерное целое из [0, bound). bound должен быть положительным. */
+/** Равномерное целое из [0, @p bound). @p bound должен быть положительным. */
 int ant_random_below(struct AntRandom *r, int bound);
 
-/* Истина с вероятностью percent процентов. */
+/** Истина с вероятностью @p percent процентов. */
 bool ant_random_chance(struct AntRandom *r, int percent);
 
-/*
+/**
  * Приближение нормального распределения N(0, 1) суммой двенадцати
  * равномерных величин. Точности хватает: величина нужна только как масштаб
  * числа мутаций, а не как статистическая модель.

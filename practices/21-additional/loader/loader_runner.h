@@ -39,7 +39,7 @@ extern "C" {
 #include "loader.h" /* порождается taktc из model/loader.takt */
 
 struct LoaderRunner {
-    const struct FactoryMap *map; /* не владеет: карту держит вызывающая сторона */
+    const struct FactoryMap *map; /**< не владеет: карту держит вызывающая сторона */
     struct Route route;
     struct Plan plan;
     struct LoaderPlant plant;
@@ -60,9 +60,9 @@ struct LoaderRunner {
     int fault;
     struct LoaderCommands commands;
 
-    int step;            /* какая команда плана исполняется */
-    int target;          /* конечная метка маршрута */
-    unsigned long ticks; /* тактов прогона */
+    int step;            /**< какая команда плана исполняется */
+    int target;          /**< конечная метка маршрута */
+    unsigned long ticks; /**< тактов прогона */
 
     /*
      * Режим сценария: входы берутся из файла, а не от установки. Нужен для

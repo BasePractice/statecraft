@@ -54,7 +54,7 @@ enum RouteDirection {
 struct RouteStep {
     int point;
     int direction;
-    int cells; /* клеток линии до этой метки */
+    int cells; /**< клеток линии до этой метки */
 };
 
 #define ROUTE_MAX_STEPS 64
@@ -65,8 +65,8 @@ struct Route {
     int start_direction;
     struct RouteStep step[ROUTE_MAX_STEPS];
     int count;
-    int cells; /* длина маршрута в клетках */
-    int turns; /* сколько раз пришлось повернуть на 90° */
+    int cells; /**< длина маршрута в клетках */
+    int turns; /**< сколько раз пришлось повернуть на 90° */
 };
 
 /**
@@ -96,16 +96,16 @@ enum LoaderCommandCode {
     LOADER_CMD_NONE = 0,
     LOADER_CMD_TURN_LEFT = 1,
     LOADER_CMD_TURN_RIGHT = 2,
-    LOADER_CMD_DRIVE = 3, /* ехать до метки, номер — в аргументе */
-    LOADER_CMD_LIFT = 4,  /* взять паллету: код паллеты и код места */
-    LOADER_CMD_PLACE = 5  /* поставить паллету на свободное место */
+    LOADER_CMD_DRIVE = 3, /**< ехать до метки, номер — в аргументе */
+    LOADER_CMD_LIFT = 4,  /**< взять паллету: код паллеты и код места */
+    LOADER_CMD_PLACE = 5  /**< поставить паллету на свободное место */
 };
 
 struct PlanStep {
     int code;
-    int point;      /* «ехать» — номер метки, «взять» — код паллеты */
-    int extra;      /* «взять» — код места (штабеля), иначе 0 */
-    int timeout_ms; /* сколько отведено на команду: см. LoaderTiming */
+    int point;      /**< «ехать» — номер метки, «взять» — код паллеты */
+    int extra;      /**< «взять» — код места (штабеля), иначе 0 */
+    int timeout_ms; /**< сколько отведено на команду: см. LoaderTiming */
 };
 
 #define PLAN_MAX_STEPS 192
@@ -122,10 +122,10 @@ struct Plan {
  * (модель CommandWatchdog в model/loader.takt).
  */
 struct LoaderTiming {
-    int cell_ms;   /* проезд одной клетки разметки */
-    int turn_ms;   /* поворот на 90°               */
-    int lift_ms;   /* подъём вил до захвата        */
-    int margin_ms; /* запас на разгон и торможение */
+    int cell_ms;   /**< проезд одной клетки разметки */
+    int turn_ms;   /**< поворот на 90°               */
+    int lift_ms;   /**< подъём вил до захвата        */
+    int margin_ms; /**< запас на разгон и торможение */
 };
 
 /** Значения из паспорта установки (loader_plant.h). */
@@ -133,9 +133,9 @@ void loader_timing_default(struct LoaderTiming *timing);
 
 /** Что добавить к маршруту сверх переездов. */
 struct PlanOptions {
-    int lift_pallet; /* код паллеты; 0 — подъём не нужен  */
-    int lift_stack;  /* код места, у которого её берут    */
-    int place_stack; /* код места, куда её ставят; 0 — не ставим */
+    int lift_pallet; /**< код паллеты; 0 — подъём не нужен  */
+    int lift_stack;  /**< код места, у которого её берут    */
+    int place_stack; /**< код места, куда её ставят; 0 — не ставим */
     struct LoaderTiming timing;
 };
 
@@ -169,13 +169,13 @@ struct Mission {
     char name[64];
     int start_point;
     int start_direction;
-    int pick_point;      /* метка у места, где стоит паллета */
-    int pick_stack;      /* код этого места                  */
-    int pick_pallet;     /* код паллеты                      */
-    int place_point;     /* метка у свободного места; 0 — только взять */
-    int place_stack;     /* код свободного места             */
-    int jam_after_cells; /* отладка: заклинить привод после N клеток; -1 — нет */
-    int block_point;     /* отладка: перегородить проход у этой метки; 0 — нет */
+    int pick_point;      /**< метка у места, где стоит паллета */
+    int pick_stack;      /**< код этого места                  */
+    int pick_pallet;     /**< код паллеты                      */
+    int place_point;     /**< метка у свободного места; 0 — только взять */
+    int place_stack;     /**< код свободного места             */
+    int jam_after_cells; /**< отладка: заклинить привод после N клеток; -1 — нет */
+    int block_point;     /**< отладка: перегородить проход у этой метки; 0 — нет */
 };
 
 void mission_default(struct Mission *mission);

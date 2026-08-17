@@ -1,7 +1,8 @@
 #ifndef STATECRAFT_RENDER_H
 #define STATECRAFT_RENDER_H
 
-/*
+/**
+ * @file
  * Векторный вывод (SVG) для лекции 11.
  *
  * Зачем: текстовая распечатка годится, чтобы посмотреть результат в
@@ -30,18 +31,18 @@
 extern "C" {
 #endif
 
-/* Оформление ленты кадров. Нулевые поля означают «взять значение по
-   умолчанию», см. render_style_default(). */
+/** Оформление ленты кадров. Нулевые поля означают «взять значение по
+    умолчанию», см. #render_style_default. */
 struct RenderStyle {
-    int cell;   /* сторона клетки в единицах SVG */
-    int gap;    /* зазор между кадрами */
-    int margin; /* поле вокруг ленты */
-    bool grid;  /* рисовать сетку поля */
+    int cell;   /**< сторона клетки в единицах SVG */
+    int gap;    /**< зазор между кадрами */
+    int margin; /**< поле вокруг ленты */
+    bool grid;  /**< рисовать сетку поля */
 };
 
 void render_style_default(struct RenderStyle *style);
 
-/*
+/**
  * Лента поколений «Жизни»: фигура name ставится в поле width x height,
  * рисуются кадры с номерами поколений из массива generations (по возрастанию,
  * count штук). Возвращает false, если фигура неизвестна или список кадров
@@ -50,7 +51,7 @@ void render_style_default(struct RenderStyle *style);
 bool render_life_svg(const char *name, int width, int height, const int *generations, int count,
                      const struct RenderStyle *style, FILE *out);
 
-/*
+/**
  * Лента прогона муравья по тропе Санта-Фе: кадры на тактах из массива steps.
  * Съеденные клетки, пройденный путь и положение муравья различаются заливкой,
  * поэтому по ленте видно, как именно стратегия ищет продолжение тропы.
@@ -58,7 +59,7 @@ bool render_life_svg(const char *name, int width, int height, const int *generat
 bool render_trail_svg(const struct AntFsm *fsm, const int *steps, int count,
                       const struct RenderStyle *style, FILE *out);
 
-/*
+/**
  * Лента «сцены» — нескольких фигур на одном поле, поставленных так, чтобы
  * они встретились. Такие картинки нужны там, где интересна не фигура сама по
  * себе, а её взаимодействие с другой. Известные сцены:
@@ -71,7 +72,7 @@ bool render_trail_svg(const struct AntFsm *fsm, const int *steps, int count,
 bool render_scene_svg(const char *scene, const int *generations, int count,
                       const struct RenderStyle *style, FILE *out);
 
-/*
+/**
  * Лента поля муравья Лэнгтона: кадры на шагах из массива steps. Первые тысячи
  * шагов узор выглядит беспорядочным, после ~10 000 муравей уходит в
  * периодическое «шоссе» — по ленте это видно сразу, а по числам нет.
@@ -79,7 +80,7 @@ bool render_scene_svg(const char *scene, const int *generations, int count,
 bool render_langton_svg(int side, const long *steps, int count, const struct RenderStyle *style,
                         FILE *out);
 
-/*
+/**
  * Диаграмма состояний автомата муравья: круги состояний, дуги переходов с
  * метками «вход/действие», стрелка в начальное состояние. Оформление то же,
  * что у диаграмм лекций: чертёжный шрифт по ГОСТ 2.304-81 (osifont), серая
@@ -94,7 +95,7 @@ bool render_langton_svg(int side, const long *steps, int count, const struct Ren
  */
 bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, FILE *out);
 
-/*
+/**
  * Лента поколений по правилу чётности (репликатор Фредкина): та же фигура,
  * то же поле, но другая локальная функция переходов — и вместо эволюции
  * получается размножение. Кадры выбираются так же, как у render_life_svg().
@@ -102,7 +103,7 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
 bool render_parity_svg(const char *name, int side, const int *generations, int count,
                        const struct RenderStyle *style, FILE *out);
 
-/*
+/**
  * Узор одномерного автомата Вольфрама: строки-поколения сверху вниз — то же
  * изображение, что печатается в терминале, только векторное.
  */
