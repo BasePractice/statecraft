@@ -1,0 +1,4 @@
+CompileFlags:
+  Add:
+    -I/Volumes/HOME/GitHub/statecraft/practices/common
+    -I.
