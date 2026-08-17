@@ -88,14 +88,10 @@ static void closed_enter(struct BarrierObject *self) {
     barrier_log_action(self->trace, BARRIER_LAMP_OFF);
 }
 
-static const struct BarrierStateVtbl CLOSED_VTBL = {
-    BARRIER_CLOSED, closed_enter, closed_event};
-static const struct BarrierStateVtbl OPENING_VTBL = {
-    BARRIER_OPENING, opening_enter, opening_event};
-static const struct BarrierStateVtbl OPEN_VTBL = {
-    BARRIER_OPEN, open_enter, open_event};
-static const struct BarrierStateVtbl CLOSING_VTBL = {
-    BARRIER_CLOSING, closing_enter, closing_event};
+static const struct BarrierStateVtbl CLOSED_VTBL = {BARRIER_CLOSED, closed_enter, closed_event};
+static const struct BarrierStateVtbl OPENING_VTBL = {BARRIER_OPENING, opening_enter, opening_event};
+static const struct BarrierStateVtbl OPEN_VTBL = {BARRIER_OPEN, open_enter, open_event};
+static const struct BarrierStateVtbl CLOSING_VTBL = {BARRIER_CLOSING, closing_enter, closing_event};
 
 void barrier_object_init(struct BarrierObject *fsm, struct BarrierTrace *trace) {
     fsm->state = &CLOSED_VTBL;
