@@ -1,0 +1,813 @@
+[
+  {
+    "_step": "1 — команда «повернуть налево» принята: погрузчик смотрит вправо (1), значит целевое направление — вверх (0)",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 1,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 1600,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 1,
+      "sense_odometer": 500,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 1,
+        "turn_left": 1,
+        "drive_gas": 0
+      },
+      "vars": {
+        "busy": 1,
+        "op": 1,
+        "target_angle": 0
+      }
+    }
+  },
+  {
+    "_step": "2 — поворот идёт: направление ещё прежнее",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 1,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 1600,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 1,
+      "sense_odometer": 500,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 0,
+        "turn_left": 1,
+        "cmd_done": 0
+      }
+    }
+  },
+  {
+    "_step": "3 — привод довернул: направление совпало с целевым, команда исполнена",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 1,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 1600,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 0,
+      "sense_odometer": 500,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "turn_left": 0,
+        "turn_right": 0
+      },
+      "vars": {
+        "busy": 0
+      }
+    }
+  },
+  {
+    "_step": "4 — квитирование: cmd_done держится, пока верхний уровень не снимет команду",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 1,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 1600,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 0,
+      "sense_odometer": 500,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_done": 1
+      }
+    }
+  },
+  {
+    "_step": "5 — команда снята: автомат вернулся к ожиданию",
+    "in_ports": {
+      "cmd_valid": 0,
+      "cmd_code": 0,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 0,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 0,
+      "sense_odometer": 500,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_done": 0,
+        "cmd_ack": 0
+      },
+      "vars": {
+        "busy": 0
+      }
+    }
+  },
+  {
+    "_step": "6 — команда «ехать до метки 2»: газ подан, точка отсчёта перебега взята с энкодера",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 2,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 1,
+      "sense_odometer": 500,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 1,
+        "drive_gas": 1
+      },
+      "vars": {
+        "busy": 1,
+        "op": 3,
+        "target_point": 2,
+        "odo_mark": 500
+      }
+    }
+  },
+  {
+    "_step": "7 — метка ещё под считывателем, погрузчик тронулся",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 2,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 1,
+      "sense_angle": 1,
+      "sense_odometer": 505,
+      "sense_range": 245,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "drive_gas": 1,
+        "cmd_done": 0
+      },
+      "vars": {
+        "busy": 1
+      }
+    }
+  },
+  {
+    "_step": "8 — зона метки пройдена: началось движение по перегону",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 2,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 0,
+      "sense_angle": 1,
+      "sense_odometer": 530,
+      "sense_range": 220,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "drive_gas": 1
+      },
+      "vars": {
+        "moving": 1
+      }
+    }
+  },
+  {
+    "_step": "9 — едем дальше, до предела перебега (400 см) далеко",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 2,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 0,
+      "sense_angle": 1,
+      "sense_odometer": 700,
+      "sense_range": 200,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "drive_gas": 1,
+        "fault": 0
+      }
+    }
+  },
+  {
+    "_step": "10 — прочитана ожидаемая метка: газ снят, команда исполнена",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 2,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 2,
+      "sense_angle": 1,
+      "sense_odometer": 900,
+      "sense_range": 180,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "drive_gas": 0
+      },
+      "vars": {
+        "busy": 0,
+        "moving": 0,
+        "odo_mark": 900
+      }
+    }
+  },
+  {
+    "_step": "11 — квитирование переезда",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 2,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 2,
+      "sense_angle": 1,
+      "sense_odometer": 900,
+      "sense_range": 180,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_done": 1,
+        "fault": 0
+      }
+    }
+  },
+  {
+    "_step": "12 — команда снята",
+    "in_ports": {
+      "cmd_valid": 0,
+      "cmd_code": 0,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 0,
+      "sense_line": 1,
+      "sense_point": 2,
+      "sense_angle": 1,
+      "sense_odometer": 900,
+      "sense_range": 180,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_done": 0
+      }
+    }
+  },
+  {
+    "_step": "13 — следующая команда: ехать до метки 3",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 3,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 2,
+      "sense_angle": 1,
+      "sense_odometer": 900,
+      "sense_range": 180,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 1,
+        "drive_gas": 1
+      },
+      "vars": {
+        "target_point": 3
+      }
+    }
+  },
+  {
+    "_step": "14 — вышли из зоны метки 2",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 3,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 0,
+      "sense_angle": 1,
+      "sense_odometer": 940,
+      "sense_range": 150,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "drive_gas": 1,
+        "fault": 0
+      }
+    }
+  },
+  {
+    "_step": "15 — под считывателем чужая метка: погрузчик ушёл с маршрута, это авария",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 3,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 7,
+      "sense_angle": 1,
+      "sense_odometer": 1000,
+      "sense_range": 150,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "fault": 1,
+        "drive_gas": 0
+      },
+      "vars": {
+        "faulted": 1,
+        "busy": 0
+      }
+    }
+  },
+  {
+    "_step": "16 — пока авария не квитирована, команды не принимаются",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 3,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 7,
+      "sense_angle": 1,
+      "sense_odometer": 1000,
+      "sense_range": 150,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "fault": 1,
+        "cmd_ack": 0,
+        "drive_gas": 0
+      },
+      "vars": {
+        "busy": 0
+      }
+    }
+  },
+  {
+    "_step": "17 — оператор квитировал аварию",
+    "in_ports": {
+      "cmd_valid": 0,
+      "cmd_code": 0,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 0,
+      "sense_line": 1,
+      "sense_point": 7,
+      "sense_angle": 1,
+      "sense_odometer": 1000,
+      "sense_range": 150,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 1
+    },
+    "guard": {
+      "out": {
+        "fault": 0
+      },
+      "vars": {
+        "faulted": 0
+      }
+    }
+  },
+  {
+    "_step": "18 — команда принята; газ пойдёт со следующего такта: исполнитель только что вышел из аварийного состояния",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 8,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 7,
+      "sense_angle": 0,
+      "sense_odometer": 1000,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 1
+      },
+      "vars": {
+        "busy": 1
+      }
+    }
+  },
+  {
+    "_step": "19 — впереди препятствие ближе 40 см: дальномер останавливает погрузчик независимо от плана",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 8,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 0,
+      "sense_angle": 0,
+      "sense_odometer": 1050,
+      "sense_range": 25,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "fault": 1,
+        "drive_gas": 0
+      },
+      "vars": {
+        "faulted": 1
+      }
+    }
+  },
+  {
+    "_step": "20 — квитирование аварии",
+    "in_ports": {
+      "cmd_valid": 0,
+      "cmd_code": 0,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 0,
+      "sense_line": 1,
+      "sense_point": 7,
+      "sense_angle": 0,
+      "sense_odometer": 1050,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 1
+    },
+    "guard": {
+      "out": {
+        "fault": 0
+      }
+    }
+  },
+  {
+    "_step": "21 — команда «ехать до метки 8» снова; газ пойдёт со следующего такта",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 8,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 7,
+      "sense_angle": 0,
+      "sense_odometer": 1050,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 1
+      },
+      "vars": {
+        "busy": 1
+      }
+    }
+  },
+  {
+    "_step": "22 — тронулись: точка отсчёта перебега взята при сходе с метки",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 8,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 0,
+      "sense_angle": 0,
+      "sense_odometer": 1100,
+      "sense_range": 250,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "drive_gas": 1,
+        "fault": 0
+      },
+      "vars": {
+        "odo_mark": 1100
+      }
+    }
+  },
+  {
+    "_step": "23 — перебег: от последней метки пройдено больше 4 м, значит маршрут потерян",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 3,
+      "cmd_point": 8,
+      "cmd_extra": 0,
+      "cmd_timeout": 3000,
+      "sense_line": 1,
+      "sense_point": 0,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 1,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "fault": 1,
+        "drive_gas": 0
+      },
+      "vars": {
+        "faulted": 1
+      }
+    }
+  },
+  {
+    "_step": "24 — квитирование",
+    "in_ports": {
+      "cmd_valid": 0,
+      "cmd_code": 0,
+      "cmd_point": 0,
+      "cmd_extra": 0,
+      "cmd_timeout": 0,
+      "sense_line": 1,
+      "sense_point": 8,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 1
+    },
+    "guard": {
+      "out": {
+        "fault": 0
+      }
+    }
+  },
+  {
+    "_step": "25 — команда «взять паллету 101 у места 5001»: сканер места ещё молчит, вилы стоят",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 4,
+      "cmd_point": 101,
+      "cmd_extra": 5001,
+      "cmd_timeout": 1800,
+      "sense_line": 1,
+      "sense_point": 8,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 0,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_ack": 1,
+        "fork_up": 0
+      },
+      "vars": {
+        "busy": 1,
+        "op": 4,
+        "target_point": 101,
+        "target_stack": 5001
+      }
+    }
+  },
+  {
+    "_step": "26 — сканер прочитал код места, и он совпал с заданием: вилы пошли вверх",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 4,
+      "cmd_point": 101,
+      "cmd_extra": 5001,
+      "cmd_timeout": 1800,
+      "sense_line": 1,
+      "sense_point": 8,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 5001,
+      "sense_pallet": 0,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "fork_up": 1
+      }
+    }
+  },
+  {
+    "_step": "27 — сканер вил прочитал паллету, но груза на вилах ещё нет",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 4,
+      "cmd_point": 101,
+      "cmd_extra": 5001,
+      "cmd_timeout": 1800,
+      "sense_line": 1,
+      "sense_point": 8,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 5001,
+      "sense_pallet": 101,
+      "sense_load": 0,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "fork_up": 1,
+        "cmd_done": 0
+      },
+      "vars": {
+        "busy": 1
+      }
+    }
+  },
+  {
+    "_step": "28 — тензодатчик отозвался: паллета принята, команда исполнена",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 4,
+      "cmd_point": 101,
+      "cmd_extra": 5001,
+      "cmd_timeout": 1800,
+      "sense_line": 1,
+      "sense_point": 8,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 5001,
+      "sense_pallet": 101,
+      "sense_load": 1,
+      "reset": 0
+    },
+    "guard": {
+      "vars": {
+        "busy": 0
+      }
+    }
+  },
+  {
+    "_step": "29 — квитирование: команда снята, вилы остаются подняты",
+    "in_ports": {
+      "cmd_valid": 1,
+      "cmd_code": 4,
+      "cmd_point": 101,
+      "cmd_extra": 5001,
+      "cmd_timeout": 1800,
+      "sense_line": 1,
+      "sense_point": 8,
+      "sense_angle": 0,
+      "sense_odometer": 1550,
+      "sense_range": 250,
+      "sense_motion": 0,
+      "sense_stack": 5001,
+      "sense_pallet": 101,
+      "sense_load": 1,
+      "reset": 0
+    },
+    "guard": {
+      "out": {
+        "cmd_done": 1,
+        "fork_up": 0
+      }
+    }
+  }
+]

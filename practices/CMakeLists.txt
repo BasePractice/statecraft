@@ -104,4 +104,5 @@ add_subdirectory(11-cells)
 add_subdirectory(11-ant-search)
 add_subdirectory(12-takt)
 add_subdirectory(20-welding-line)
+add_subdirectory(21-additional)
 # 09-promela собирается внешним инструментом (SPIN), см. PLAN.md § 5.8
