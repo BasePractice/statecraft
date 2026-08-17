@@ -67,6 +67,15 @@ add_custom_target(style-fix
         COMMENT "Переформатирование кода по .clang-format"
         USES_TERMINAL)
 
+# --- документация практикума ------------------------------------------------
+# Doxygen внешний: при его отсутствии цель успешно завершается с
+# предупреждением — так же, как promela-check без SPIN.
+add_custom_target(docs
+        COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/scripts/build-docs.sh"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Doxygen: документация практикума"
+        USES_TERMINAL)
+
 message(STATUS "statecraft: лекции=${STATECRAFT_BUILD_LECTURES} "
         "практикум=${STATECRAFT_BUILD_PRACTICE} "
         "тесты=${STATECRAFT_BUILD_TESTS} строгий режим=${STATECRAFT_STRICT}")

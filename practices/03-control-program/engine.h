@@ -1,6 +1,17 @@
 #ifndef C_AUTOMATA_PROGRAMMING_PRACTICE_ENGINE_H
 #define C_AUTOMATA_PROGRAMMING_PRACTICE_ENGINE_H
 
+/**
+ * @file
+ * Лекция 3. Автомат управления линией точечной сварки.
+ *
+ * Прикладной пример к лекциям 3, 7 и 8: изделие приезжает на конвейере,
+ * автомат его удерживает, находит точки сварки, сваривает и отпускает
+ * ленту. Входы, выходы и настройки автомат получает интерфейсами
+ * (`sensor.h`, `device.h`, `properties.h`) и потому не зависит от того,
+ * настоящая перед ним установка или эмулятор.
+ */
+
 #include <properties.h>
 #include <sensor.h>
 #include <device.h>
@@ -9,29 +20,37 @@
 extern "C" {
 #endif
 
+/** Состояния автомата управления. */
 enum EngineState {
-    ENGINE_OFF,
-    ENGINE_ON,
-    ENGINE_ERROR,
+    ENGINE_OFF,   /**< питание снято */
+    ENGINE_ON,    /**< включено, идёт инициализация */
+    ENGINE_ERROR, /**< авария: дальнейшая работа запрещена */
 
+    /** Ожидание изделия: пока оно не спозиционировано, лента свободна. */
     ENGINE_WAIT_OBJECT,
-    /* Ожидаем изделие, пока оно не будет спозиционировано, далее блокируем ленту */
-    ENGINE_BEGIN_WORK,
-    ENGINE_POSITION,                     /* Позиционирование сварочного аппарата к центру изделия */
-    ENGINE_FIND_NEXT_POINT,              /* Поиск следующей точки */
-    ENGINE_FIND_PROCESS,                 /* Процесс поиска точки */
-    ENGINE_POINT_NOT_FOUND,              /* Точка не найдена, удаляем изделия с конвеера */
-    ENGINE_CONCRETE_NEXT_POINT_POSITION, /* Позиционирование сварки над точкой */
-    ENGINE_WELDING_DOWN,
-    ENGINE_WELDING_UP,
-    ENGINE_WELDING,          /* Процесс сварки */
-    ENGINE_START_POSITION,   /* Начальное положение сварки */
-    ENGINE_FREE,             /* Освобождение конвеера */
-    ENGINE_WAIT_FREE_OBJECT, /* Ожидание пока изделие не удет с конвейера */
+    ENGINE_BEGIN_WORK,                   /**< лента заблокирована, работа начата */
+    ENGINE_POSITION,                     /**< аппарат сводится к центру изделия */
+    ENGINE_FIND_NEXT_POINT,              /**< выбор следующей точки сварки */
+    ENGINE_FIND_PROCESS,                 /**< поиск точки идёт */
+    ENGINE_POINT_NOT_FOUND,              /**< точка не найдена: изделие снимается */
+    ENGINE_CONCRETE_NEXT_POINT_POSITION, /**< аппарат сводится над точкой */
+    ENGINE_WELDING_DOWN,                 /**< аппарат опускается */
+    ENGINE_WELDING_UP,                   /**< аппарат поднимается */
+    ENGINE_WELDING,                      /**< идёт сварка */
+    ENGINE_START_POSITION,               /**< возврат в исходное положение */
+    ENGINE_FREE,                         /**< освобождение конвейера */
+    ENGINE_WAIT_FREE_OBJECT,             /**< ожидание, пока изделие уедет */
 
-    ENGINE_MOVE_WELDING_DEVICE /* Состояние перемещения сварки */
+    ENGINE_MOVE_WELDING_DEVICE /**< перемещение аппарата между точками */
 };
 
+/**
+ * Прогон автомата до остановки.
+ *
+ * Функция сама тактирует эмуляцию: на каждом такте опрашивает входы через
+ * @p si, принимает решение и выдаёт воздействия через @p di. Числа,
+ * зависящие от изделия, берутся из @p pi.
+ */
 void engine_execute(struct PropertyInterface *pi, struct SensorInterface *si,
                     struct DeviceInterface *di);
 

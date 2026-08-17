@@ -1,11 +1,14 @@
 #ifndef STATECRAFT_FSM_H
 #define STATECRAFT_FSM_H
 
-/*
+/**
+ * @file
  * Представление автоматов и обмен ими между практиками лекций 4 и 5.
  *
  * Здесь только структуры данных и ввод-вывод: алгоритмы живут в самих
- * практиках, чтобы студент видел их целиком, а не по частям.
+ * практиках, чтобы студент видел их целиком, а не по частям. Конвейер
+ * `05-kleene "(a|b)*abb" | 04-dfa-nfa --minimize` работает именно потому,
+ * что обе стороны читают и пишут описанный ниже формат.
  *
  * Текстовый формат описания НКА (одна конструкция на строку, '#' — комментарий):
  *
@@ -23,66 +26,119 @@
 #include <stdio.h>
 #include "base_types.h"
 
-#define FSM_MAX_STATES 64      /* состояний в НКА */
-#define FSM_MAX_DFA_STATES 128 /* состояний в ДКА: подмножества исходных */
-#define FSM_MAX_SYMBOLS 16     /* мощность входного алфавита */
+#define FSM_MAX_STATES 64      /**< состояний в НКА */
+#define FSM_MAX_DFA_STATES 128 /**< состояний в ДКА: подмножества исходных */
+#define FSM_MAX_SYMBOLS 16     /**< мощность входного алфавита */
+/** Отсутствие состояния: «перехода нет» в ДКА и признак ошибки у функций,
+    возвращающих номер состояния или символа. */
 #define FSM_NO_STATE (-1)
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
+/**
+ * Недетерминированный конечный автомат с ε-переходами.
+ *
+ * Переходы хранятся матрицами флагов, а не списками: у учебных автоматов
+ * состояний десятки, зато проверка «есть ли переход» — одно обращение, и
+ * код алгоритмов читается как определение из лекции.
+ */
 struct Nfa {
-    int state_count;
-    int symbol_count;
-    char symbols[FSM_MAX_SYMBOLS];
-    int start;
-    char final[FSM_MAX_STATES];
+    int state_count;               /**< состояний; нумерация с нуля */
+    int symbol_count;              /**< мощность алфавита */
+    char symbols[FSM_MAX_SYMBOLS]; /**< сам алфавит: символ на позицию */
+    int start;                     /**< начальное состояние */
+    char final[FSM_MAX_STATES];    /**< флаг «состояние заключительное» */
+    /** Переходы по пустому слову: eps[from][to]. */
     char eps[FSM_MAX_STATES][FSM_MAX_STATES];
+    /** Переходы по символу: trans[from][символ][to]. */
     char trans[FSM_MAX_STATES][FSM_MAX_SYMBOLS][FSM_MAX_STATES];
 };
 
+/**
+ * Детерминированный конечный автомат.
+ *
+ * Состояний в нём допускается вдвое больше, чем в НКА: детерминизация
+ * строит подмножества исходных состояний, и их может оказаться больше
+ * самих состояний.
+ */
 struct Dfa {
-    int state_count;
-    int symbol_count;
-    char symbols[FSM_MAX_SYMBOLS];
-    int start;
-    char final[FSM_MAX_DFA_STATES];
+    int state_count;                /**< состояний; нумерация с нуля */
+    int symbol_count;               /**< мощность алфавита */
+    char symbols[FSM_MAX_SYMBOLS];  /**< сам алфавит: символ на позицию */
+    int start;                      /**< начальное состояние */
+    char final[FSM_MAX_DFA_STATES]; /**< флаг «состояние заключительное» */
+    /** Функция переходов; #FSM_NO_STATE означает, что перехода нет. */
     int trans[FSM_MAX_DFA_STATES][FSM_MAX_SYMBOLS];
 };
 
 /* --- НКА -------------------------------------------------------------- */
 
+/** Пустой автомат без состояний: с этого начинается любое построение. */
 void nfa_init(struct Nfa *nfa);
 
-/* Новое состояние; FSM_NO_STATE, если достигнут предел FSM_MAX_STATES. */
+/**
+ * Заводит новое состояние.
+ *
+ * @return номер состояния или #FSM_NO_STATE, если достигнут предел
+ *         #FSM_MAX_STATES. Проверять обязательно: конструкция Томпсона
+ *         заводит по два состояния на символ выражения и упирается в предел
+ *         на выражениях средней длины.
+ */
 int nfa_add_state(struct Nfa *nfa);
 
-/* Индекс символа в алфавите; символ добавляется, если его там ещё нет.
-   FSM_NO_STATE, если алфавит переполнен. */
+/**
+ * Индекс символа в алфавите; символ добавляется, если его там ещё нет.
+ *
+ * @return позицию символа или #FSM_NO_STATE, если алфавит переполнен.
+ */
 int nfa_symbol_index(struct Nfa *nfa, char symbol);
 
+/** Переход по символу; символ добавляется в алфавит, если его там не было. */
 void nfa_add_transition(struct Nfa *nfa, int from, char symbol, int to);
+
+/** Переход по пустому слову. */
 void nfa_add_epsilon(struct Nfa *nfa, int from, int to);
+
 void nfa_set_final(struct Nfa *nfa, int state, bool value);
 
-/* eps-замыкание множества: на входе и выходе массив флагов длины
-   state_count. */
+/**
+ * Дополняет множество состояний его ε-замыканием.
+ *
+ * @param nfa автомат, чьи ε-переходы прослеживаются
+ * @param set массив флагов длины `state_count`; он же и результат — функция
+ *            добавляет в него всё, куда можно попасть по пустому слову
+ */
 void nfa_epsilon_closure(const struct Nfa *nfa, char *set);
 
-/* Допускает ли НКА слово. Прямое моделирование по множеству состояний —
-   то же, что делает детерминизация, но без запоминания подмножеств. */
+/**
+ * Допускает ли автомат слово.
+ *
+ * Прямое моделирование по множеству состояний — то же, что делает
+ * детерминизация, но без запоминания подмножеств.
+ */
 bool nfa_accepts(const struct Nfa *nfa, const char *word);
 
+/** Печать в текстовом формате, описанном в начале файла. */
 void nfa_print(const struct Nfa *nfa, FILE *out);
+
+/** Печать на языке DOT — для Graphviz. */
 void nfa_print_dot(const struct Nfa *nfa, FILE *out);
 
-/* Чтение текстового формата. false — ошибка разбора, причина в stderr. */
+/**
+ * Чтение текстового формата, описанного в начале файла.
+ *
+ * @return false при ошибке разбора; причина печатается в stderr, а
+ *         содержимое @p nfa после этого неопределено.
+ */
 bool nfa_read(struct Nfa *nfa, FILE *in);
 
 /* --- ДКА -------------------------------------------------------------- */
 
+/** Пустой автомат: все переходы — #FSM_NO_STATE. */
 void dfa_init(struct Dfa *dfa);
+
 bool dfa_accepts(const struct Dfa *dfa, const char *word);
 void dfa_print(const struct Dfa *dfa, FILE *out);
 void dfa_print_dot(const struct Dfa *dfa, FILE *out);

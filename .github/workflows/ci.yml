@@ -54,6 +54,28 @@ jobs:
       - name: Тесты
         run: ctest --test-dir build --output-on-failure
 
+  docs:
+    name: Документация практикума (Doxygen)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Установить doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen
+
+      # Ключ --strict: молчаливый пропуск здесь означал бы, что задание
+      # зелёное, ничего не проверив. Разметка комментариев проверяется самим
+      # doxygen — Doxyfile поднимает WARN_AS_ERROR.
+      - name: Собрать документацию
+        run: ./scripts/build-docs.sh --strict
+
+      - name: Выложить документацию
+        uses: actions/upload-artifact@v4
+        with:
+          name: practices-docs
+          path: build/docs/html
+          if-no-files-found: error
+
   promela:
     name: Модели Promela (SPIN)
     runs-on: ubuntu-latest

@@ -1,0 +1,61 @@
+# Doxyfile — документация практикума курса АПСУ (ТД-4).
+#
+# Собирается целью CMake `docs` либо вручную из корня репозитория:
+#
+#   doxygen Doxyfile          результат — build/docs/html/index.html
+#
+# Файл намеренно короткий: перечислено только то, что отличается от
+# умолчаний doxygen. Полный список параметров печатает `doxygen -g -`.
+
+PROJECT_NAME           = "Практикум АПСУ"
+PROJECT_BRIEF          = "Примеры на ISO C90 к курсу «Автоматное программирование систем управления»"
+# Версию задаёт вызывающая сторона: цель CMake берёт её из lectures/course.typ,
+# чтобы номер документации совпадал с номером на титульных листах лекций.
+PROJECT_NUMBER         = "$(STATECRAFT_VERSION)"
+
+OUTPUT_DIRECTORY       = build/docs
+OUTPUT_LANGUAGE        = Russian
+# Комментарии в коде русские — без этого doxygen читает их как latin-1.
+INPUT_ENCODING         = UTF-8
+
+INPUT                  = practices
+FILE_PATTERNS          = *.c *.h
+RECURSIVE              = YES
+# Сторонний и порождённый код под требования курса не подпадает: тот же
+# список исключений, что в scripts/check-style.sh.
+EXCLUDE_PATTERNS       = */catch2/* \
+                         */resources/* \
+                         */generated/* \
+                         */build/* \
+                         */cmake-build*/*
+
+# Практикум написан на Си: ни классов, ни пространств имён.
+OPTIMIZE_OUTPUT_FOR_C  = YES
+# Первая фраза комментария и есть краткое описание — тег @brief не нужен.
+JAVADOC_AUTOBRIEF      = YES
+TAB_SIZE               = 4
+
+# Документируется публичный интерфейс. Статические функции и файлы без
+# комментариев в документацию не попадают: по требованию ТД-4 объём
+# минимально необходимый, а не «всё подряд».
+EXTRACT_ALL            = NO
+EXTRACT_STATIC         = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+
+GENERATE_HTML          = YES
+GENERATE_LATEX         = NO
+HTML_OUTPUT            = html
+# Исходники рядом с документацией: учебному коду это полезнее, чем описание.
+SOURCE_BROWSER         = YES
+STRIP_CODE_COMMENTS    = NO
+
+QUIET                  = YES
+WARNINGS               = YES
+# Недокументированное — не ошибка (см. выше про объём), а вот испорченная
+# разметка ошибка: неверное имя параметра в @param, ссылка в никуда,
+# незакрытая группа. Такие места doxygen находит, и в CI это должно падать.
+WARN_IF_UNDOCUMENTED   = NO
+WARN_NO_PARAMDOC       = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_AS_ERROR          = FAIL_ON_WARNINGS
