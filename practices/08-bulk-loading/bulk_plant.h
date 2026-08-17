@@ -1,7 +1,8 @@
 #ifndef STATECRAFT_BULK_PLANT_H
 #define STATECRAFT_BULK_PLANT_H
 
-/*
+/**
+ * @file
  * Модель установки для автомата из bulk_fsm.h: рельс, контейнер, резервуары
  * с заслонками, таймер выдержки.
  *
@@ -34,42 +35,45 @@
 extern "C" {
 #endif
 
-/* Тактов на одну клетку пути, на ход заслонки и на выдержку наполнения. */
-#define BULK_MOVE_TICKS 2
-#define BULK_GATE_TICKS 3
-#define BULK_FILL_TICKS 5
+#define BULK_MOVE_TICKS 2 /**< тактов на одну клетку пути */
+#define BULK_GATE_TICKS 3 /**< тактов на ход заслонки */
+#define BULK_FILL_TICKS 5 /**< тактов на выдержку наполнения */
 
-/* Позиции: 0 — исходное (крайнее правое), резервуары левее с шагом 2. */
-#define BULK_HOME_POSITION 0
-#define BULK_TANK_STEP 2
+#define BULK_HOME_POSITION 0 /**< исходное положение — крайнее правое */
+#define BULK_TANK_STEP 2     /**< резервуары стоят левее с этим шагом */
 
+/** Положение заслонки резервуара. */
 enum BulkGate { BULK_GATE_CLOSED, BULK_GATE_OPENING, BULK_GATE_OPEN, BULK_GATE_CLOSING };
 
+/** Состояние установки: механика, сведённая к счётчикам. */
 struct BulkPlant {
-    int position;      /* где контейнер, в клетках от исходного положения */
-    int move_progress; /* сколько тактов идёт текущее перемещение */
+    int position;      /**< где контейнер, в клетках от исходного положения */
+    int move_progress; /**< сколько тактов идёт текущее перемещение */
 
     enum BulkGate gate[BULK_TANK_COUNT];
     int gate_progress;
 
-    int timer;      /* тактов выдержки осталось; -1 — таймер не запущен */
-    int timer_done; /* выдержка истекла */
+    int timer;      /**< тактов выдержки осталось; -1 — таймер не запущен */
+    int timer_done; /**< выдержка истекла */
 
-    int filled[BULK_TANK_COUNT]; /* сколько раз резервуар отдал материал */
-    int running;                 /* подано ли питание */
-    int fault;                   /* установка сообщает об аварии */
+    int filled[BULK_TANK_COUNT]; /**< сколько раз резервуар отдал материал */
+    int running;                 /**< подано ли питание */
+    int fault;                   /**< установка сообщает об аварии */
 };
 
+/** Установка под напряжением, контейнер в исходном положении, заслонки закрыты. */
 void bulk_plant_init(struct BulkPlant *plant);
 
-/*
+/**
  * Один такт установки: команды автомата исполняются, затем показания датчиков
- * записываются в его регистр входов. Порядок именно такой — датчики отвечают
- * на состояние, сложившееся после исполнения команд.
+ * записываются в его регистр входов.
+ *
+ * Порядок именно такой — датчики отвечают на состояние, сложившееся после
+ * исполнения команд.
  */
 void bulk_plant_tick(struct BulkPlant *plant, struct BulkFsm *fsm);
 
-/* Позиция, в которой контейнер стоит под резервуаром. */
+/** Позиция, в которой контейнер стоит под резервуаром @p tank. */
 int bulk_tank_position(int tank);
 
 #if defined(__cplusplus)
