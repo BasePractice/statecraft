@@ -421,3 +421,25 @@ TEST_CASE("заклинивший привод останавливает пог
     CHECK(sensors.line == 1);     /* прочие датчики исправны      */
     CHECK(sensors.odometer == LOADER_CELL_CM);
 }
+
+TEST_CASE("дальномер видит перегороженный проход, и погрузчик в него не въезжает", "[plant]") {
+    Config config("factory.json");
+    LoaderPlant plant;
+    LoaderCommands commands = {0, 0, 0, 0, 0};
+    LoaderSensors sensors;
+
+    /* Метки 7 и 8 стоят в одном проходе через пять клеток друг от друга. */
+    REQUIRE(loader_plant_init(&plant, &config.map, 7, ROUTE_UP));
+    loader_plant_block(&plant, 8);
+    loader_plant_sensors(&plant, &sensors);
+    CHECK(sensors.range == 5 * LOADER_CELL_CM);
+
+    commands.gas = 1;
+    for (int i = 0; i < 400; ++i)
+        loader_plant_tick(&plant, &commands);
+    loader_plant_sensors(&plant, &sensors);
+
+    CHECK(loader_plant_point(&plant) != 8); /* до перегороженной метки не доехал */
+    CHECK(sensors.line == 1);               /* разметка на месте: отказ виден только дальномеру */
+    CHECK(sensors.range < 40);              /* ближе порога остановки */
+}

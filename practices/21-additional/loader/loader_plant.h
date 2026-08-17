@@ -109,6 +109,13 @@ struct LoaderPlant {
      */
     int jam_after_cells;
 
+    /*
+     * Метка, у которой проход перегорожен: чужой погрузчик, упавшая паллета,
+     * ремонтная зона. Дальномер видит препятствие заранее, а въехать в него
+     * нельзя — как и в жизни.
+     */
+    int blocked_point;
+
     /** Погрузчик потерял разметку: дальше ехать некуда. */
     int off_line;
 
@@ -147,6 +154,13 @@ void loader_plant_add_stack(struct LoaderPlant *plant, int point, int stack_code
  * прочие датчики молчат.
  */
 void loader_plant_jam_after(struct LoaderPlant *plant, int cells);
+
+/**
+ * Перегораживает проход в клетке метки @p point. Дальномер начнёт видеть
+ * препятствие за LOADER_RANGE_MAX_CM, а система управления обязана встать
+ * раньше, чем упрётся: порог — STOP_RANGE в модели.
+ */
+void loader_plant_block(struct LoaderPlant *plant, int point);
 
 /** Код паллеты на вилах или 0. */
 int loader_plant_carried(const struct LoaderPlant *plant);

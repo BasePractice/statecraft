@@ -156,6 +156,8 @@ bool loader_runner_init_mission(struct LoaderRunner *runner, const struct Factor
         loader_plant_add_stack(&runner->plant, mission->place_point, mission->place_stack);
     if (mission->jam_after_cells >= 0)
         loader_plant_jam_after(&runner->plant, mission->jam_after_cells);
+    if (mission->block_point != 0)
+        loader_plant_block(&runner->plant, mission->block_point);
 
     loader_plant_sensors(&runner->plant, &runner->sensors);
     runner->model.userdata = runner;

@@ -524,6 +524,8 @@ bool mission_read_file(struct Mission *mission, const char *file_name, char *err
         mission->place_stack = value;
     if (mission_field(text, "\"jam_after_cells\"", &value))
         mission->jam_after_cells = value;
+    if (mission_field(text, "\"block_point\"", &value))
+        mission->block_point = value;
 
     if (mission->pick_point == 0) {
         if (error != NULL && error_size > 0) {

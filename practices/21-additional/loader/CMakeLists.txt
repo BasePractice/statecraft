@@ -27,7 +27,7 @@ foreach (config factory.json factory-grid.json)
             "${CMAKE_CURRENT_BINARY_DIR}/${config}" COPYONLY)
 endforeach ()
 
-file(GLOB LOADER_MISSIONS "${CMAKE_CURRENT_SOURCE_DIR}/mission/*.json")
+file(GLOB LOADER_MISSIONS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/mission/*.json")
 foreach (item IN LISTS LOADER_MISSIONS)
     get_filename_component(item_name "${item}" NAME)
     configure_file("${item}" "${CMAKE_CURRENT_BINARY_DIR}/mission/${item_name}" COPYONLY)

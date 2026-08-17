@@ -104,6 +104,17 @@ void loader_plant_jam_after(struct LoaderPlant *plant, int cells) {
         plant->jam_after_cells = cells;
 }
 
+void loader_plant_block(struct LoaderPlant *plant, int point) {
+    if (plant != NULL)
+        plant->blocked_point = point;
+}
+
+/* Перегорожена ли клетка. Препятствие занимает клетку метки целиком. */
+static bool cell_blocked(const struct LoaderPlant *plant, int row, int col) {
+    return plant->blocked_point != 0
+           && factory_point_at(plant->map, row, col) == plant->blocked_point;
+}
+
 int loader_plant_carried(const struct LoaderPlant *plant) {
     return plant == NULL ? 0 : plant->carried_pallet;
 }
@@ -123,6 +134,8 @@ static int range_ahead(const struct LoaderPlant *plant) {
         row += DELTA_ROW[plant->angle];
         col += DELTA_COL[plant->angle];
         if (factory_cell(plant->map, FACTORY_LAYER_MAP, row, col) != 13)
+            break;
+        if (cell_blocked(plant, row, col))
             break;
         distance += LOADER_CELL_CM;
         if (distance >= LOADER_RANGE_MAX_CM)
@@ -177,8 +190,12 @@ void loader_plant_tick(struct LoaderPlant *plant, const struct LoaderCommands *c
             int next_col = plant->col + DELTA_COL[plant->angle];
 
             plant->travel_cm -= LOADER_CELL_CM;
-            if (cell_allows(plant->map, plant->row, plant->col, plant->angle)
-                && cell_allows(plant->map, next_row, next_col, plant->angle)) {
+            if (cell_blocked(plant, next_row, next_col)) {
+                /* В препятствие погрузчик не въезжает: он упирается в него.
+                   Линия при этом на месте — отказ виден только дальномеру. */
+                plant->travel_cm = LOADER_CELL_CM - 1;
+            } else if (cell_allows(plant->map, plant->row, plant->col, plant->angle)
+                       && cell_allows(plant->map, next_row, next_col, plant->angle)) {
                 plant->row = next_row;
                 plant->col = next_col;
                 ++plant->cells;
@@ -189,9 +206,12 @@ void loader_plant_tick(struct LoaderPlant *plant, const struct LoaderCommands *c
                 plant->travel_cm = 0;
             }
         }
-    } else if (!commands->gas) {
-        plant->travel_cm = 0;
     }
+    /*
+     * Газ снят — погрузчик остаётся там, где встал: положение внутри клетки не
+     * обнуляется. Иначе показание дальномера «отскакивало» бы назад в тот
+     * самый момент, когда система управления остановилась перед препятствием.
+     */
 
     if (commands->fork_up || commands->fork_down) {
         int slot = stack_here(plant);

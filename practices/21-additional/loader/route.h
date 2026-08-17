@@ -175,6 +175,7 @@ struct Mission {
     int place_point;     /* метка у свободного места; 0 — только взять */
     int place_stack;     /* код свободного места             */
     int jam_after_cells; /* отладка: заклинить привод после N клеток; -1 — нет */
+    int block_point;     /* отладка: перегородить проход у этой метки; 0 — нет */
 };
 
 void mission_default(struct Mission *mission);

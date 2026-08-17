@@ -209,6 +209,20 @@ void draw_map(const FactoryMap *map, const Route &route) {
 void draw_stacks(const LoaderRunner &runner) {
     const LoaderPlant &plant = runner.plant;
 
+    /* Перегороженная клетка: то, во что погрузчик обязан не въехать. */
+    if (plant.blocked_point != 0) {
+        int row = 0;
+        int col = 0;
+
+        if (factory_point_cell(runner.map, plant.blocked_point, &row, &col)) {
+            int x = MARGIN + col * TILE;
+            int y = MARGIN + row * TILE;
+
+            DrawRectangle(x - 2, y - 2, TILE + 4, TILE + 4, Color{200, 70, 60, 220});
+            DrawRectangleLines(x - 2, y - 2, TILE + 4, TILE + 4, MAROON);
+        }
+    }
+
     for (int i = 0; i < LOADER_STACK_COUNT; ++i) {
         int row = 0;
         int col = 0;
@@ -410,7 +424,13 @@ bool draw_button(const Button &button, bool enabled) {
     return hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 }
 
-/* Ползунок частоты тактирования: от 1 до 240 тактов в секунду. */
+/*
+ * Ползунок частоты тактирования: от 1 до 240 тактов в секунду. Тянуть его
+ * можно, только начав с нажатия внутри полосы: иначе зажатая где-то ещё кнопка
+ * мыши, проехав над ползунком, меняла бы скорость сама собой.
+ */
+bool g_slider_grabbed = false;
+
 int draw_speed_slider(Rectangle box, int speed) {
     static const Label L_SPEED = {"Тактов в секунду", "Ticks per second"};
     const int min_speed = 1;
@@ -427,7 +447,12 @@ int draw_speed_slider(Rectangle box, int speed) {
     DrawRectangle((int)(box.x + box.width * part) - 3, (int)box.y - 3, 6, (int)box.height + 6,
                   Color{70, 100, 150, 255});
 
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouse, box)) {
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouse, box))
+        g_slider_grabbed = true;
+    if (!IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        g_slider_grabbed = false;
+
+    if (g_slider_grabbed) {
         float value = (mouse.x - box.x) / box.width;
 
         if (value < 0.0f)
