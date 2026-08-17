@@ -63,11 +63,19 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Registers file %s not found\n", filename);
         return EXIT_FAILURE;
     }
-    fscanf(fd, "%d %d %d %d %d %d %d %d %d %d %d %d %d", &registers[SENSOR_POWER_OFF],
-           &registers[SENSOR_POINT_PRESENT], &registers[SENSOR_D1], &registers[SENSOR_D2],
-           &registers[SENSOR_D3], &registers[SENSOR_D4], &registers[SENSOR_D5],
-           &registers[SENSOR_M1], &registers[SENSOR_M2], &registers[SENSOR_M3],
-           &registers[SENSOR_M4], &registers[SENSOR_S1], &registers[LAST_SENSOR]);
+    /* Файл регистров задаёт весь набор входов разом: прочитан он должен быть
+       целиком, иначе часть значений останется нулями молча. Проверка ещё и
+       обязательна для GCC — glibc помечает fscanf warn_unused_result. */
+    if (fscanf(fd, "%d %d %d %d %d %d %d %d %d %d %d %d %d", &registers[SENSOR_POWER_OFF],
+               &registers[SENSOR_POINT_PRESENT], &registers[SENSOR_D1], &registers[SENSOR_D2],
+               &registers[SENSOR_D3], &registers[SENSOR_D4], &registers[SENSOR_D5],
+               &registers[SENSOR_M1], &registers[SENSOR_M2], &registers[SENSOR_M3],
+               &registers[SENSOR_M4], &registers[SENSOR_S1], &registers[LAST_SENSOR])
+        != 13) {
+        fprintf(stderr, "Registers file %s is incomplete\n", filename);
+        fclose(fd);
+        return EXIT_FAILURE;
+    }
     fclose(fd);
 #if defined(WIN32)
     WSADATA wsa_data;

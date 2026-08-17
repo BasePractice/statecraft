@@ -28,12 +28,22 @@ int main(int argc, char **argv) {
                 struct PneumoCylinder *y1 = &engine.cylinders[PNEUMO_CYLINDER_Y1];
                 struct PneumoCylinder *y2 = &engine.cylinders[PNEUMO_CYLINDER_Y2];
 
-                fscanf(fd, "%d %d %d %d %d %d", (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
-                       (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
-                       (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
-                       (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
-                       (int *)&eq_output[PNEUMO_CYLINDER_Y1],
-                       (int *)&eq_output[PNEUMO_CYLINDER_Y2]);
+                /* Прочитаны должны быть все шесть значений. При неполной
+                   строке сигналы остались бы от предыдущего такта, и автомат
+                   пошёл бы по чужим входам — молча. glibc помечает fscanf
+                   warn_unused_result, поэтому GCC такой вызов и отвергает. */
+                if (fscanf(fd, "%d %d %d %d %d %d",
+                           (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
+                           (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
+                           (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
+                           (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
+                           (int *)&eq_output[PNEUMO_CYLINDER_Y1],
+                           (int *)&eq_output[PNEUMO_CYLINDER_Y2])
+                    != 6) {
+                    fprintf(stderr, "Строка файла симуляции прочитана не полностью\n");
+                    running = false;
+                    continue;
+                }
             }
             running = pneumo_engine_tick(&engine);
             if (!running) {
