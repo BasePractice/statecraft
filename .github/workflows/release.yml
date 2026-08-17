@@ -86,8 +86,31 @@ jobs:
             echo "Сборочный номер $build — релиз не оформляется" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          gh release create "$GITHUB_REF_NAME" \
-            --title "Курс АПСУ $VERSION" \
-            --notes-file release-notes.md \
-            "release/statecraft-lectures-$VERSION.zip"
-          echo "Релиз $GITHUB_REF_NAME оформлен" >> "$GITHUB_STEP_SUMMARY"
+
+          archive="release/statecraft-lectures-$VERSION.zip"
+
+          # Шаг перезапускаемый, и это не запас на будущее: первый настоящий
+          # выпуск упал на 503 от api.github.com при загрузке архива, а тег
+          # уже стоял. Повторный `gh release create` в такой ситуации падает
+          # с «release already exists», поэтому существующий релиз
+          # дозаполняется, а сама загрузка повторяется трижды.
+          attempt=1
+          while [ "$attempt" -le 3 ]; do
+            if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+              if gh release upload "$GITHUB_REF_NAME" "$archive" --clobber; then
+                echo "Релиз $GITHUB_REF_NAME оформлен" >> "$GITHUB_STEP_SUMMARY"
+                exit 0
+              fi
+            elif gh release create "$GITHUB_REF_NAME" \
+                   --title "Курс АПСУ $VERSION" \
+                   --notes-file release-notes.md \
+                   "$archive"; then
+              echo "Релиз $GITHUB_REF_NAME оформлен" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "попытка $attempt не удалась, повтор через 20 с" >&2
+            sleep 20
+            attempt=$((attempt + 1))
+          done
+          echo "релиз не оформлен: GitHub не принял запрос" >&2
+          exit 1
