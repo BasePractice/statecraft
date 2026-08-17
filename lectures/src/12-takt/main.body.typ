@@ -378,8 +378,8 @@
 #code-file(
   "/src/12-takt/code/driver.c",
   lang: "c",
-  from: 15,
-  to: 50,
+  from: 16,
+  to: 51,
   caption: [Драйвер: реализация портов модели через обратные вызовы],
 ) <lst:driver>
 

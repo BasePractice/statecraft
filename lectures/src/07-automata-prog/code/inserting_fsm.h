@@ -1,39 +1,71 @@
 #ifndef C_AUTOMATA_PROGRAMMING_PRACTICE_INSERTING_FSM_H
 #define C_AUTOMATA_PROGRAMMING_PRACTICE_INSERTING_FSM_H
+
+/**
+ * @file
+ * Лекция 7. Автомат поиска места вставки — задача Шалыто.
+ *
+ * В последовательности `m_1` ищется место, куда встаёт последовательность
+ * `m_2`. Автомат из трёх состояний вызывается по такту и каждый раз
+ * сообщает событие; вся память о ходе поиска — в его состоянии и двух
+ * счётчиках, поэтому прогон можно остановить и продолжить.
+ *
+ * Пример показателен тем, что задача решается тремя состояниями там, где
+ * привычное решение вложенными циклами читается хуже и ошибается на
+ * границах — в этом и смысл автоматного подхода.
+ */
+
 #include "base_types.h"
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
+/** Состояния автомата: A — просмотр, B — сверка, C — завершение. */
 enum InsertingState { INSERTING_A, INSERTING_B, INSERTING_C };
 
+/** События, которыми автомат отчитывается о такте. */
 enum InsertingEvent {
-    INSERTING_ERROR_END,
-    INSERTING_OK_END,
-    INSERTING_DETECT,
-    INSERTING_DETECT_END,
-    INSERTING_NEXT
+    INSERTING_ERROR_END,  /**< место не найдено: вход исчерпан */
+    INSERTING_OK_END,     /**< место найдено, поиск завершён */
+    INSERTING_DETECT,     /**< совпал очередной символ */
+    INSERTING_DETECT_END, /**< совпадение оборвалось, сверка сброшена */
+    INSERTING_NEXT        /**< такт просмотра без совпадения */
 };
 
+/**
+ * Состояние поиска.
+ *
+ * Последовательности не копируются: структура хранит указатели, и они
+ * обязаны оставаться действительными до конца прогона.
+ */
 struct InsertingEngine {
     enum InsertingState state;
-    bool running;
-    size_t s_1;
-    size_t s_2;
+    bool running; /**< прогон не завершён */
+    size_t s_1;   /**< позиция просмотра в m_1 */
+    size_t s_2;   /**< позиция сверки в m_2 */
 
-    size_t c_1;
-    size_t c_2;
+    size_t c_1; /**< начало текущего совпадения в m_1 */
+    size_t c_2; /**< длина текущего совпадения */
 
-    char *m_1;
+    char *m_1; /**< последовательность, в которой ищем */
     size_t m_1_len;
-    char *m_2;
+    char *m_2; /**< последовательность, которую вставляем */
     size_t m_2_len;
 };
 
+/**
+ * Готовит автомат к прогону.
+ *
+ * @return false, если какой-либо аргумент равен NULL. Длины проверяются на
+ *         каждом такте: `m_1` короче `m_2` — законный случай, поиск просто
+ *         закончится отказом (чтение за границей массива здесь уже было
+ *         дефектом и закрыто тестом).
+ */
 bool inserting_init(struct InsertingEngine *engine, char *m_1, size_t m_1_len, char *m_2,
                     size_t m_2_len);
 
+/** Один такт автомата; событие такта — возвращаемое значение. */
 enum InsertingEvent inserting_engine(struct InsertingEngine *engine);
 
 #if defined(__cplusplus)

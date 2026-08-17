@@ -53,6 +53,11 @@ fi
 export STATECRAFT_VERSION
 
 cd "$ROOT" || exit 1
+# Каталог создаётся заранее: doxygen 1.9 не заводит вложенный путь, если
+# промежуточного каталога нет, и падает с «Output directory does not exist».
+# Локально каталог обычно уже создан сборкой, поэтому дефект вылез в CI.
+mkdir -p build/docs || exit 1
+
 if ! "$DOXYGEN" Doxyfile; then
   bad "doxygen: документация не собрана"
   exit 1
