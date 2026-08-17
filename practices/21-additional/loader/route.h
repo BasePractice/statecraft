@@ -97,7 +97,8 @@ enum LoaderCommandCode {
     LOADER_CMD_TURN_LEFT = 1,
     LOADER_CMD_TURN_RIGHT = 2,
     LOADER_CMD_DRIVE = 3, /* ехать до метки, номер — в аргументе */
-    LOADER_CMD_LIFT = 4
+    LOADER_CMD_LIFT = 4,  /* взять паллету: код паллеты и код места */
+    LOADER_CMD_PLACE = 5  /* поставить паллету на свободное место */
 };
 
 struct PlanStep {
@@ -132,8 +133,9 @@ void loader_timing_default(struct LoaderTiming *timing);
 
 /** Что добавить к маршруту сверх переездов. */
 struct PlanOptions {
-    int lift_pallet; /* код паллеты; 0 — подъём не нужен */
-    int lift_stack;  /* код места, у которого её берут   */
+    int lift_pallet; /* код паллеты; 0 — подъём не нужен  */
+    int lift_stack;  /* код места, у которого её берут    */
+    int place_stack; /* код места, куда её ставят; 0 — не ставим */
     struct LoaderTiming timing;
 };
 
@@ -149,6 +151,44 @@ void plan_options_default(struct PlanOptions *options);
  * @p options допускает NULL — тогда берутся значения по умолчанию.
  */
 bool plan_build(const struct Route *route, const struct PlanOptions *options, struct Plan *plan);
+
+/**
+ * То же, но команды дописываются в конец уже начатого плана: так задание из
+ * нескольких перегонов («доехать, взять, отвезти, поставить») собирается в
+ * один план, который автомат исполняет командой за командой.
+ */
+bool plan_append(const struct Route *route, const struct PlanOptions *options, struct Plan *plan);
+
+/* --- задание целиком -------------------------------------------------------- */
+
+/**
+ * Задание складской системы: откуда выехать, где взять паллету и куда её
+ * поставить. Планировщик разворачивает его в один план команд.
+ */
+struct Mission {
+    char name[64];
+    int start_point;
+    int start_direction;
+    int pick_point;      /* метка у места, где стоит паллета */
+    int pick_stack;      /* код этого места                  */
+    int pick_pallet;     /* код паллеты                      */
+    int place_point;     /* метка у свободного места; 0 — только взять */
+    int place_stack;     /* код свободного места             */
+    int jam_after_cells; /* отладка: заклинить привод после N клеток; -1 — нет */
+};
+
+void mission_default(struct Mission *mission);
+
+/** Читает задание из файла (подмножество JSON). */
+bool mission_read_file(struct Mission *mission, const char *file_name, char *error,
+                       size_t error_size);
+
+/**
+ * Разворачивает задание в план: переезд к месту, «взять», переезд к
+ * свободному месту, «поставить».
+ */
+bool mission_plan(const struct FactoryMap *map, const struct Mission *mission,
+                  const struct LoaderTiming *timing, struct Plan *plan);
 
 const char *plan_command_name(int code);
 

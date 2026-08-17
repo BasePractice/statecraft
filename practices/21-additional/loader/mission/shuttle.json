@@ -1,0 +1,12 @@
+{
+  "_": "Короткое задание: паллета из среднего прохода переезжает в левый",
+  "name": "Перестановка в соседний проход",
+  "start_point": 4,
+  "start_direction": 0,
+  "pick_point": 14,
+  "pick_stack": 5003,
+  "pick_pallet": 202,
+  "place_point": 9,
+  "place_stack": 5004,
+  "jam_after_cells": -1
+}

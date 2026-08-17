@@ -1,0 +1,12 @@
+{
+  "_": "Забрать паллету в дальнем конце левого прохода и поставить её в правый",
+  "name": "Перевозка через склад",
+  "start_point": 1,
+  "start_direction": 1,
+  "pick_point": 10,
+  "pick_stack": 5001,
+  "pick_pallet": 101,
+  "place_point": 18,
+  "place_stack": 5002,
+  "jam_after_cells": -1
+}

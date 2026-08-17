@@ -11,7 +11,8 @@
 //   1 — повернуть налево на 90°
 //   2 — повернуть направо на 90°
 //   3 — ехать по линии до метки cmd_point
-//   4 — поднять груз вилами
+//   4 — взять паллету (вилы вверх, коды сверяются сканерами)
+//   5 — поставить паллету на свободное место (вилы вниз)
 //
 // Направление отсчитывается по часовой стрелке от «вверх»:
 //   0 — вверх, 1 — вправо, 2 — вниз, 3 — влево.
@@ -46,6 +47,7 @@ const CMD_TURN_LEFT: u8 := 1;
 const CMD_TURN_RIGHT: u8 := 2;
 const CMD_DRIVE: u8 := 3;
 const CMD_LIFT: u8 := 4;
+const CMD_PLACE: u8 := 5;
 
 // ─── Направления ──────────────────────────────────────────────────────────────
 const DIR_UP: u8 := 0;
@@ -78,6 +80,7 @@ out drive_gas: bit at 0x400:0;  // ехать вперёд
 out turn_left: bit at 0x401:0;  // поворот на месте налево
 out turn_right: bit at 0x402:0; // поворот на месте направо
 out fork_up: bit at 0x403:0;    // поднять вилы
+out fork_down: bit at 0x404:0;  // опустить вилы
 out fault: bit at 0x500:0;      // авария: движение прекращено
 
 // ─── Рабочие переменные ───────────────────────────────────────────────────────
@@ -118,6 +121,7 @@ cond Obstacle = sense_range < STOP_RANGE;
 cond AtStack = sense_stack = target_stack;
 cond WrongStack = sense_stack != 0 & sense_stack != target_stack;
 cond PalletTaken = sense_pallet = target_point & sense_load = 1;
+cond PalletPlaced = sense_load = 0;
 cond WrongPallet = sense_pallet != 0 & sense_pallet != target_point;
 
 // ─── Модель 1: приём команды ──────────────────────────────────────────────────
@@ -268,8 +272,10 @@ model LiftController {
     start LiftIdle {
         enter {
             fork_up := 0;
+            fork_down := 0;
         }
         ref LiftCheck: busy = 1 & op = CMD_LIFT & Healthy;
+        ref PlaceCheck: busy = 1 & op = CMD_PLACE & Healthy;
     }
 
     // Сверка места. Сканер может ещё ничего не прочитать (код 0) — тогда просто
@@ -285,6 +291,21 @@ model LiftController {
         }
         ref LiftFault: WrongPallet | Faulted;
         ref LiftDone: PalletTaken;
+    }
+
+    // Поставить паллету можно только на то место, которое назвал верхний
+    // уровень: сканер обязан подтвердить код, иначе груз уедет не туда.
+    state PlaceCheck {
+        ref LiftFault: WrongStack | Faulted;
+        ref Placing: AtStack;
+    }
+
+    state Placing {
+        enter {
+            fork_down := 1;
+        }
+        ref LiftFault: Faulted;
+        ref LiftDone: PalletPlaced;
     }
 
     // Вилы остаются поднятыми: снимается команда, а не груз.

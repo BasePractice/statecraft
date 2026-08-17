@@ -323,3 +323,101 @@ TEST_CASE("план проводит погрузчик по цеху", "[plant]
     CHECK(loader_plant_point(&plant) == 10);
     CHECK((int)plant.cells == route.cells);
 }
+
+/*
+ * Задание — это уже не маршрут, а работа: доехать, взять паллету, отвезти,
+ * поставить. Проверяется, что план собирается из двух перегонов и что стенд
+ * действительно переносит груз с одного места на другое.
+ */
+TEST_CASE("задание разворачивается в план из двух перегонов", "[mission]") {
+    Config config("factory.json");
+    Mission mission;
+    Plan plan;
+
+    mission_default(&mission);
+    mission.start_point = 1;
+    mission.start_direction = ROUTE_RIGHT;
+    mission.pick_point = 10;
+    mission.pick_stack = 5001;
+    mission.pick_pallet = 101;
+    mission.place_point = 18;
+    mission.place_stack = 5002;
+
+    REQUIRE(mission_plan(&config.map, &mission, nullptr, &plan));
+
+    int lifts = 0;
+    int places = 0;
+    for (int i = 0; i < plan.count; ++i) {
+        if (plan.step[i].code == LOADER_CMD_LIFT)
+            ++lifts;
+        if (plan.step[i].code == LOADER_CMD_PLACE)
+            ++places;
+    }
+    CHECK(lifts == 1);
+    CHECK(places == 1);
+    CHECK(plan.step[plan.count - 1].code == LOADER_CMD_PLACE);
+    CHECK(plan.step[plan.count - 1].extra == 5002);
+}
+
+TEST_CASE("задание читается из файла", "[mission]") {
+    Mission mission;
+    char error[256] = {0};
+
+    REQUIRE(mission_read_file(&mission, "mission/pick-and-place.json", error, sizeof(error)));
+    CHECK(mission.pick_point == 10);
+    CHECK(mission.pick_pallet == 101);
+    CHECK(mission.place_point == 18);
+    CHECK(mission.place_stack == 5002);
+    CHECK(mission.jam_after_cells == -1);
+
+    REQUIRE(mission_read_file(&mission, "mission/jam.json", error, sizeof(error)));
+    CHECK(mission.jam_after_cells == 30);
+}
+
+TEST_CASE("вилы переносят паллету между местами", "[plant]") {
+    Config config("factory.json");
+    LoaderPlant plant;
+    LoaderCommands commands = {0, 0, 0, 0, 0};
+    LoaderSensors sensors;
+    const int fork_ticks = LOADER_TICKS_FOR(LOADER_FORK_MS);
+
+    REQUIRE(loader_plant_init(&plant, &config.map, 1, ROUTE_RIGHT));
+    loader_plant_place_pallet(&plant, 1, 5001, 101);
+    loader_plant_add_stack(&plant, 2, 5002);
+
+    commands.fork_up = 1;
+    for (int i = 0; i < fork_ticks; ++i)
+        loader_plant_tick(&plant, &commands);
+    loader_plant_sensors(&plant, &sensors);
+    CHECK(loader_plant_carried(&plant) == 101);
+    CHECK(sensors.load == 1);
+
+    /* Поставить паллету можно только там, где место свободно: на метке 1 оно
+       теперь пустое, но груз ставится там, где стоит погрузчик. */
+    commands.fork_up = 0;
+    commands.fork_down = 1;
+    for (int i = 0; i < fork_ticks; ++i)
+        loader_plant_tick(&plant, &commands);
+    loader_plant_sensors(&plant, &sensors);
+    CHECK(loader_plant_carried(&plant) == 0);
+    CHECK(sensors.load == 0);
+}
+
+TEST_CASE("заклинивший привод останавливает погрузчик, а датчики это показывают", "[plant]") {
+    Config config("factory.json");
+    LoaderPlant plant;
+    LoaderCommands commands = {0, 0, 0, 0, 0};
+    LoaderSensors sensors;
+
+    REQUIRE(loader_plant_init(&plant, &config.map, 1, ROUTE_RIGHT));
+    loader_plant_jam_after(&plant, 1);
+    commands.gas = 1;
+    for (int i = 0; i < 100; ++i)
+        loader_plant_tick(&plant, &commands);
+    loader_plant_sensors(&plant, &sensors);
+
+    CHECK(plant.cells == 1);      /* дальше одной клетки не уехал */
+    CHECK(sensors.motion == 0);   /* акселерометр молчит          */
+    CHECK(sensors.line == 1);     /* прочие датчики исправны      */
+    CHECK(sensors.odometer == LOADER_CELL_CM);
+}

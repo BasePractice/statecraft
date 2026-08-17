@@ -53,6 +53,9 @@ static void runner_write_bit(Loader_Out_BitPort port, bool value, void *userdata
     case LOADER_PORT_FORK_UP:
         runner->commands.fork_up = flag;
         break;
+    case LOADER_PORT_FORK_DOWN:
+        runner->commands.fork_down = flag;
+        break;
     case LOADER_PORT_FAULT:
         runner->fault = flag;
         break;
@@ -120,6 +123,44 @@ bool loader_runner_init(struct LoaderRunner *runner, const struct FactoryMap *ma
     /* Числовых выходных портов у модели нет, поэтому write_numeric в
        порождённой структуре не появился: `taktc` заводит только те обработчики,
        которые модель действительно использует. */
+    runner->model.read_numeric = runner_read_numeric;
+    runner->model.now_ms = runner_now_ms;
+    Loader_init(&runner->model);
+    return true;
+}
+
+bool loader_runner_init_mission(struct LoaderRunner *runner, const struct FactoryMap *map,
+                                const struct Mission *mission) {
+    struct LoaderTiming timing;
+
+    if (runner == NULL || map == NULL || mission == NULL)
+        return false;
+    memset(runner, 0, sizeof(*runner));
+    runner->map = map;
+    runner->target = mission->place_point != 0 ? mission->place_point : mission->pick_point;
+    loader_timing_default(&timing);
+
+    /* Маршрут до места, где стоит паллета, нужен ещё и графике: она
+       подсвечивает метки маршрута. Полный план собирает mission_plan. */
+    if (!route_find(map, mission->start_point, mission->pick_point, mission->start_direction, 3,
+                    &runner->route))
+        return false;
+    if (!mission_plan(map, mission, &timing, &runner->plan))
+        return false;
+    if (!loader_plant_init(&runner->plant, map, mission->start_point, mission->start_direction))
+        return false;
+
+    loader_plant_place_pallet(&runner->plant, mission->pick_point, mission->pick_stack,
+                              mission->pick_pallet);
+    if (mission->place_point != 0)
+        loader_plant_add_stack(&runner->plant, mission->place_point, mission->place_stack);
+    if (mission->jam_after_cells >= 0)
+        loader_plant_jam_after(&runner->plant, mission->jam_after_cells);
+
+    loader_plant_sensors(&runner->plant, &runner->sensors);
+    runner->model.userdata = runner;
+    runner->model.read_bit = runner_read_bit;
+    runner->model.write_bit = runner_write_bit;
     runner->model.read_numeric = runner_read_numeric;
     runner->model.now_ms = runner_now_ms;
     Loader_init(&runner->model);

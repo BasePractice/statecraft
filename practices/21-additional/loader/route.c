@@ -341,7 +341,9 @@ const char *plan_command_name(int code) {
     case LOADER_CMD_DRIVE:
         return "ехать до метки";
     case LOADER_CMD_LIFT:
-        return "поднять груз";
+        return "взять паллету";
+    case LOADER_CMD_PLACE:
+        return "поставить паллету";
     default:
         return "?";
     }
@@ -381,6 +383,13 @@ static bool plan_add(struct Plan *plan, int code, int point, int extra, int time
 }
 
 bool plan_build(const struct Route *route, const struct PlanOptions *options, struct Plan *plan) {
+    if (plan == NULL)
+        return false;
+    memset(plan, 0, sizeof(*plan));
+    return plan_append(route, options, plan);
+}
+
+bool plan_append(const struct Route *route, const struct PlanOptions *options, struct Plan *plan) {
     struct PlanOptions defaults;
     int direction;
     int i;
@@ -391,7 +400,6 @@ bool plan_build(const struct Route *route, const struct PlanOptions *options, st
         plan_options_default(&defaults);
         options = &defaults;
     }
-    memset(plan, 0, sizeof(*plan));
     direction = route->start_direction;
     for (i = 0; i < route->count; ++i) {
         int wanted = route->step[i].direction;
@@ -426,9 +434,152 @@ bool plan_build(const struct Route *route, const struct PlanOptions *options, st
                       route->step[i].cells * options->timing.cell_ms + options->timing.margin_ms))
             return false;
     }
-    if (options->lift_pallet != 0
+    if (options->lift_pallet != 0 && options->place_stack == 0
         && !plan_add(plan, LOADER_CMD_LIFT, options->lift_pallet, options->lift_stack,
                      options->timing.lift_ms + options->timing.margin_ms))
         return false;
+    if (options->place_stack != 0
+        && !plan_add(plan, LOADER_CMD_PLACE, options->lift_pallet, options->place_stack,
+                     options->timing.lift_ms + options->timing.margin_ms))
+        return false;
     return true;
+}
+
+/*
+ * Чтение задания. Формат — плоский объект JSON с числами и строками; разбор
+ * такой же несложный, как у сценария (scenario.c), и по той же причине свой:
+ * тащить ради десятка полей стороннюю библиотеку в учебный пример незачем.
+ */
+static const char *mission_skip_spaces(const char *text) {
+    while (*text == ' ' || *text == '\t' || *text == '\n' || *text == '\r' || *text == ','
+           || *text == '{' || *text == '}')
+        ++text;
+    return text;
+}
+
+static bool mission_field(const char *text, const char *name, int *value) {
+    const char *found = strstr(text, name);
+
+    if (found == NULL)
+        return false;
+    found = strchr(found, ':');
+    if (found == NULL)
+        return false;
+    ++found;
+    while (*found == ' ' || *found == '\t')
+        ++found;
+    *value = atoi(found);
+    return true;
+}
+
+bool mission_read_file(struct Mission *mission, const char *file_name, char *error,
+                       size_t error_size) {
+    FILE *file;
+    char text[4096];
+    size_t read;
+    int value;
+    const char *found;
+
+    if (mission == NULL || file_name == NULL)
+        return false;
+    mission_default(mission);
+    file = fopen(file_name, "rb");
+    if (file == NULL) {
+        if (error != NULL && error_size > 0) {
+            strncpy(error, "задание не открывается", error_size - 1);
+            error[error_size - 1] = '\0';
+        }
+        return false;
+    }
+    read = fread(text, 1, sizeof(text) - 1, file);
+    text[read] = '\0';
+    fclose(file);
+    (void)mission_skip_spaces(text);
+
+    found = strstr(text, "\"name\"");
+    if (found != NULL) {
+        found = strchr(found + 6, '"');
+        if (found != NULL) {
+            size_t i = 0;
+
+            ++found;
+            while (*found != '"' && *found != '\0' && i + 1 < sizeof(mission->name))
+                mission->name[i++] = *found++;
+            mission->name[i] = '\0';
+        }
+    }
+    if (mission_field(text, "\"start_point\"", &value))
+        mission->start_point = value;
+    if (mission_field(text, "\"start_direction\"", &value))
+        mission->start_direction = value;
+    if (mission_field(text, "\"pick_point\"", &value))
+        mission->pick_point = value;
+    if (mission_field(text, "\"pick_stack\"", &value))
+        mission->pick_stack = value;
+    if (mission_field(text, "\"pick_pallet\"", &value))
+        mission->pick_pallet = value;
+    if (mission_field(text, "\"place_point\"", &value))
+        mission->place_point = value;
+    if (mission_field(text, "\"place_stack\"", &value))
+        mission->place_stack = value;
+    if (mission_field(text, "\"jam_after_cells\"", &value))
+        mission->jam_after_cells = value;
+
+    if (mission->pick_point == 0) {
+        if (error != NULL && error_size > 0) {
+            strncpy(error, "в задании не указано, где брать паллету", error_size - 1);
+            error[error_size - 1] = '\0';
+        }
+        return false;
+    }
+    return true;
+}
+
+void mission_default(struct Mission *mission) {
+    if (mission == NULL)
+        return;
+    memset(mission, 0, sizeof(*mission));
+    strcpy(mission->name, "без имени");
+    mission->start_point = 1;
+    mission->start_direction = ROUTE_RIGHT;
+    mission->jam_after_cells = -1;
+}
+
+/*
+ * Задание разворачивается в один план: доехать до места, где стоит паллета,
+ * взять её, доехать до свободного места, поставить. Направление, в котором
+ * погрузчик окажется после первого перегона, известно из маршрута — оттуда и
+ * начинается второй.
+ */
+bool mission_plan(const struct FactoryMap *map, const struct Mission *mission,
+                  const struct LoaderTiming *timing, struct Plan *plan) {
+    struct PlanOptions options;
+    struct Route route;
+    int direction;
+
+    if (map == NULL || mission == NULL || plan == NULL)
+        return false;
+    plan_options_default(&options);
+    if (timing != NULL)
+        options.timing = *timing;
+    memset(plan, 0, sizeof(*plan));
+
+    direction = mission->start_direction;
+    if (!route_find(map, mission->start_point, mission->pick_point, direction, 3, &route))
+        return false;
+    options.lift_pallet = mission->pick_pallet;
+    options.lift_stack = mission->pick_stack;
+    options.place_stack = 0;
+    if (!plan_append(&route, &options, plan))
+        return false;
+    if (route.count > 0)
+        direction = route.step[route.count - 1].direction;
+
+    if (mission->place_point == 0)
+        return true;
+
+    if (!route_find(map, mission->pick_point, mission->place_point, direction, 3, &route))
+        return false;
+    options.place_stack = mission->place_stack;
+    return plan_append(&route, &options, plan);
 }

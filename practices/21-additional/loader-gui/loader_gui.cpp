@@ -20,6 +20,9 @@
  *   R          квитировать аварию
  *   N          новое задание: следующая метка по кругу
  *   Esc        выход
+ *
+ * Задания и сценарии выбираются кнопкой из каталогов mission/ и scenario/,
+ * лежащих рядом с приложением.
  */
 
 #include <cstdio>
@@ -100,6 +103,8 @@ Font load_font(const char *requested, bool *loaded) {
     codepoints[count++] = 0x0401;
     codepoints[count++] = 0x0451;
     codepoints[count++] = 0x2192; /* стрелка в подписи маршрута */
+    codepoints[count++] = 0x25B6; /* значок задания в списке */
+    codepoints[count++] = 0x2261; /* значок сценария в списке */
 
     if (requested != nullptr) {
         Font font = LoadFontEx(requested, 18, codepoints, count);
@@ -196,6 +201,35 @@ void draw_map(const FactoryMap *map, const Route &route) {
     }
 }
 
+/*
+ * Места хранения и паллеты. Без них не видно главного: паллета исчезла с
+ * одного места и появилась на другом — то есть погрузчик её действительно
+ * перевёз, а не просто доехал.
+ */
+void draw_stacks(const LoaderRunner &runner) {
+    const LoaderPlant &plant = runner.plant;
+
+    for (int i = 0; i < LOADER_STACK_COUNT; ++i) {
+        int row = 0;
+        int col = 0;
+
+        if (plant.stack_code[i] == 0)
+            continue;
+        if (!factory_point_cell(runner.map, plant.stack_point[i], &row, &col))
+            continue;
+        {
+            int x = MARGIN + col * TILE;
+            int y = MARGIN + row * TILE;
+
+            /* Место — рамка; занятое место — залитый квадрат паллеты. */
+            DrawRectangleLines(x - TILE, y - TILE, TILE * 3, TILE * 3, Color{90, 120, 90, 255});
+            if (plant.stack_pallet[i] != 0)
+                DrawRectangle(x - TILE + 4, y - TILE + 4, TILE * 3 - 8, TILE * 3 - 8,
+                              Color{150, 190, 120, 220});
+        }
+    }
+}
+
 /* Погрузчик рисуется между клетками: доля пути берётся из счётчика установки,
    иначе он прыгал бы через клетку скачком. */
 void draw_loader(const LoaderRunner &runner) {
@@ -236,39 +270,76 @@ struct PortRow {
     Label name;
     int value;
     int output; /* 1 — выход автомата, 0 — вход */
+    int bad;    /* значение, при котором работать нельзя */
 };
+
+/*
+ * «Плохое» значение — то, из-за которого система управления обязана
+ * остановиться: пропала разметка, препятствие вплотную, чужая метка или чужой
+ * код, перебег по энкодеру, газ подан а движения нет. Правила те же, что в
+ * model/loader.takt: панель показывает не собственное мнение приложения, а то,
+ * на что смотрит автомат.
+ */
+int port_is_bad(const LoaderRunner &runner, const char *name, int value) {
+    bool driving = runner.cmd_code == LOADER_CMD_DRIVE;
+    bool handling = runner.cmd_code == LOADER_CMD_LIFT || runner.cmd_code == LOADER_CMD_PLACE;
+
+    if (strcmp(name, "sense_line") == 0)
+        return value == 0;
+    if (strcmp(name, "sense_range") == 0)
+        return value < 40;
+    if (strcmp(name, "sense_point") == 0)
+        return driving && value != 0 && value != runner.cmd_point;
+    if (strcmp(name, "sense_stack") == 0)
+        return handling && value != 0 && value != runner.cmd_extra;
+    if (strcmp(name, "sense_pallet") == 0)
+        return handling && value != 0 && value != runner.cmd_point;
+    /* Смотреть на drive_gas тут нельзя: в аварии газ уже снят, а датчик,
+       из-за которого всё встало, обязан оставаться отмеченным. Признак того,
+       что погрузчик должен ехать, — исполняемая команда «ехать». */
+    if (strcmp(name, "sense_motion") == 0)
+        return driving && runner.cmd_valid != 0 && value == 0;
+    if (strcmp(name, "sense_odometer") == 0)
+        return driving && value - (int)runner.model.odo_mark > 400;
+    if (strcmp(name, "fault") == 0)
+        return value != 0;
+    return 0;
+}
 
 int collect_ports(const LoaderRunner &runner, PortRow *rows, int capacity) {
     const PortRow source[] = {
-        {{"cmd_valid", "cmd_valid"}, runner.cmd_valid, 0},
-        {{"cmd_code", "cmd_code"}, runner.cmd_code, 0},
-        {{"cmd_point", "cmd_point"}, runner.cmd_point, 0},
-        {{"cmd_extra", "cmd_extra"}, runner.cmd_extra, 0},
-        {{"cmd_timeout", "cmd_timeout"}, runner.cmd_timeout_ms, 0},
-        {{"sense_line", "sense_line"}, runner.sensors.line, 0},
-        {{"sense_point", "sense_point"}, runner.sensors.point, 0},
-        {{"sense_angle", "sense_angle"}, runner.sensors.angle, 0},
-        {{"sense_odometer", "sense_odometer"}, runner.sensors.odometer, 0},
-        {{"sense_range", "sense_range"}, runner.sensors.range, 0},
-        {{"sense_motion", "sense_motion"}, runner.sensors.motion, 0},
-        {{"sense_stack", "sense_stack"}, runner.sensors.stack, 0},
-        {{"sense_pallet", "sense_pallet"}, runner.sensors.pallet, 0},
-        {{"sense_load", "sense_load"}, runner.sensors.load, 0},
-        {{"reset", "reset"}, runner.reset, 0},
-        {{"cmd_ack", "cmd_ack"}, runner.cmd_ack, 1},
-        {{"cmd_done", "cmd_done"}, runner.cmd_done, 1},
-        {{"drive_gas", "drive_gas"}, runner.commands.gas, 1},
-        {{"turn_left", "turn_left"}, runner.commands.turn_left, 1},
-        {{"turn_right", "turn_right"}, runner.commands.turn_right, 1},
-        {{"fork_up", "fork_up"}, runner.commands.fork_up, 1},
-        {{"fault", "fault"}, runner.fault, 1},
+        {{"cmd_valid", "cmd_valid"}, runner.cmd_valid, 0, 0},
+        {{"cmd_code", "cmd_code"}, runner.cmd_code, 0, 0},
+        {{"cmd_point", "cmd_point"}, runner.cmd_point, 0, 0},
+        {{"cmd_extra", "cmd_extra"}, runner.cmd_extra, 0, 0},
+        {{"cmd_timeout", "cmd_timeout"}, runner.cmd_timeout_ms, 0, 0},
+        {{"sense_line", "sense_line"}, runner.sensors.line, 0, 0},
+        {{"sense_point", "sense_point"}, runner.sensors.point, 0, 0},
+        {{"sense_angle", "sense_angle"}, runner.sensors.angle, 0, 0},
+        {{"sense_odometer", "sense_odometer"}, runner.sensors.odometer, 0, 0},
+        {{"sense_range", "sense_range"}, runner.sensors.range, 0, 0},
+        {{"sense_motion", "sense_motion"}, runner.sensors.motion, 0, 0},
+        {{"sense_stack", "sense_stack"}, runner.sensors.stack, 0, 0},
+        {{"sense_pallet", "sense_pallet"}, runner.sensors.pallet, 0, 0},
+        {{"sense_load", "sense_load"}, runner.sensors.load, 0, 0},
+        {{"reset", "reset"}, runner.reset, 0, 0},
+        {{"cmd_ack", "cmd_ack"}, runner.cmd_ack, 1, 0},
+        {{"cmd_done", "cmd_done"}, runner.cmd_done, 1, 0},
+        {{"drive_gas", "drive_gas"}, runner.commands.gas, 1, 0},
+        {{"turn_left", "turn_left"}, runner.commands.turn_left, 1, 0},
+        {{"turn_right", "turn_right"}, runner.commands.turn_right, 1, 0},
+        {{"fork_up", "fork_up"}, runner.commands.fork_up, 1, 0},
+        {{"fork_down", "fork_down"}, runner.commands.fork_down, 1, 0},
+        {{"fault", "fault"}, runner.fault, 1, 0},
     };
     int count = (int)(sizeof(source) / sizeof(source[0]));
 
     if (count > capacity)
         count = capacity;
-    for (int i = 0; i < count; ++i)
+    for (int i = 0; i < count; ++i) {
         rows[i] = source[i];
+        rows[i].bad = port_is_bad(runner, source[i].name.en, source[i].value);
+    }
     return count;
 }
 
@@ -306,10 +377,12 @@ void draw_ports(const LoaderRunner &runner, int origin_x, int origin_y) {
             y += line + 2;
             header_drawn = 1;
         }
-        if (changed)
+        if (rows[i].bad)
+            DrawRectangle(origin_x - 3, y - 2, 190, line, Color{255, 170, 160, 255});
+        else if (changed)
             DrawRectangle(origin_x - 3, y - 2, 190, line, Color{255, 232, 120, 255});
         draw_text(TextFormat("%-15s %6d", pick(rows[i].name), rows[i].value), origin_x, y, 14,
-                  changed ? BLACK : DARKGRAY);
+                  rows[i].bad ? MAROON : (changed ? BLACK : DARKGRAY));
         y += line;
     }
 }
@@ -386,9 +459,20 @@ void draw_panel(const LoaderRunner &runner, int origin_x, bool running, int spee
 
     draw_text(pick(L_TITLE), origin_x, y, 20, BLACK);
     y += line + 6;
-    draw_text(TextFormat("%s: %d %s %d", pick(L_ROUTE), runner.route.from,
-                         g_font != nullptr ? "→" : "->", runner.route.to),
-              origin_x, y, 18, DARKGRAY);
+    {
+        /* У задания два перегона: за паллетой и с ней к свободному месту. */
+        const char *arrow = g_font != nullptr ? "→" : "->";
+
+        if (runner.target != runner.route.to) {
+            draw_text(TextFormat("%s: %d %s %d %s %d", pick(L_ROUTE), runner.route.from, arrow,
+                                 runner.route.to, arrow, runner.target),
+                      origin_x, y, 18, DARKGRAY);
+        } else {
+            draw_text(TextFormat("%s: %d %s %d", pick(L_ROUTE), runner.route.from, arrow,
+                                 runner.route.to),
+                      origin_x, y, 18, DARKGRAY);
+        }
+    }
     y += line;
     draw_text(TextFormat("%s: %s", pick(L_COMMAND), loader_runner_command_name(&runner)), origin_x,
               y, 18, DARKGRAY);
@@ -435,6 +519,37 @@ bool parse_direction(const char *text, int *direction) {
     return true;
 }
 
+/*
+ * Список заданий и сценариев. Файлового диалога в raylib нет, а тащить его из
+ * системы ради учебного примера незачем: приложение показывает содержимое двух
+ * каталогов рядом с собой и грузит выбранный файл по щелчку.
+ */
+constexpr int FILES_MAX = 24;
+
+struct FileList {
+    char path[FILES_MAX][512];
+    char name[FILES_MAX][64];
+    int mission[FILES_MAX]; /* 1 — задание, 0 — потактовый сценарий */
+    int count;
+};
+
+void collect_files(FileList *list, const char *directory, int mission) {
+    if (!DirectoryExists(directory))
+        return;
+    {
+        FilePathList found = LoadDirectoryFilesEx(directory, ".json", false);
+
+        for (unsigned int i = 0; i < found.count && list->count < FILES_MAX; ++i) {
+            snprintf(list->path[list->count], sizeof(list->path[0]), "%s", found.paths[i]);
+            snprintf(list->name[list->count], sizeof(list->name[0]), "%s",
+                     GetFileNameWithoutExt(found.paths[i]));
+            list->mission[list->count] = mission;
+            ++list->count;
+        }
+        UnloadDirectoryFiles(found);
+    }
+}
+
 /* Следующая существующая метка по кругу — так задание меняется без ввода. */
 int next_point(const FactoryMap *map, int point) {
     for (int i = 1; i <= FACTORY_POINT_MAX; ++i) {
@@ -461,6 +576,8 @@ int main(int argc, char **argv) {
     int frames_limit = 0;
     const char *shot_name = nullptr;
     const char *scenario_name = nullptr;
+    const char *mission_name = nullptr;
+    int start_speed = 30;
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--file") == 0 && i + 1 < argc) {
@@ -484,10 +601,15 @@ int main(int argc, char **argv) {
             shot_name = argv[++i];
         } else if (strcmp(argv[i], "--scenario") == 0 && i + 1 < argc) {
             scenario_name = argv[++i];
+        } else if (strcmp(argv[i], "--mission") == 0 && i + 1 < argc) {
+            mission_name = argv[++i];
+        } else if (strcmp(argv[i], "--speed") == 0 && i + 1 < argc) {
+            start_speed = atoi(argv[++i]);
         } else {
             printf("Использование: 21-additional-gui [--file ФАЙЛ] [--font ФАЙЛ]\n");
             printf("       [--from МЕТКА] [--to МЕТКА] [--dir up|right|down|left] [--lift]\n");
-            printf("       [--frames N] [--shot ФАЙЛ] [--scenario ФАЙЛ]\n");
+            printf("       [--frames N] [--shot ФАЙЛ] [--scenario ФАЙЛ] [--mission ФАЙЛ]\n");
+            printf("       [--speed ТАКТОВ_В_СЕКУНДУ]\n");
             return EXIT_FAILURE;
         }
     }
@@ -514,7 +636,8 @@ int main(int argc, char **argv) {
     }
 
     const int width = MARGIN * 2 + map.cols * TILE + PANEL_WIDTH + PORTS_WIDTH;
-    const int height = MARGIN * 2 + map.rows * TILE;
+    /* Под картой — полоса управления: кнопки, ползунок и выбор файла. */
+    const int height = MARGIN * 2 + map.rows * TILE + 148;
 
     SetTraceLogLevel(LOG_WARNING);
     InitWindow(width, height, "Statecraft — погрузчик цеха");
@@ -533,16 +656,36 @@ int main(int argc, char **argv) {
         g_font = &font;
 
     bool running = true;
-    int speed = 30; /* тактов автомата в секунду */
+    int speed = start_speed > 0 ? start_speed : 30; /* тактов автомата в секунду */
     float accumulator = 0.0f;
     int frames = 0;
 
     Scenario scenario;
     bool scenario_loaded = false;
     char scenario_note[128] = {0};
+    Mission mission;
+    bool mission_loaded = false;
+
+    /* Что лежит рядом: задания (mission/) и потактовые сценарии (scenario/). */
+    FileList files = {};
+    bool files_open = false;
+
+    collect_files(&files, "mission", 1);
+    collect_files(&files, "scenario", 0);
+    /* Ничего не загружено — список открыт: так видно, что выбрать. */
+    files_open = files.count > 0 && scenario_name == nullptr && mission_name == nullptr;
 
     /* Сценарий можно задать ключом или бросить файл в окно: файлового диалога
        в raylib нет, а перетаскивание работает на всех трёх платформах. */
+    if (mission_name != nullptr) {
+        if (mission_read_file(&mission, mission_name, error, sizeof(error))
+            && loader_runner_init_mission(&runner, &map, &mission)) {
+            mission_loaded = true;
+            snprintf(scenario_note, sizeof(scenario_note), "%s", mission.name);
+        } else {
+            fprintf(stderr, "задание %s не прочитано: %s\n", mission_name, error);
+        }
+    }
     if (scenario_name != nullptr) {
         if (scenario_read_file(&scenario, scenario_name, error, sizeof(error))) {
             scenario_loaded = true;
@@ -555,7 +698,7 @@ int main(int argc, char **argv) {
     }
 
     const int control_x = MARGIN * 2 + map.cols * TILE;
-    const int control_y = height - MARGIN - 92;
+    const int control_y = MARGIN + map.rows * TILE + 12;
     Button button_run = {{(float)control_x, (float)control_y, 84.0f, 28.0f},
                          {"Пуск", "Run"},
                          false};
@@ -565,6 +708,44 @@ int main(int argc, char **argv) {
     Button button_reset = {{(float)control_x + 196.0f, (float)control_y, 96.0f, 28.0f},
                            {"Сброс", "Reset"},
                            false};
+    Button button_files = {{(float)control_x, (float)control_y + 82.0f, 292.0f, 26.0f},
+                           {"Задания и сценарии…", "Missions and scenarios…"},
+                           false};
+
+    /* Загрузка выбранного файла: задание прогоняется на модели цеха, сценарий
+       подаёт значения портов по тактам. */
+    auto load_file = [&](int index) {
+        if (index < 0 || index >= files.count)
+            return;
+        if (files.mission[index]) {
+            if (!mission_read_file(&mission, files.path[index], error, sizeof(error))
+                || !loader_runner_init_mission(&runner, &map, &mission)) {
+                snprintf(scenario_note, sizeof(scenario_note), "%s", error);
+                return;
+            }
+            if (scenario_loaded) {
+                scenario_destroy(&scenario);
+                scenario_loaded = false;
+            }
+            mission_loaded = true;
+            snprintf(scenario_note, sizeof(scenario_note), "%s", mission.name);
+        } else {
+            Scenario loaded;
+
+            if (!scenario_read_file(&loaded, files.path[index], error, sizeof(error))) {
+                snprintf(scenario_note, sizeof(scenario_note), "%s", error);
+                return;
+            }
+            if (scenario_loaded)
+                scenario_destroy(&scenario);
+            scenario = loaded;
+            scenario_loaded = true;
+            mission_loaded = false;
+            loader_runner_set_scenario(&runner, &scenario);
+            snprintf(scenario_note, sizeof(scenario_note), "%s: %d шагов", files.name[index],
+                     scenario.count);
+        }
+    };
 
     while (!WindowShouldClose()) {
         if (frames_limit > 0 && frames >= frames_limit)
@@ -597,27 +778,6 @@ int main(int argc, char **argv) {
             loader_runner_tick(&runner);
         }
 
-        /* Перетащенный в окно файл считается сценарием. */
-        if (IsFileDropped()) {
-            FilePathList dropped = LoadDroppedFiles();
-
-            if (dropped.count > 0) {
-                Scenario loaded;
-
-                if (scenario_read_file(&loaded, dropped.paths[0], error, sizeof(error))) {
-                    if (scenario_loaded)
-                        scenario_destroy(&scenario);
-                    scenario = loaded;
-                    scenario_loaded = true;
-                    loader_runner_set_scenario(&runner, &scenario);
-                    snprintf(scenario_note, sizeof(scenario_note), "%s: %d",
-                             GetFileName(dropped.paths[0]), scenario.count);
-                } else {
-                    snprintf(scenario_note, sizeof(scenario_note), "%s", error);
-                }
-            }
-            UnloadDroppedFiles(dropped);
-        }
 
         bool finished = scenario_loaded ? loader_runner_scenario_done(&runner)
                                         : loader_runner_done(&runner);
@@ -637,6 +797,7 @@ int main(int argc, char **argv) {
         BeginDrawing();
         ClearBackground(RAYWHITE);
         draw_map(&map, runner.route);
+        draw_stacks(runner);
         draw_loader(runner);
         draw_panel(runner, control_x, running, speed);
         draw_ports(runner, control_x + PANEL_WIDTH, MARGIN);
@@ -649,30 +810,63 @@ int main(int argc, char **argv) {
             running = false;
         if (draw_button(button_reset, true)) {
             /* Сброс — это и снятие аварии, и возврат прогона в начало. */
-            int start = runner.route.from;
-            int target = runner.route.to;
+            if (mission_loaded) {
+                loader_runner_init_mission(&runner, &map, &mission);
+            } else {
+                int start = runner.route.from;
+                int target = runner.route.to;
 
-            if (!loader_runner_init(&runner, &map, start, target, direction, &options)) {
-                fprintf(stderr, "прогон не перезапущен\n");
-            } else if (lift) {
-                loader_plant_place_pallet(&runner.plant, target, 5001, 101);
+                if (!loader_runner_init(&runner, &map, start, target, direction, &options)) {
+                    fprintf(stderr, "прогон не перезапущен\n");
+                } else if (lift) {
+                    loader_plant_place_pallet(&runner.plant, target, 5001, 101);
+                }
+                if (scenario_loaded)
+                    loader_runner_set_scenario(&runner, &scenario);
             }
-            if (scenario_loaded)
-                loader_runner_set_scenario(&runner, &scenario);
             accumulator = 0.0f;
         }
         speed = draw_speed_slider({(float)control_x, (float)(control_y + 60), 292.0f, 14.0f},
                                   speed);
         {
-            static const Label L_SCENARIO = {"Сценарий (бросьте файл в окно)",
-                                             "Scenario (drop a file here)"};
-
             static const Label L_KEYS = {"Пробел пуск   S шаг   R квитировать   N цель",
                                          "Space run   S step   R ack fault   N target"};
+            static const Label L_EMPTY = {"файлов рядом нет", "no files nearby"};
 
-            draw_text(scenario_loaded ? scenario_note : pick(L_SCENARIO), control_x,
-                      control_y + 82, 14, scenario_loaded ? DARKBLUE : GRAY);
             draw_text(pick(L_KEYS), control_x, control_y - 26, 13, GRAY);
+            if (draw_button(button_files, files.count > 0))
+                files_open = !files_open;
+            if (scenario_note[0] != '\0')
+                draw_text(scenario_note, control_x, control_y + 114, 14, DARKBLUE);
+            else if (files.count == 0)
+                draw_text(pick(L_EMPTY), control_x, control_y + 114, 14, GRAY);
+
+            if (files_open && files.count > 0) {
+                /* Список раскрывается вверх от кнопки: вниз ему места нет —
+                   там край окна. */
+                int shown = files.count > 8 ? 8 : files.count;
+                Rectangle list_box = {(float)control_x, 0.0f, 292.0f, (float)(shown * 22 + 8)};
+
+                list_box.y = button_files.box.y - list_box.height - 4.0f;
+                DrawRectangleRec(list_box, Color{250, 250, 248, 255});
+                DrawRectangleLinesEx(list_box, 1.0f, Color{150, 152, 158, 255});
+                for (int i = 0; i < shown; ++i) {
+                    Rectangle row = {list_box.x + 4, list_box.y + 4 + (float)(i * 22),
+                                     list_box.width - 8, 20.0f};
+                    bool hovered = CheckCollisionPointRec(GetMousePosition(), row);
+
+                    if (hovered)
+                        DrawRectangleRec(row, Color{224, 232, 244, 255});
+                    draw_text(TextFormat("%s %s", files.mission[i] ? "▶" : "≡", files.name[i]),
+                              (int)row.x + 6, (int)row.y + 3, 14,
+                              files.mission[i] ? BLACK : DARKGRAY);
+                    if (hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                        load_file(i);
+                        files_open = false;
+                        accumulator = 0.0f;
+                    }
+                }
+            }
         }
         EndDrawing();
 

@@ -31,6 +31,7 @@ static int usage(void) {
     printf("  --stack КОД        код места для сканера штабеля (по умолчанию 5001)\n");
     printf("  --no-pallet        не ставить паллету на месте: команда «взять» "
            "закончится аварией\n");
+    printf("  --mission ФАЙЛ     задание: доехать, взять паллету, отвезти, поставить\n");
     printf("  --limit N          предел тактов прогона (по умолчанию 4000)\n");
     printf("  --quiet            без потактовой трассы\n");
     return EXIT_FAILURE;
@@ -62,6 +63,8 @@ int main(int argc, char **argv) {
     bool place_pallet = true;
     int pallet_code = 101;
     int stack_code = 5001;
+    const char *mission_name = NULL;
+    struct Mission mission;
     char error[256];
 
     struct FactoryMap map;
@@ -88,6 +91,8 @@ int main(int argc, char **argv) {
             pallet_code = atoi(argv[++i]);
         } else if (strcmp(argv[i], "--stack") == 0 && i + 1 < argc) {
             stack_code = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--mission") == 0 && i + 1 < argc) {
+            mission_name = argv[++i];
         } else if (strcmp(argv[i], "--no-pallet") == 0) {
             place_pallet = false;
         } else if (strcmp(argv[i], "--quiet") == 0) {
@@ -101,23 +106,41 @@ int main(int argc, char **argv) {
         fprintf(stderr, "не удалось прочитать %s: %s\n", file_name, error);
         return EXIT_FAILURE;
     }
-    plan_options_default(&options);
-    if (lift) {
-        options.lift_pallet = pallet_code;
-        options.lift_stack = stack_code;
-    }
-    if (!loader_runner_init(&runner, &map, from, to, direction, &options)) {
-        fprintf(stderr, "маршрут от метки %d до метки %d не построен\n", from, to);
-        factory_map_destroy(&map);
-        return EXIT_FAILURE;
-    }
-    /* Паллета кладётся на конечную метку: без неё сканеры ничего не прочитают,
-       и команда «взять» закончится аварией — как и должна. */
-    if (lift && place_pallet)
-        loader_plant_place_pallet(&runner.plant, to, stack_code, pallet_code);
+    if (mission_name != NULL) {
+        if (!mission_read_file(&mission, mission_name, error, sizeof(error))) {
+            fprintf(stderr, "задание %s не прочитано: %s\n", mission_name, error);
+            factory_map_destroy(&map);
+            return EXIT_FAILURE;
+        }
+        if (!loader_runner_init_mission(&runner, &map, &mission)) {
+            fprintf(stderr, "задание «%s» не спланировано\n", mission.name);
+            factory_map_destroy(&map);
+            return EXIT_FAILURE;
+        }
+        from = mission.start_point;
+        to = mission.place_point != 0 ? mission.place_point : mission.pick_point;
+        printf("Задание «%s»: метка %d → паллета %d у места %d → место %d, команд %d\n",
+               mission.name, mission.start_point, mission.pick_pallet, mission.pick_point,
+               mission.place_point, runner.plan.count);
+    } else {
+        plan_options_default(&options);
+        if (lift) {
+            options.lift_pallet = pallet_code;
+            options.lift_stack = stack_code;
+        }
+        if (!loader_runner_init(&runner, &map, from, to, direction, &options)) {
+            fprintf(stderr, "маршрут от метки %d до метки %d не построен\n", from, to);
+            factory_map_destroy(&map);
+            return EXIT_FAILURE;
+        }
+        /* Паллета кладётся на конечную метку: без неё сканеры ничего не
+           прочитают, и команда «взять» закончится аварией — как и должна. */
+        if (lift && place_pallet)
+            loader_plant_place_pallet(&runner.plant, to, stack_code, pallet_code);
 
-    printf("Маршрут %d → %d: %d клеток, %d поворотов, %d команд\n", from, to, runner.route.cells,
-           runner.route.turns, runner.plan.count);
+        printf("Маршрут %d → %d: %d клеток, %d поворотов, %d команд\n", from, to,
+               runner.route.cells, runner.route.turns, runner.plan.count);
+    }
 
     while ((int)runner.ticks < limit && !loader_runner_done(&runner)) {
         loader_runner_tick(&runner);
@@ -127,8 +150,9 @@ int main(int argc, char **argv) {
                    runner.plant.clock_ms, runner.sensors.point,
                    route_direction_name(runner.sensors.angle), runner.sensors.odometer,
                    runner.sensors.range, runner.commands.gas, runner.commands.turn_left,
-                   runner.commands.turn_right, runner.commands.fork_up, runner.cmd_ack,
-                   runner.cmd_done, runner.fault, loader_runner_command_name(&runner));
+                   runner.commands.turn_right, runner.commands.fork_up || runner.commands.fork_down,
+                   runner.cmd_ack, runner.cmd_done, runner.fault,
+                   loader_runner_command_name(&runner));
         }
         if (runner.fault) {
             fprintf(stderr, "ОШИБКА: автомат сообщил об аварии на такте %lu (команда %d из %d)\n",

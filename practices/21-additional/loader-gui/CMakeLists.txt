@@ -30,10 +30,22 @@ add_executable(21-additional-gui loader_gui.cpp)
 target_link_libraries(21-additional-gui PRIVATE loader_runtime raylib)
 set_target_properties(21-additional-gui PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 
-# Конфигурации нужны рядом с исполняемым файлом.
+# Конфигурации, задания и сценарии нужны рядом с исполняемым файлом: список в
+# окне строится из каталогов mission/ и scenario/, лежащих рядом с ним.
 foreach (config factory.json factory-grid.json)
     configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../loader/${config}"
             "${CMAKE_CURRENT_BINARY_DIR}/${config}" COPYONLY)
+endforeach ()
+
+file(GLOB LOADER_MISSIONS "${CMAKE_CURRENT_SOURCE_DIR}/../loader/mission/*.json")
+file(GLOB LOADER_SCENARIOS "${CMAKE_CURRENT_SOURCE_DIR}/../loader/scenario/*.json")
+foreach (item IN LISTS LOADER_MISSIONS)
+    get_filename_component(item_name "${item}" NAME)
+    configure_file("${item}" "${CMAKE_CURRENT_BINARY_DIR}/mission/${item_name}" COPYONLY)
+endforeach ()
+foreach (item IN LISTS LOADER_SCENARIOS)
+    get_filename_component(item_name "${item}" NAME)
+    configure_file("${item}" "${CMAKE_CURRENT_BINARY_DIR}/scenario/${item_name}" COPYONLY)
 endforeach ()
 
 # Тестом графику не покрыть: она требует дисплея. Проверяется вручную —

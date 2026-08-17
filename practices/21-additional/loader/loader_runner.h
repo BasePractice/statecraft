@@ -105,6 +105,14 @@ void loader_runner_set_scenario(struct LoaderRunner *runner, const struct Scenar
 /** Сценарий доигран до конца (в обычном режиме — всегда false). */
 bool loader_runner_scenario_done(const struct LoaderRunner *runner);
 
+/**
+ * Готовит прогон по заданию: план из двух перегонов с «взять» и «поставить»,
+ * места хранения и паллета расставлены на стенде, при @c jam_after_cells
+ * привод заклинивает после стольких клеток.
+ */
+bool loader_runner_init_mission(struct LoaderRunner *runner, const struct FactoryMap *map,
+                                const struct Mission *mission);
+
 /** Название текущей команды плана — для трассы и панели состояния. */
 const char *loader_runner_command_name(const struct LoaderRunner *runner);
 

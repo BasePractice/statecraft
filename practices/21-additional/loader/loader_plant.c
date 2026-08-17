@@ -47,16 +47,65 @@ bool loader_plant_init(struct LoaderPlant *plant, const struct FactoryMap *map, 
     plant->row = row;
     plant->col = col;
     plant->angle = direction;
+    plant->jam_after_cells = -1;
     return true;
+}
+
+/* Индекс места хранения у метки, где стоит погрузчик, или -1. */
+static int stack_here(const struct LoaderPlant *plant) {
+    int point = loader_plant_point(plant);
+    int i;
+
+    if (point == 0)
+        return -1;
+    for (i = 0; i < LOADER_STACK_COUNT; ++i) {
+        if (plant->stack_code[i] != 0 && plant->stack_point[i] == point)
+            return i;
+    }
+    return -1;
+}
+
+static int stack_slot(struct LoaderPlant *plant, int point, int stack_code) {
+    int i;
+
+    for (i = 0; i < LOADER_STACK_COUNT; ++i) {
+        if (plant->stack_code[i] == 0 || plant->stack_point[i] == point) {
+            plant->stack_point[i] = point;
+            plant->stack_code[i] = stack_code;
+            return i;
+        }
+    }
+    return -1;
 }
 
 void loader_plant_place_pallet(struct LoaderPlant *plant, int point, int stack_code,
                                int pallet_code) {
+    int slot;
+
     if (plant == NULL)
         return;
-    plant->stack_point = point;
-    plant->stack_code = stack_code;
-    plant->pallet_code = pallet_code;
+    slot = stack_slot(plant, point, stack_code);
+    if (slot >= 0)
+        plant->stack_pallet[slot] = pallet_code;
+}
+
+void loader_plant_add_stack(struct LoaderPlant *plant, int point, int stack_code) {
+    int slot;
+
+    if (plant == NULL)
+        return;
+    slot = stack_slot(plant, point, stack_code);
+    if (slot >= 0)
+        plant->stack_pallet[slot] = 0;
+}
+
+void loader_plant_jam_after(struct LoaderPlant *plant, int cells) {
+    if (plant != NULL)
+        plant->jam_after_cells = cells;
+}
+
+int loader_plant_carried(const struct LoaderPlant *plant) {
+    return plant == NULL ? 0 : plant->carried_pallet;
 }
 
 /*
@@ -114,7 +163,12 @@ void loader_plant_tick(struct LoaderPlant *plant, const struct LoaderCommands *c
     }
 
     step_cm = LOADER_SPEED_CM_S * LOADER_TICK_MS / 1000;
-    if (commands->gas && !commands->turn_left && !commands->turn_right && !plant->off_line) {
+    if (plant->jam_after_cells >= 0 && (int)plant->cells >= plant->jam_after_cells) {
+        /* Привод заклинило: газ подан, а машина стоит. Ни один датчик
+           положения этого не «заметит» — движения просто нет, и отказ ловит
+           сторожевой таймер команды. */
+        plant->travel_cm = 0;
+    } else if (commands->gas && !commands->turn_left && !commands->turn_right && !plant->off_line) {
         plant->travel_cm += step_cm;
         plant->odometer_cm += step_cm;
         plant->moved_this_tick = 1;
@@ -139,10 +193,23 @@ void loader_plant_tick(struct LoaderPlant *plant, const struct LoaderCommands *c
         plant->travel_cm = 0;
     }
 
-    if (commands->fork_up) {
+    if (commands->fork_up || commands->fork_down) {
+        int slot = stack_here(plant);
+
         plant->fork_elapsed_ms += LOADER_TICK_MS;
         if (plant->fork_elapsed_ms > LOADER_FORK_MS)
             plant->fork_elapsed_ms = LOADER_FORK_MS;
+        if (plant->fork_elapsed_ms >= LOADER_FORK_MS && slot >= 0) {
+            if (commands->fork_up && plant->carried_pallet == 0 && plant->stack_pallet[slot] != 0) {
+                /* Паллета перешла со стеллажа на вилы. */
+                plant->carried_pallet = plant->stack_pallet[slot];
+                plant->stack_pallet[slot] = 0;
+            } else if (commands->fork_down && plant->carried_pallet != 0
+                       && plant->stack_pallet[slot] == 0) {
+                plant->stack_pallet[slot] = plant->carried_pallet;
+                plant->carried_pallet = 0;
+            }
+        }
     } else {
         plant->fork_elapsed_ms = 0;
     }
@@ -165,16 +232,18 @@ void loader_plant_sensors(const struct LoaderPlant *plant, struct LoaderSensors 
     sensors->range = range_ahead(plant);
     sensors->motion = plant->moved_this_tick;
 
-    at_stack = plant->stack_code != 0 && loader_plant_point(plant) == plant->stack_point;
-    if (at_stack) {
-        sensors->stack = plant->stack_code;
+    at_stack = stack_here(plant);
+    if (at_stack >= 0) {
+        sensors->stack = plant->stack_code[at_stack];
         /* Сканер на вилах читает код паллеты, когда вилы подошли к ней, а
-           тензодатчик отзывается позже — когда паллета оказалась на вилах. */
-        if (plant->fork_elapsed_ms * 2 >= LOADER_FORK_MS)
-            sensors->pallet = plant->pallet_code;
-        if (plant->fork_elapsed_ms >= LOADER_FORK_MS)
-            sensors->load = 1;
+           тензодатчик отзывается позже — когда паллета оказалась на вилах.
+           Поднятый груз сканер видит всё время: он на вилах. */
+        if (plant->carried_pallet != 0)
+            sensors->pallet = plant->carried_pallet;
+        else if (plant->fork_elapsed_ms * 2 >= LOADER_FORK_MS)
+            sensors->pallet = plant->stack_pallet[at_stack];
     }
+    sensors->load = plant->carried_pallet != 0;
 }
 
 int loader_plant_point(const struct LoaderPlant *plant) {

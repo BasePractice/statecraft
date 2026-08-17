@@ -51,6 +51,9 @@ extern "C" {
 #define LOADER_FORK_MS 800      /* подъём вил до захвата паллеты    */
 #define LOADER_RANGE_MAX_CM 250 /* дальше дальномер не видит       */
 
+/** Сколько мест хранения помнит стенд. */
+#define LOADER_STACK_COUNT 4
+
 /** Сколько раз надо тикнуть стендом, чтобы прошло @p ms миллисекунд. */
 #define LOADER_TICKS_FOR(ms) ((ms) / LOADER_TICK_MS)
 
@@ -60,6 +63,7 @@ struct LoaderCommands {
     int turn_left;
     int turn_right;
     int fork_up;
+    int fork_down;
 };
 
 /** Показания датчиков — то, что автомат читает на следующем такте. */
@@ -87,10 +91,23 @@ struct LoaderPlant {
     int fork_elapsed_ms; /* сколько длится текущий подъём вил */
     int moved_this_tick; /* на этом такте погрузчик сдвинулся */
 
-    /* Единственная стоянка с паллетой: метка, код места и код паллеты. */
-    int stack_point;
-    int stack_code;
-    int pallet_code;
+    /*
+     * Места хранения: у каждого свой код, читаемый сканером, и паллета, если
+     * она там стоит. Два места — этого хватает на «взять здесь, поставить
+     * там»; больше в учебном примере не нужно.
+     */
+    int stack_point[LOADER_STACK_COUNT];
+    int stack_code[LOADER_STACK_COUNT];
+    int stack_pallet[LOADER_STACK_COUNT]; /* 0 — место свободно */
+
+    int carried_pallet; /* код паллеты на вилах, 0 — вилы пусты */
+
+    /*
+     * Заклинивание привода: с этой клетки погрузчик перестаёт двигаться, хотя
+     * газ подан. Датчики честно показывают, что движения нет, и отказ обязан
+     * поймать сторожевой таймер команды. Значение -1 — исправная машина.
+     */
+    int jam_after_cells;
 
     /** Погрузчик потерял разметку: дальше ехать некуда. */
     int off_line;
@@ -117,6 +134,22 @@ bool loader_plant_init(struct LoaderPlant *plant, const struct FactoryMap *map, 
  */
 void loader_plant_place_pallet(struct LoaderPlant *plant, int point, int stack_code,
                                int pallet_code);
+
+/**
+ * Заводит место хранения без паллеты: сканер прочитает код, но брать там
+ * нечего. Сюда груз ставят командой «поставить».
+ */
+void loader_plant_add_stack(struct LoaderPlant *plant, int point, int stack_code);
+
+/**
+ * Привод заклинивает после @p cells пройденных клеток: газ подан, а погрузчик
+ * стоит. Так проверяется сторожевой таймер команды — отказ, при котором все
+ * прочие датчики молчат.
+ */
+void loader_plant_jam_after(struct LoaderPlant *plant, int cells);
+
+/** Код паллеты на вилах или 0. */
+int loader_plant_carried(const struct LoaderPlant *plant);
 
 /** Один такт установки: команды исполняются, физика двигается. */
 void loader_plant_tick(struct LoaderPlant *plant, const struct LoaderCommands *commands);
