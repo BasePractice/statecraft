@@ -48,6 +48,25 @@ mkdir -p "$OUT"
 "$BIN" svg life diehard 0,50,100,130 "$OUT/life-diehard.svg" 32
 "$BIN" svg life acorn 0,50,100,200 "$OUT/life-acorn.svg" 48
 
+# Фигуры, считанные со сканов книги М. Гарднера: кот исчезает, оставляя
+# «улыбку» и «отпечаток лапы»; у «Сада Эдема» нет предшественника.
+"$BIN" svg life cheshire-cat 0,3,6,7 "$OUT/life-cheshire-cat.svg" 20
+"$BIN" svg life garden-of-eden 0 "$OUT/life-garden-of-eden.svg" 40
+
+# Пять триплетов: три погибают, четвёртый даёт блок, пятый — мигалку.
+"$BIN" svg life triplet-step 0,1,2,3 "$OUT/life-triplet-step.svg" 10
+"$BIN" svg life triplet-v 0,1,2,3 "$OUT/life-triplet-v.svg" 10
+"$BIN" svg life triplet-diagonal 0,1,2,3 "$OUT/life-triplet-diagonal.svg" 10
+"$BIN" svg life tromino 0,1,2,3 "$OUT/life-tromino.svg" 10
+"$BIN" svg life blinker 0,1,2,3 "$OUT/life-triplet-blinker.svg" 10
+
+# Агар и «вирус»: одна лишняя клетка либо гибнет, либо разрушает решётку.
+"$BIN" svg scene agar-virus-corner 0,1,2,3 "$OUT/life-agar-corner.svg"
+"$BIN" svg scene agar-virus 0,4,10,20 "$OUT/life-agar-virus.svg"
+
+# Размножение тримино по правилу чётности (репликатор Фредкина).
+"$BIN" svg parity tromino 0,1,2,4 "$OUT/life-parity-tromino.svg" 40
+
 # --- муравей Лэнгтона --------------------------------------------------------
 # Беспорядок первых тысяч шагов и внезапное «шоссе» после ~10 000.
 "$BIN" svg langton 200,2000,7000,11000 "$OUT/langton-highway.svg" 96

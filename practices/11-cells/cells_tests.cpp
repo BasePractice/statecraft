@@ -3,6 +3,7 @@
 #include <cells.h>
 #include <render.h>
 
+#include <algorithm>
 #include <cstdio>
 #include <string>
 
@@ -254,6 +255,168 @@ TEST_CASE("Долгие эволюции из горстки клеток", "[11
     REQUIRE(life_population(&acorn) > 7);
 }
 
+TEST_CASE("Чеширский кот оставляет улыбку, а затем отпечаток лапы", "[11.Cells]") {
+    Life a;
+    life_init(&a, 20, 20);
+    REQUIRE(life_place(&a, "cheshire-cat", 6, 6));
+    REQUIRE(life_population(&a) == 18);
+
+    /* Конфигурация считана со скана книги М. Гарднера, и проверяется она
+       ровно тем, что о ней там сказано: на шестом ходу от кота остаётся
+       «улыбка» из четырёх клеток, на седьмом — «отпечаток лапы», блок. */
+    for (int i = 0; i < 6; ++i) {
+        life_step(&a);
+    }
+    REQUIRE(life_population(&a) == 4);
+
+    Life smile = a;
+    life_step(&a);
+    REQUIRE(life_population(&a) == 4);
+    REQUIRE_FALSE(life_equal_shifted(&a, &smile, 0, 0));
+
+    Life block;
+    life_init(&block, 20, 20);
+    REQUIRE(life_place(&block, "block", 0, 0));
+    /* Блок узнаётся по устойчивости: следующие ходы ничего не меняют. */
+    Life before = a;
+    for (int i = 0; i < 3; ++i) {
+        life_step(&a);
+        REQUIRE(life_equal_shifted(&a, &before, 0, 0));
+    }
+    REQUIRE(life_population(&block) == life_population(&a));
+}
+
+TEST_CASE("«Сад Эдема» — 226 клеток в прямоугольнике 33 на 9", "[11.Cells]") {
+    Life a;
+    life_init(&a, 40, 16);
+    REQUIRE(life_place(&a, "garden-of-eden", 1, 1));
+
+    /* Проверить отсутствие предшественника прогоном нельзя — это утверждение
+       о несуществовании. Сверяются размеры и число клеток: если конфигурация
+       будет случайно испорчена правкой, тест это заметит. */
+    REQUIRE(life_population(&a) == 226);
+
+    int left = 40;
+    int right = -1;
+    int top = 16;
+    int bottom = -1;
+    for (int y = 0; y < 16; ++y) {
+        for (int x = 0; x < 40; ++x) {
+            if (!life_get(&a, x, y)) {
+                continue;
+            }
+            left = std::min(left, x);
+            right = std::max(right, x);
+            top = std::min(top, y);
+            bottom = std::max(bottom, y);
+        }
+    }
+    REQUIRE(right - left + 1 == 33);
+    REQUIRE(bottom - top + 1 == 9);
+}
+
+TEST_CASE("Пять триплетов ведут себя так, как в книге", "[11.Cells]") {
+    const char *dying[] = {"triplet-step", "triplet-v", "triplet-diagonal"};
+
+    for (const char *name : dying) {
+        Life a;
+        life_init(&a, 16, 16);
+        REQUIRE(life_place(&a, name, 6, 6));
+        REQUIRE(life_population(&a) == 3);
+        for (int i = 0; i < 3; ++i) {
+            life_step(&a);
+        }
+        REQUIRE(life_population(&a) == 0);
+    }
+
+    /* Четвёртый триплет — тримино — даёт блок и на этом останавливается. */
+    Life corner;
+    life_init(&corner, 16, 16);
+    REQUIRE(life_place(&corner, "tromino", 6, 6));
+    life_step(&corner);
+    REQUIRE(life_population(&corner) == 4);
+    Life block = corner;
+    for (int i = 0; i < 3; ++i) {
+        life_step(&corner);
+        REQUIRE(life_equal_shifted(&corner, &block, 0, 0));
+    }
+}
+
+TEST_CASE("Агар устойчив, а вирус решает всё", "[11.Cells]") {
+    Life agar;
+    life_init(&agar, 24, 24);
+    REQUIRE(life_fill_agar(&agar));
+    REQUIRE(life_population(&agar) == 256);
+
+    Life a = agar;
+    for (int i = 0; i < 5; ++i) {
+        life_step(&a);
+        REQUIRE(life_equal_shifted(&a, &agar, 0, 0));
+    }
+
+    /* Вирус в клетке, где сходятся углы четырёх блоков: агар уничтожает его и
+       через два хода восстанавливает прежний вид. */
+    Life corner = agar;
+    life_set(&corner, 14, 14, true);
+    life_step(&corner);
+    REQUIRE_FALSE(life_equal_shifted(&corner, &agar, 0, 0));
+    life_step(&corner);
+    REQUIRE(life_equal_shifted(&corner, &agar, 0, 0));
+
+    /* Вирус рядом с блоком — начинается разрушение, и оно только растёт. */
+    Life edge = agar;
+    life_set(&edge, 12, 14, true);
+    int damage_before = 0;
+    for (int step = 1; step <= 8; ++step) {
+        life_step(&edge);
+        int damage = 0;
+        for (int y = 0; y < 24; ++y) {
+            for (int x = 0; x < 24; ++x) {
+                if (life_get(&edge, x, y) != life_get(&agar, x, y)) {
+                    ++damage;
+                }
+            }
+        }
+        REQUIRE(damage > damage_before);
+        damage_before = damage;
+    }
+}
+
+TEST_CASE("Заливка агаром требует стороны, кратной трём", "[11.Cells]") {
+    Life bad;
+    life_init(&bad, 20, 24);
+    /* Иначе на стыке через тор получится шов, и агар разрушится сам по себе,
+       без всякого вируса, — а картинка соврёт о правиле. */
+    REQUIRE_FALSE(life_fill_agar(&bad));
+}
+
+TEST_CASE("Правило чётности размножает тримино", "[11.Cells]") {
+    Life a;
+    life_init(&a, 48, 48);
+    REQUIRE(life_place(&a, "tromino", 20, 20));
+    REQUIRE(life_population(&a) == 3);
+
+    /* Репликатор Фредкина: через четыре хода вместо одной фигуры на поле
+       четыре её копии — 12 клеток. Именно это и описано в лекции: копии
+       расходятся вправо, влево, вверх и вниз от опустевшего места. */
+    for (int i = 0; i < 4; ++i) {
+        life_step_parity(&a);
+    }
+    REQUIRE(life_population(&a) == 12);
+
+    /* Копии — это именно тримино: три клетки в углу, восемь раз. */
+    int corners = 0;
+    for (int y = 0; y < 48; ++y) {
+        for (int x = 0; x < 48; ++x) {
+            if (life_get(&a, x, y) && life_get(&a, x + 1, y) && life_get(&a, x, y + 1)
+                && !life_get(&a, x + 1, y + 1)) {
+                ++corners;
+            }
+        }
+    }
+    REQUIRE(corners == 4);
+}
+
 TEST_CASE("Список фигур перебирается по индексу", "[11.Cells]") {
     Life a;
     int count = 0;
@@ -266,7 +429,7 @@ TEST_CASE("Список фигур перебирается по индексу"
         REQUIRE(life_population(&a) > 0);
         ++count;
     }
-    REQUIRE(count >= 19);
+    REQUIRE(count >= 25);
     REQUIRE(life_pattern_name(count) == NULL);
     REQUIRE(life_pattern_name(-1) == NULL);
 }

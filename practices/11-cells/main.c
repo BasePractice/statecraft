@@ -28,7 +28,9 @@ static int usage(void) {
     printf("  11-cells svg life <фигура> <поколения через запятую> <файл> [сторона]\n");
     printf("  11-cells svg trail <стратегия> <такты через запятую> <файл>\n");
     printf("  11-cells svg fsm <стратегия|таблица> <файл>\n");
-    printf("  11-cells svg scene eater-vs-glider <поколения> <файл>\n");
+    printf("  11-cells svg scene <eater-vs-glider|agar-virus|agar-virus-corner>\n");
+    printf("                     <поколения> <файл>\n");
+    printf("  11-cells svg parity <фигура> <поколения> <файл> [сторона]\n");
     printf("  11-cells svg langton <шаги через запятую> <файл> [сторона]\n");
     printf("  11-cells svg rule <0..255> <ширина> <шагов> <файл>\n");
     printf("                               векторные ленты кадров для лекции\n");
@@ -292,6 +294,33 @@ static int run_svg(int argc, char **argv) {
             return 1;
         }
         printf("Записано: %s (%d кадров сцены «%s»)\n", argv[5], count, argv[3]);
+        return 0;
+    }
+
+    if (strcmp(argv[2], "parity") == 0 && argc >= 6) {
+        int side = (argc > 6) ? (int)strtol(argv[6], NULL, 10) : 32;
+
+        count = parse_frames(argv[4], frames, MAX_FRAMES);
+        if (count == 0) {
+            fprintf(stderr, "список поколений не разобран: «%s»\n", argv[4]);
+            return 1;
+        }
+        if (side < 4 || side > LIFE_MAX_SIDE) {
+            fprintf(stderr, "сторона поля — от 4 до %d\n", LIFE_MAX_SIDE);
+            return 1;
+        }
+        out = fopen(argv[5], "w");
+        if (out == NULL) {
+            fprintf(stderr, "не открыть файл «%s»\n", argv[5]);
+            return 1;
+        }
+        ok = render_parity_svg(argv[3], side, frames, count, NULL, out);
+        fclose(out);
+        if (!ok) {
+            fprintf(stderr, "неизвестная фигура «%s»\n", argv[3]);
+            return 1;
+        }
+        printf("Записано: %s (%d кадров правила чётности, фигура «%s»)\n", argv[5], count, argv[3]);
         return 0;
     }
 

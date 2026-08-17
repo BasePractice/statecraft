@@ -138,6 +138,48 @@ static const char *const R_PENTOMINO[] = {".##", "##.", ".#.", NULL};
 static const char *const DIEHARD[] = {"......#.", "##......", ".#...###", NULL};
 static const char *const ACORN[] = {".#.....", "...#...", "##..###", NULL};
 
+/*
+ * «Чеширский кот» (К. Р. Томпкинс): на шестом ходу от кота остаётся одна
+ * «улыбка», на седьмом и она исчезает, оставив «отпечаток лапы» — блок.
+ * Конфигурация считана со скана книги М. Гарднера и проверена прогоном:
+ * тест практики требует и «улыбку» на шестом ходу, и блок на седьмом.
+ */
+static const char *const CHESHIRE_CAT[] = {".#..#.", ".####.", "#....#",
+                                           "#.##.#", "#....#", ".####.", NULL};
+
+/*
+ * «Сад Эдема» (Э. Р. Бэнкс, 1971) — конфигурация, у которой нет
+ * предшественника: она может быть только начальной. 226 клеток в
+ * прямоугольнике 33 x 9; считана со скана книги М. Гарднера.
+ *
+ * Проверить отсутствие предшественника прогоном нельзя: это утверждение о
+ * несуществовании, и доказывается оно перебором предшественников, а не
+ * моделированием. Тест практики сверяет только размеры и число клеток.
+ */
+static const char *const GARDEN_OF_EDEN[] = {"#################################",
+                                             "##.#.###.###.##.#.#.#.#.#.#.#.#.#",
+                                             "#.#.###.###.####.###.#.#.#.#.#.#.",
+                                             "#####.###.###.####.##############",
+                                             "#.#.##.###.###.#.###.#.#.#.#.#.#.",
+                                             "####.###.###.#####.##.#.#.#.#.#.#",
+                                             ".##.###.###.###.#.#.#############",
+                                             "##.##.###.###.##.####.#.#.#.#.#.#",
+                                             "##################.##############",
+                                             NULL};
+
+/*
+ * Пять триплетов — все конфигурации из трёх клеток с точностью до поворота и
+ * отражения. Три первых погибают за три хода, четвёртая даёт блок, пятая —
+ * мигалку (она же blinker).
+ */
+static const char *const TRIPLET_STEP[] = {"#.", "#.", ".#", NULL};
+static const char *const TRIPLET_V[] = {".#.", "#.#", NULL};
+static const char *const TRIPLET_DIAGONAL[] = {"..#", ".#.", "#..", NULL};
+
+/* Тримино — угол из трёх клеток. В «Жизни» превращается в блок, а по правилу
+   чётности (life_step_parity) размножается. */
+static const char *const TROMINO[] = {"##", "#.", NULL};
+
 /* Пожиратель: натюрморт, который уничтожает налетевший на него планер. */
 static const char *const EATER[] = {"##..", "#.#.", "..#.", "..##", NULL};
 
@@ -165,26 +207,36 @@ struct Pattern {
     const char *const *rows;
 };
 
-static const struct Pattern PATTERNS[] = {{"block", BLOCK},
-                                          {"beehive", BEEHIVE},
-                                          {"loaf", LOAF},
-                                          {"boat", BOAT},
-                                          {"tub", TUB},
-                                          {"blinker", BLINKER},
-                                          {"toad", TOAD},
-                                          {"beacon", BEACON},
-                                          {"pulsar", PULSAR},
-                                          {"pentadecathlon", PENTADECATHLON},
-                                          {"glider", GLIDER},
-                                          {"lwss", LWSS},
-                                          {"mwss", MWSS},
-                                          {"hwss", HWSS},
-                                          {"r-pentomino", R_PENTOMINO},
-                                          {"diehard", DIEHARD},
-                                          {"acorn", ACORN},
-                                          {"eater", EATER},
-                                          {"gosper-gun", GOSPER_GUN},
-                                          {NULL, NULL}};
+/* clang-format off */
+static const struct Pattern PATTERNS[] = {
+    {"block", BLOCK},
+    {"beehive", BEEHIVE},
+    {"loaf", LOAF},
+    {"boat", BOAT},
+    {"tub", TUB},
+    {"blinker", BLINKER},
+    {"toad", TOAD},
+    {"beacon", BEACON},
+    {"pulsar", PULSAR},
+    {"pentadecathlon", PENTADECATHLON},
+    {"glider", GLIDER},
+    {"lwss", LWSS},
+    {"mwss", MWSS},
+    {"hwss", HWSS},
+    {"r-pentomino", R_PENTOMINO},
+    {"diehard", DIEHARD},
+    {"acorn", ACORN},
+    {"eater", EATER},
+    {"gosper-gun", GOSPER_GUN},
+    {"cheshire-cat", CHESHIRE_CAT},
+    {"garden-of-eden", GARDEN_OF_EDEN},
+    {"triplet-step", TRIPLET_STEP},
+    {"triplet-v", TRIPLET_V},
+    {"triplet-diagonal", TRIPLET_DIAGONAL},
+    {"tromino", TROMINO},
+    {NULL, NULL}
+};
+/* clang-format on */
 
 static const char *const *pattern_by_name(const char *name) {
     int i;
@@ -259,6 +311,44 @@ void life_step(struct Life *life) {
         }
     }
     memcpy(life->cells, next, sizeof(next));
+}
+
+/* Соседи по четырём сторонам — окрестность фон Неймана. Правило Фредкина
+   определено именно на ней, и число копий (четыре) от этого и зависит. */
+static int neighbours_von_neumann(const struct Life *life, int x, int y) {
+    return (life_get(life, x + 1, y) ? 1 : 0) + (life_get(life, x - 1, y) ? 1 : 0)
+           + (life_get(life, x, y + 1) ? 1 : 0) + (life_get(life, x, y - 1) ? 1 : 0);
+}
+
+void life_step_parity(struct Life *life) {
+    char next[LIFE_MAX_SIDE][LIFE_MAX_SIDE];
+    int x;
+    int y;
+
+    memset(next, 0, sizeof(next));
+    for (y = 0; y < life->height; ++y) {
+        for (x = 0; x < life->width; ++x) {
+            /* Судьба клетки зависит только от чётности числа соседей, а не от
+               её собственного состояния — в этом всё отличие от «Жизни». */
+            next[y][x] = (char)(neighbours_von_neumann(life, x, y) % 2);
+        }
+    }
+    memcpy(life->cells, next, sizeof(next));
+}
+
+bool life_fill_agar(struct Life *life) {
+    int x;
+    int y;
+
+    if (life->width % 3 != 0 || life->height % 3 != 0) {
+        return false;
+    }
+    for (y = 0; y < life->height; ++y) {
+        for (x = 0; x < life->width; ++x) {
+            life->cells[y][x] = (char)((x % 3 != 2) && (y % 3 != 2));
+        }
+    }
+    return true;
 }
 
 int life_population(const struct Life *life) {

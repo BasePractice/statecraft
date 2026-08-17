@@ -59,10 +59,14 @@ bool render_trail_svg(const struct AntFsm *fsm, const int *steps, int count,
                       const struct RenderStyle *style, FILE *out);
 
 /*
- * Лента «сцены» — нескольких фигур, поставленных на одно поле так, чтобы они
- * встретились. Пока сцена одна: "eater-vs-glider", пожиратель и летящий в
- * него планер. Такие картинки нужны там, где интересна не фигура сама по
- * себе, а её взаимодействие с другой.
+ * Лента «сцены» — нескольких фигур на одном поле, поставленных так, чтобы
+ * они встретились. Такие картинки нужны там, где интересна не фигура сама по
+ * себе, а её взаимодействие с другой. Известные сцены:
+ *
+ *   eater-vs-glider     пожиратель и летящий в него планер;
+ *   agar-virus          агар и «вирус» рядом с блоком: разрушение растёт;
+ *   agar-virus-corner   агар и «вирус» в углу четырёх блоков: агар
+ *                       восстанавливается через два хода.
  */
 bool render_scene_svg(const char *scene, const int *generations, int count,
                       const struct RenderStyle *style, FILE *out);
@@ -89,6 +93,14 @@ bool render_langton_svg(int side, const long *steps, int count, const struct Ren
  * разговоре о том, что даёт эволюционный поиск и чего он стоит.
  */
 bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, FILE *out);
+
+/*
+ * Лента поколений по правилу чётности (репликатор Фредкина): та же фигура,
+ * то же поле, но другая локальная функция переходов — и вместо эволюции
+ * получается размножение. Кадры выбираются так же, как у render_life_svg().
+ */
+bool render_parity_svg(const char *name, int side, const int *generations, int count,
+                       const struct RenderStyle *style, FILE *out);
 
 /*
  * Узор одномерного автомата Вольфрама: строки-поколения сверху вниз — то же

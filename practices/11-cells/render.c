@@ -104,8 +104,12 @@ struct Bounds {
     int bottom;
 };
 
+/* Как делать ход: правило «Жизни» или правило чётности. Обе ленты рисуются
+   одним кодом — различие ровно в одной функции. */
+typedef void (*LifeStep)(struct Life *life);
+
 static bool life_bounds(const char *name, int width, int height, const int *generations, int count,
-                        struct Bounds *bounds) {
+                        LifeStep step, struct Bounds *bounds) {
     struct Life life;
     int generation = 0;
     int i;
@@ -125,7 +129,7 @@ static bool life_bounds(const char *name, int width, int height, const int *gene
         int y;
 
         while (generation < generations[i]) {
-            life_step(&life);
+            (*step)(&life);
             ++generation;
         }
         for (y = 0; y < life.height; ++y) {
@@ -165,8 +169,8 @@ static bool life_bounds(const char *name, int width, int height, const int *gene
     return true;
 }
 
-bool render_life_svg(const char *name, int width, int height, const int *generations, int count,
-                     const struct RenderStyle *style, FILE *out) {
+static bool render_field_svg(const char *name, int width, int height, const int *generations,
+                             int count, LifeStep step, const struct RenderStyle *style, FILE *out) {
     struct RenderStyle st = effective(style);
     struct Bounds bounds;
     struct Life life;
@@ -181,7 +185,7 @@ bool render_life_svg(const char *name, int width, int height, const int *generat
     if (count < 1 || generations == NULL || width < 1 || height < 1) {
         return false;
     }
-    if (!life_bounds(name, width, height, generations, count, &bounds)) {
+    if (!life_bounds(name, width, height, generations, count, step, &bounds)) {
         return false;
     }
     life_init(&life, width, height);
@@ -203,7 +207,7 @@ bool render_life_svg(const char *name, int width, int height, const int *generat
         int y;
 
         while (generation < generations[i]) {
-            life_step(&life);
+            (*step)(&life);
             ++generation;
         }
         if (st.grid) {
@@ -222,6 +226,16 @@ bool render_life_svg(const char *name, int width, int height, const int *generat
     return true;
 }
 
+bool render_life_svg(const char *name, int width, int height, const int *generations, int count,
+                     const struct RenderStyle *style, FILE *out) {
+    return render_field_svg(name, width, height, generations, count, life_step, style, out);
+}
+
+bool render_parity_svg(const char *name, int side, const int *generations, int count,
+                       const struct RenderStyle *style, FILE *out) {
+    return render_field_svg(name, side, side, generations, count, life_step_parity, style, out);
+}
+
 /* --- сцены ------------------------------------------------------------------- */
 
 struct ScenePart {
@@ -233,6 +247,7 @@ struct ScenePart {
 struct Scene {
     const char *name;
     int side;
+    bool agar; /* залить поле агаром перед расстановкой фигур */
     struct ScenePart parts[4];
 };
 
@@ -241,10 +256,26 @@ struct Scene {
  * несколько ходов упирается в пожирателя. Тот проглатывает планер и
  * восстанавливает свою форму — конфигурация из семи клеток, которая чистит
  * поле от мусора (Госпер, 1971).
+ *
+ * Агар и «вирус»: одна лишняя живая клетка на регулярной решётке блоков.
+ * Куда её поставить — решает всё. В углу, где сходятся четыре блока, агар
+ * уничтожает вирус и через два хода восстанавливает прежний вид; рядом с
+ * блоком — начинается разрушение, которое расходится по агару без предела
+ * (Уэйнрайт). Обе сцены проверены тестами практики.
+ *
+ * Сторона поля сцен с агаром делится на 3: иначе на стыке через тор
+ * получится шов, и агар разрушится сам по себе, без всякого вируса.
  */
+/* clang-format off */
+#define NO_PART {NULL, 0, 0}
+
 static const struct Scene SCENES[] = {
-        {"eater-vs-glider", 20, {{"eater", 11, 11}, {"glider", 4, 4}, {NULL, 0, 0}, {NULL, 0, 0}}},
-        {NULL, 0, {{NULL, 0, 0}, {NULL, 0, 0}, {NULL, 0, 0}, {NULL, 0, 0}}}};
+    {"eater-vs-glider",   20, false, {{"eater", 11, 11}, {"glider", 4, 4}, NO_PART, NO_PART}},
+    {"agar-virus",        24, true,  {{"tub-cell", 12, 14}, NO_PART, NO_PART, NO_PART}},
+    {"agar-virus-corner", 24, true,  {{"tub-cell", 14, 14}, NO_PART, NO_PART, NO_PART}},
+    {NULL, 0, false, {NO_PART, NO_PART, NO_PART, NO_PART}}
+};
+/* clang-format on */
 
 static const struct Scene *scene_by_name(const char *name) {
     int i;
@@ -261,7 +292,16 @@ static bool scene_setup(const struct Scene *scene, struct Life *life) {
     int i;
 
     life_init(life, scene->side, scene->side);
+    if (scene->agar && !life_fill_agar(life)) {
+        return false;
+    }
     for (i = 0; i < 4 && scene->parts[i].pattern != NULL; ++i) {
+        /* «Вирус» — не фигура из таблицы, а одна живая клетка: заводить ради
+           неё запись в списке фигур незачем. */
+        if (strcmp(scene->parts[i].pattern, "tub-cell") == 0) {
+            life_set(life, scene->parts[i].x, scene->parts[i].y, true);
+            continue;
+        }
         if (!life_place(life, scene->parts[i].pattern, scene->parts[i].x, scene->parts[i].y)) {
             return false;
         }
@@ -498,12 +538,14 @@ bool render_langton_svg(int side, const long *steps, int count, const struct Ren
  */
 
 #define FSM_STATE_RADIUS 17
-#define FSM_MIN_RADIUS 70
-#define FSM_STEP_ARC 96 /* желаемое расстояние между соседними состояниями */
-#define FSM_PADDING 46  /* поле под метки и петли */
+#define FSM_MIN_RADIUS 78
+#define FSM_STEP_ARC 104 /* желаемое расстояние между соседними состояниями */
+#define FSM_PADDING 54   /* поле под метки и петли */
+#define FSM_LABEL_SIZE 11
+#define FSM_ARROW_GAP 3.0 /* зазор между наконечником стрелки и кружком */
 
-/* Чертёжный шрифт по ГОСТ 2.304-81; запасные — на случай, если osifont в
-   системе не установлен (см. lectures/scripts/fetch-fonts.sh). */
+/* Чертёжный шрифт по ГОСТ 2.304-81; запасные — на случай, если osifont не
+   установлен (ставится lectures/scripts/fetch-fonts.sh). */
 #define FSM_FONT "osifont, ISOCPEUR, sans-serif"
 
 static const char *action_label(enum AntAction action) {
@@ -527,7 +569,7 @@ static double fsm_layout_radius(int count) {
 }
 
 /* Положение состояния на окружности. Угол отсчитывается от «девяти часов»,
-   чтобы начальное состояние оказалось слева — там же, где входящая стрелка. */
+   чтобы начальное состояние оказалось слева. */
 static void fsm_state_center(int index, int count, double radius, double cx, double cy, double *x,
                              double *y) {
     double angle = 3.1415926 + 6.2831853 * (double)index / (double)count;
@@ -536,73 +578,183 @@ static void fsm_state_center(int index, int count, double radius, double cx, dou
     *y = cy + radius * sin(angle);
 }
 
-static void svg_text(FILE *out, double x, double y, int size, const char *text) {
+/*
+ * Надпись с белой подложкой. Подложка обязательна: метки переходов ложатся
+ * поверх других дуг, и без неё «1/Ш» на пересечении линий не разобрать.
+ * Ширина считается по числу знаков — метки короткие и одного вида.
+ */
+static void svg_label(FILE *out, double x, double y, const char *text, int chars) {
+    double w = (double)chars * (double)FSM_LABEL_SIZE * 0.62 + 3.0;
+    double h = (double)FSM_LABEL_SIZE + 2.0;
+
+    fprintf(out, "<rect x=\"%.1f\" y=\"%.1f\" width=\"%.1f\" height=\"%.1f\" fill=\"#ffffff\"/>\n",
+            x - w / 2.0, y - h / 2.0, w, h);
     fprintf(out,
             "<text x=\"%.1f\" y=\"%.1f\" font-family=\"%s\" font-size=\"%d\" "
             "text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#1a1a1a\">%s</text>\n",
-            x, y, FSM_FONT, size, text);
+            x, y, FSM_FONT, FSM_LABEL_SIZE, text);
 }
 
-/* Дуга перехода: квадратичная кривая с прогибом в сторону, чтобы переходы
-   «туда» и «обратно» не ложились друг на друга. */
-static void svg_arc(FILE *out, double x1, double y1, double x2, double y2, const char *label) {
+static void svg_state_number(FILE *out, double x, double y, const char *text) {
+    fprintf(out,
+            "<text x=\"%.1f\" y=\"%.1f\" font-family=\"%s\" font-size=\"13\" "
+            "text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#1a1a1a\">%s</text>\n",
+            x, y, FSM_FONT, text);
+}
+
+/* --- квадратичная кривая ----------------------------------------------------- */
+
+struct Quad {
+    double x0;
+    double y0;
+    double cx; /* управляющая точка */
+    double cy;
+    double x1;
+    double y1;
+};
+
+static void quad_point(const struct Quad *q, double t, double *x, double *y) {
+    double u = 1.0 - t;
+
+    *x = u * u * q->x0 + 2.0 * u * t * q->cx + t * t * q->x1;
+    *y = u * u * q->y0 + 2.0 * u * t * q->cy + t * t * q->y1;
+}
+
+/*
+ * Часть кривой между параметрами a и b (двойное деление по де Кастельжо).
+ * Нужна, чтобы дуга начиналась и кончалась ровно на границах кружков:
+ * стрелка обязана касаться состояния, иначе рисунок читается неверно.
+ */
+static struct Quad quad_segment(const struct Quad *q, double a, double b) {
+    struct Quad right;
+    struct Quad result;
+    double s;
+    double mx;
+    double my;
+
+    quad_point(q, a, &right.x0, &right.y0);
+    right.cx = q->cx + (q->x1 - q->cx) * a;
+    right.cy = q->cy + (q->y1 - q->cy) * a;
+    right.x1 = q->x1;
+    right.y1 = q->y1;
+
+    s = (a < 1.0) ? (b - a) / (1.0 - a) : 0.0;
+    mx = right.x0 + (right.cx - right.x0) * s;
+    my = right.y0 + (right.cy - right.y0) * s;
+    result.x0 = right.x0;
+    result.y0 = right.y0;
+    result.cx = mx;
+    result.cy = my;
+    quad_point(&right, s, &result.x1, &result.y1);
+    return result;
+}
+
+/*
+ * Параметр, при котором кривая выходит за окружность радиуса r вокруг точки.
+ * Ищется перебором с мелким шагом: расстояние по кривой немонотонно, и
+ * бинарный поиск нашёл бы не тот корень.
+ */
+static double quad_exit(const struct Quad *q, double px, double py, double r, bool from_start) {
+    int i;
+
+    for (i = 0; i <= 100; ++i) {
+        double t = from_start ? (double)i / 100.0 : 1.0 - (double)i / 100.0;
+        double x;
+        double y;
+        double dx;
+        double dy;
+
+        quad_point(q, t, &x, &y);
+        dx = x - px;
+        dy = y - py;
+        if (sqrt(dx * dx + dy * dy) >= r) {
+            return t;
+        }
+    }
+    return from_start ? 0.0 : 1.0;
+}
+
+/*
+ * Дуга перехода. Прогиб нужен, чтобы переходы «туда» и «обратно» не легли
+ * друг на друга; направление прогиба одинаково для всех дуг, поэтому встречная
+ * пара всегда расходится.
+ */
+static void svg_arc(FILE *out, double x1, double y1, double x2, double y2, const char *label,
+                    double label_at) {
+    struct Quad full;
+    struct Quad arc;
     double dx = x2 - x1;
     double dy = y2 - y1;
     double length = sqrt(dx * dx + dy * dy);
     double nx;
     double ny;
     double bend;
-    double sx;
-    double sy;
-    double ex;
-    double ey;
-    double mx;
-    double my;
-    double t = 0.3;
+    double t0;
+    double t1;
     double lx;
     double ly;
+    double ax;
+    double ay;
+    double tangent;
 
     if (length < 1.0) {
         return;
     }
     nx = -dy / length;
     ny = dx / length;
-    bend = length / 5.0;
-    if (bend > 34.0) {
-        bend = 34.0;
+    bend = length / 3.0;
+    if (bend > 62.0) {
+        bend = 62.0;
     }
 
-    /* Кривая начинается и кончается на границах кружков, а не в их центрах. */
-    sx = x1 + dx / length * FSM_STATE_RADIUS;
-    sy = y1 + dy / length * FSM_STATE_RADIUS;
-    ex = x2 - dx / length * (FSM_STATE_RADIUS + 4.0);
-    ey = y2 - dy / length * (FSM_STATE_RADIUS + 4.0);
-    mx = (x1 + x2) / 2.0 + nx * bend * 2.0;
-    my = (y1 + y2) / 2.0 + ny * bend * 2.0;
+    full.x0 = x1;
+    full.y0 = y1;
+    full.x1 = x2;
+    full.y1 = y2;
+    full.cx = (x1 + x2) / 2.0 + nx * bend;
+    full.cy = (y1 + y2) / 2.0 + ny * bend;
+
+    t0 = quad_exit(&full, x1, y1, (double)FSM_STATE_RADIUS, true);
+    t1 = quad_exit(&full, x2, y2, (double)FSM_STATE_RADIUS + FSM_ARROW_GAP, false);
+    if (t1 <= t0) {
+        return;
+    }
+    arc = quad_segment(&full, t0, t1);
 
     fprintf(out,
             "<path d=\"M %.1f %.1f Q %.1f %.1f %.1f %.1f\" fill=\"none\" stroke=\"#1a1a1a\" "
             "stroke-width=\"1.2\" marker-end=\"url(#arrow)\"/>\n",
-            sx, sy, mx, my, ex, ey);
+            arc.x0, arc.y0, arc.cx, arc.cy, arc.x1, arc.y1);
 
     /*
-     * Метка ставится не на середине дуги, а ближе к её началу: в середине
-     * сходятся метки встречных переходов, и подписи налезают друг на друга.
-     * Точка берётся с самой кривой Безье, поэтому подпись всегда рядом со
-     * своей линией.
+     * Метка ставится не в середине дуги: там сходятся подписи встречных
+     * переходов. Точка берётся с самой кривой, а два перехода одного
+     * состояния подписываются в разных её местах.
      */
-    lx = (1.0 - t) * (1.0 - t) * sx + 2.0 * (1.0 - t) * t * mx + t * t * ex;
-    ly = (1.0 - t) * (1.0 - t) * sy + 2.0 * (1.0 - t) * t * my + t * t * ey;
-    svg_text(out, lx + nx * 11.0, ly + ny * 11.0, 11, label);
+    quad_point(&arc, label_at, &lx, &ly);
+    quad_point(&arc, label_at + 0.05, &ax, &ay);
+    dx = ax - lx;
+    dy = ay - ly;
+    tangent = sqrt(dx * dx + dy * dy);
+    if (tangent < 0.001) {
+        dx = 1.0;
+        dy = 0.0;
+        tangent = 1.0;
+    }
+    svg_label(out, lx - dy / tangent * 10.0, ly + dx / tangent * 10.0, label, 3);
 }
 
-/* Петля: переход состояния в себя. Рисуется наружу от центра диаграммы. */
+/* Петля: переход состояния в себя, наружу от центра диаграммы. */
 static void svg_loop(FILE *out, double x, double y, double cx, double cy, const char *label) {
     double dx = x - cx;
     double dy = y - cy;
     double length = sqrt(dx * dx + dy * dy);
     double ux;
     double uy;
+    double sx;
+    double sy;
+    double ex;
+    double ey;
 
     if (length < 1.0) {
         ux = 0.0;
@@ -611,13 +763,19 @@ static void svg_loop(FILE *out, double x, double y, double cx, double cy, const 
         ux = dx / length;
         uy = dy / length;
     }
+    /* Концы петли лежат на самой окружности состояния — по обе стороны от
+       направления «наружу», примерно в 35° от него. */
+    sx = x + (ux * 0.82 - uy * 0.57) * FSM_STATE_RADIUS;
+    sy = y + (uy * 0.82 + ux * 0.57) * FSM_STATE_RADIUS;
+    ex = x + (ux * 0.82 + uy * 0.57) * (FSM_STATE_RADIUS + FSM_ARROW_GAP);
+    ey = y + (uy * 0.82 - ux * 0.57) * (FSM_STATE_RADIUS + FSM_ARROW_GAP);
+
     fprintf(out,
             "<path d=\"M %.1f %.1f C %.1f %.1f %.1f %.1f %.1f %.1f\" fill=\"none\" "
             "stroke=\"#1a1a1a\" stroke-width=\"1.2\" marker-end=\"url(#arrow)\"/>\n",
-            x + ux * 12.0 - uy * 12.0, y + uy * 12.0 + ux * 12.0, x + ux * 46.0 - uy * 26.0,
-            y + uy * 46.0 + ux * 26.0, x + ux * 46.0 + uy * 26.0, y + uy * 46.0 - ux * 26.0,
-            x + ux * 14.0 + uy * 12.0, y + uy * 14.0 - ux * 12.0);
-    svg_text(out, x + ux * 44.0, y + uy * 44.0, 11, label);
+            sx, sy, x + ux * 50.0 - uy * 28.0, y + uy * 50.0 + ux * 28.0, x + ux * 50.0 + uy * 28.0,
+            y + uy * 50.0 - ux * 28.0, ex, ey);
+    svg_label(out, x + ux * 46.0, y + uy * 46.0, label, 3);
 }
 
 bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, FILE *out) {
@@ -660,7 +818,7 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
                 continue;
             }
             fsm_state_center(target, fsm->state_count, radius, cx, cy, &tx, &ty);
-            svg_arc(out, x, y, tx, ty, label);
+            svg_arc(out, x, y, tx, ty, label, (input == 1) ? 0.24 : 0.46);
         }
     }
 
@@ -675,29 +833,23 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
                 "stroke-width=\"1.2\"/>\n",
                 x, y, FSM_STATE_RADIUS);
         sprintf(number, "%d", i);
-        svg_text(out, x, y, 13, number);
+        svg_state_number(out, x, y, number);
     }
 
     /*
-     * Начальное состояние — входящая стрелка «ниоткуда». Она направлена по
-     * касательной, а не по радиусу: наружу по радиусу уходит петля состояния,
-     * и стрелки накладывались бы друг на друга.
+     * Начальное состояние — входящая стрелка «ниоткуда». Она подходит снизу,
+     * а не по радиусу: наружу по радиусу уходит петля состояния, и стрелки
+     * накладывались бы друг на друга.
      */
     {
         double x;
         double y;
-        double ux = (cx - 0.0);
-        double uy;
 
         fsm_state_center(0, fsm->state_count, radius, cx, cy, &x, &y);
-        ux = x - cx;
-        uy = y - cy;
-        (void)ux;
-        (void)uy;
         fprintf(out,
                 "<path d=\"M %.1f %.1f L %.1f %.1f\" stroke=\"#1a1a1a\" stroke-width=\"1.2\" "
                 "marker-end=\"url(#arrow)\"/>\n",
-                x, y + FSM_STATE_RADIUS + 30.0, x, y + FSM_STATE_RADIUS + 5.0);
+                x, y + FSM_STATE_RADIUS + 32.0, x, y + FSM_STATE_RADIUS + FSM_ARROW_GAP);
     }
 
     svg_close(out);
