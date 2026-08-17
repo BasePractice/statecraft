@@ -1070,8 +1070,10 @@ raylib): сборка Debug и Release без предупреждений в с
 
 ## Внешние инструменты
 
-`taktc` и `takt-sim` (репозиторий [BuT](https://github.com/BasePractice/BuT),
-локальная копия — `/Volumes/HOME/Github/BuT`, там же документация языка в
+`taktc` и `takt-sim` (репозиторий [Takt](https://github.com/Pastor/Takt),
+рабочая ветка `v2`; прежний адрес `BasePractice/BuT` больше не отвечает —
+проверено 17.08.2026 при заведении задания CI. Локальная копия —
+`/Volumes/HOME/Github/BuT`, там же документация языка в
 `book/src` и примеры в `examples/`) нужны практикам `12-takt` и
 `21-additional`. Каталог с ними задаётся переменной `STATECRAFT_TAKT_DIR`
 (переменная окружения или CMake), по умолчанию — `~/.local/bin`, затем `PATH`.

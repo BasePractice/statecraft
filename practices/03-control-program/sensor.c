@@ -1,3 +1,13 @@
+/* Макрос тестируемых возможностей объявляется ДО любого включения.
+   usleep и pthread — это POSIX, а не ISO C90, и в строгом режиме (-std=c90)
+   glibc прячет их объявления: GCC считает usleep неявно объявленной, а в
+   курсе предупреждения — ошибки. Значение 500 (SUSv2) выбрано потому, что в
+   POSIX.1-2008 функция usleep удалена. На macOS объявления видны и без
+   макроса, поэтому дефект проявлялся только в CI на ubuntu. */
+#if !defined(_WIN32)
+#define _XOPEN_SOURCE 500
+#endif
+
 #include "base_types.h"
 #include <stdio.h>
 #include <memory.h>

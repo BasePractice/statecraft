@@ -50,9 +50,16 @@ make draft               # с водяным знаком «ЧЕРНОВИК»
 make sync                # подтянуть листинги из practices/
 make sync-check          # проверить, что листинги не разошлись (стоит в CI)
 make check               # проверить окружение
+make version             # версия курса из course.typ (она же версия релиза)
+make pack                # комплект для раздачи: читаемые имена в одном zip
 make clean               # очистить out/
 make OUT=/tmp/pdf        # положить результат в другой каталог
 ```
+
+Комплект (`make pack`) — то же, что выкладывается релизом: PDF под читаемыми
+именами внутри каталога «Лекции АПСУ <версия>», упакованные в
+`statecraft-lectures-<версия>.zip`. Версия берётся из `course.typ`, и она же
+проверяется по тегу при публикации: `./scripts/course.sh --check v1.1.0`.
 
 `make help` печатает то же самое. Цели `make` — тонкие обёртки над
 `scripts/*.sh`; при желании скрипты вызываются напрямую
@@ -66,7 +73,8 @@ template/          шаблон: тема, подписи, блоки, лист�
 shared/            общая нотация, глоссарий, контрольные вопросы, задачник
 bib/references.bib единая библиография (стиль gost-r-705-2008-numeric)
 src/<id>/          лекция: main.typ, main.body.typ, images/, code/
-scripts/           check, build, clean, sync-code, fetch-fonts, vendor-packages, tex2typ
+scripts/           check, build, clean, sync-code, fetch-fonts, vendor-packages,
+                   tex2typ, course (версия и реестр), pack (комплект для раздачи)
 scripts/code-map.txt соответствие «файл практикума → листинг лекции»
 out/               собранные PDF (в .gitignore)
 ```

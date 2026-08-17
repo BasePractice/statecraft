@@ -174,11 +174,20 @@ jobs:
       - name: Права на запуск
         run: chmod +x takt-bin/taktc takt-bin/takt-sim
 
+      # В Ubuntu 24.04 пакета raylib нет вовсе (проверено: apt не знает ни
+      # libraylib-dev, ни raylib), а бинарный архив с сайта проекта идёт без
+      # cmake-конфигурации, поэтому find_package(raylib) его не находит.
+      # Остаётся сборка из исходников; версия — та же, что ставит brew.
       - name: Установить raylib
         run: |
           if [ "$RUNNER_OS" = "Linux" ]; then
             sudo apt-get update
-            sudo apt-get install -y libraylib-dev
+            sudo apt-get install -y libgl1-mesa-dev libx11-dev libxrandr-dev \
+                                    libxinerama-dev libxcursor-dev libxi-dev
+            git clone --depth 1 --branch 6.0 https://github.com/raysan5/raylib.git raylib-src
+            cmake -S raylib-src -B raylib-src/build \
+                  -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF
+            sudo cmake --build raylib-src/build --target install -j 4
           else
             brew install raylib
           fi
