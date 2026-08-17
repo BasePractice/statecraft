@@ -61,6 +61,17 @@ list_lectures() {
   }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
 }
 
+# Реестр приложений курса из course.typ. Приложения — не лекции: у них нет
+# номера, но собираются они тем же способом и попадают в тот же комплект.
+# Печатает строки вида "id<TAB>название".
+list_appendices() {
+  typst_args
+  "$TYPST_BIN" eval "${TYPST_ARGS[@]}" --format json '{
+    import "/course.typ": appendices
+    appendices.map(a => a.id + "\t" + a.title).join("\n")
+  }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
+}
+
 # Проверка, что id есть в реестре.
 lecture_exists() {
   list_lectures | cut -f1 | grep -qxF -- "$1"

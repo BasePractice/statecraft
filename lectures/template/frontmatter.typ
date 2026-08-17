@@ -23,7 +23,13 @@
   #v(5mm)
   #line(length: 62%, stroke: 0.7pt + palette.rule)
   #v(6mm)
-  #text(size: sizes.subtitle, fill: palette.muted)[#L.lecture~#meta.n]
+  // У приложений номера в расписании нет: вместо «Лекция N» печатается
+  // «Приложение».
+  #text(size: sizes.subtitle, fill: palette.muted)[#if meta.n == none {
+    L.appendix
+  } else {
+    [#L.lecture~#meta.n]
+  }]
   #v(3mm)
   #text(size: sizes.title, weight: 600, meta.title)
   #v(1fr)

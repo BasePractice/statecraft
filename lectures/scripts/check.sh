@@ -5,7 +5,7 @@
 #   1. typst нужной версии;
 #   2. шрифты (с --fix — скачивает недостающие);
 #   3. структуру каталога;
-#   4. что у каждой лекции из реестра course.typ есть main.typ;
+#   4. что у каждой лекции и приложения из реестра course.typ есть main.typ;
 #   5. что все пути в img(...), image(...) и code-file(...) существуют;
 #   6. что @preview-пакеты либо не нужны, либо доступны;
 #   7. что шаблон реально компилируется.
@@ -81,6 +81,18 @@ while IFS="$(printf '\t')" read -r id n title; do
   fi
 done <<EOF
 $LECT
+EOF
+
+APPX="$(list_appendices)" || die "не удалось прочитать реестр приложений"
+while IFS="$(printf '\t')" read -r id title; do
+  [ -z "${id:-}" ] && continue
+  if [ -f "$SRC_DIR/$id/main.typ" ]; then
+    ok " —  $id — $title"
+  else
+    fail " —  $id — нет src/$id/main.typ"
+  fi
+done <<EOF
+$APPX
 EOF
 
 echo

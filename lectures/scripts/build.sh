@@ -63,12 +63,19 @@ mkdir -p "$OUT_DIR"
 typst_args
 
 LECT="$(list_lectures)" || die "не удалось прочитать реестр из course.typ"
+APPX="$(list_appendices)" || die "не удалось прочитать реестр приложений"
 
+# Без явных аргументов собирается весь комплект: лекции и приложения курса.
 if [ "${#IDS[@]}" -eq 0 ]; then
   while IFS="$(printf '\t')" read -r id n title; do
     [ -n "${id:-}" ] && IDS+=( "$id" )
   done <<EOF
 $LECT
+EOF
+  while IFS="$(printf '\t')" read -r id title; do
+    [ -n "${id:-}" ] && IDS+=( "$id" )
+  done <<EOF
+$APPX
 EOF
 fi
 
@@ -90,7 +97,9 @@ safe_title() {
   printf '%s' "$t"
 }
 
-# Читаемое имя PDF по id.
+# Читаемое имя PDF по id. У лекций оно начинается с номера, у приложений —
+# со слова «Приложение»: так комплект сортируется в том же порядке, в каком
+# читается.
 pretty_name() {
   local want="$1"
   while IFS="$(printf '\t')" read -r id n title; do
@@ -100,6 +109,14 @@ pretty_name() {
     fi
   done <<EOF
 $LECT
+EOF
+  while IFS="$(printf '\t')" read -r id title; do
+    if [ "$id" = "$want" ]; then
+      printf 'Приложение — %s.pdf' "$(safe_title "$title")"
+      return
+    fi
+  done <<EOF
+$APPX
 EOF
   printf '%s.pdf' "$want"
 }

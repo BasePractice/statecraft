@@ -5,7 +5,7 @@
 //     #show: lecture.with(id: "02-fsm")
 // Всё остальное — номер, название, дата, автор, институт — берётся из course.typ.
 
-#import "/course.typ": course as _course, lecture-meta
+#import "/course.typ": course as _course, lecture-meta, appendix-meta
 #import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight
 #import "i18n.typ" as i18n
 #import "i18n.typ": L, ru-date
@@ -29,6 +29,10 @@
 
 #let lecture(
   id: none,
+  // Приложения курса печатаются тем же шаблоном: у них нет номера в
+  // расписании, поэтому вместо «Лекция N» на титуле и в колонтитуле стоит
+  // метка вида «Приложение». Задаётся `appendix-id` (реестр в course.typ).
+  appendix-id: none,
   // Точечные переопределения — обычно не нужны.
   number: none,
   title: none,
@@ -53,6 +57,9 @@
 ) = {
   let m = if id != none {
     lecture-meta(id)
+  } else if appendix-id != none {
+    let a = appendix-meta(appendix-id)
+    (n: none, id: a.id, title: a.title, date: a.date)
   } else {
     (n: number, id: "-", title: title, date: date)
   }
@@ -135,7 +142,7 @@
       grid(
         columns: (1fr, auto),
         align: (left, right),
-        [#L.lecture~#n.~#ttl],
+        if n == none { [#L.appendix.~#ttl] } else { [#L.lecture~#n.~#ttl] },
         if cur != none {
           let num = counter(heading).at(cur.location())
           [#numbering(cur.numbering, ..num)~#cur.body]
