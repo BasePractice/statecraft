@@ -120,12 +120,11 @@ static void update_file_registers(struct EmulateRegisters *em) {
            предыдущего шага, и эмуляция подала бы автомату смесь двух тактов.
            Заодно это требование GCC: glibc помечает fscanf
            warn_unused_result. */
-        if (fscanf(em->fd, "%d %d %d %d %d %d %d %d %d %d %d %d %d",
-                   &registers[SENSOR_POWER_OFF], &registers[SENSOR_POINT_PRESENT],
-                   &registers[SENSOR_D1], &registers[SENSOR_D2], &registers[SENSOR_D3],
-                   &registers[SENSOR_D4], &registers[SENSOR_D5], &registers[SENSOR_M1],
-                   &registers[SENSOR_M2], &registers[SENSOR_M3], &registers[SENSOR_M4],
-                   &registers[SENSOR_S1], &registers[LAST_SENSOR])
+        if (fscanf(em->fd, "%d %d %d %d %d %d %d %d %d %d %d %d %d", &registers[SENSOR_POWER_OFF],
+                   &registers[SENSOR_POINT_PRESENT], &registers[SENSOR_D1], &registers[SENSOR_D2],
+                   &registers[SENSOR_D3], &registers[SENSOR_D4], &registers[SENSOR_D5],
+                   &registers[SENSOR_M1], &registers[SENSOR_M2], &registers[SENSOR_M3],
+                   &registers[SENSOR_M4], &registers[SENSOR_S1], &registers[LAST_SENSOR])
             != 13) {
             fprintf(stderr, "Строка регистров прочитана не полностью\n");
             fclose(em->fd);
