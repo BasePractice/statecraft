@@ -63,7 +63,10 @@ TEST_CASE("Границы последовательностей", "[07-fsm-inse
         REQUIRE(INSERTING_NEXT == inserting_engine(&engine)); /* c = c */
         REQUIRE(INSERTING_DETECT_END == inserting_engine(&engine));
         REQUIRE(3 == engine.c_1);
-        REQUIRE(4 == engine.c_2);
+        /* Граница исключающая: вставка занимает позиции [3, 5) второй
+           последовательности. Тест закреплял 4 — то есть несогласованность
+           с остальными путями автомата. */
+        REQUIRE(5 == engine.c_2);
     }
 
     SECTION("Вторая последовательность короче: вставки нет") {

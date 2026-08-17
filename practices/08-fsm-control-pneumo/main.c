@@ -27,20 +27,42 @@ int main(int argc, char **argv) {
             {
                 struct PneumoCylinder *y1 = &engine.cylinders[PNEUMO_CYLINDER_Y1];
                 struct PneumoCylinder *y2 = &engine.cylinders[PNEUMO_CYLINDER_Y2];
+                char line[256];
+                char *hash;
+                int parsed = 0;
 
-                /* Прочитаны должны быть все шесть значений. При неполной
-                   строке сигналы остались бы от предыдущего такта, и автомат
-                   пошёл бы по чужим входам — молча. glibc помечает fscanf
-                   warn_unused_result, поэтому GCC такой вызов и отвергает. */
-                if (fscanf(fd, "%d %d %d %d %d %d",
-                           (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
-                           (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
-                           (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
-                           (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
-                           (int *)&eq_output[PNEUMO_CYLINDER_Y1],
-                           (int *)&eq_output[PNEUMO_CYLINDER_Y2])
-                    != 6) {
-                    fprintf(stderr, "Строка файла симуляции прочитана не полностью\n");
+                /*
+                 * Строка читается целиком, а не сразу шестью числами: в
+                 * сценарии за числами идёт комментарий, поясняющий такт
+                 * («# Y1 пошёл вверх»). Без этого разбор спотыкался о решётку
+                 * и останавливал прогон.
+                 *
+                 * Прочитаны должны быть все шесть значений: при неполной
+                 * строке сигналы остались бы от предыдущего такта, и автомат
+                 * пошёл бы по чужим входам — молча.
+                 */
+                while (parsed == 0 && fgets(line, (int)sizeof(line), fd) != NULL) {
+                    hash = strchr(line, '#');
+                    if (hash != NULL)
+                        *hash = '\0';
+                    parsed = sscanf(line, "%d %d %d %d %d %d",
+                                    (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
+                                    (int *)&y1->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
+                                    (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
+                                    (int *)&y2->input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
+                                    (int *)&eq_output[PNEUMO_CYLINDER_Y1],
+                                    (int *)&eq_output[PNEUMO_CYLINDER_Y2]);
+                    /* Пустая строка или строка из одного комментария — не
+                       ошибка: читаем следующую. */
+                    if (parsed == 0 || parsed == EOF)
+                        parsed = 0;
+                    else if (parsed != 6) {
+                        fprintf(stderr, "Строка файла симуляции прочитана не полностью\n");
+                        return EXIT_FAILURE;
+                    }
+                }
+                if (parsed != 6) {
+                    fprintf(stdout, "Завершение файла симуляции\n");
                     running = false;
                     continue;
                 }

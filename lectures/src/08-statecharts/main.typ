@@ -474,7 +474,7 @@ statechart'у.
 #code-file(
   "/src/08-statecharts/code/pneumo_ctrl.c",
   lang: "c",
-  from: 1, to: 60,
+  from: 1, to: 59,
   caption: [Инициализация автомата: выдержки и таймауты по состояниям],
 ) <lst:pneumo-c>
 

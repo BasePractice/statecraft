@@ -26,9 +26,16 @@ enum InsertingEvent inserting_engine(struct InsertingEngine *engine) {
             engine->state = INSERTING_A;
             return INSERTING_ERROR_END;
         } else if (engine->s_1 >= engine->m_1_len) {
-            /* первая кончилась раньше: остаток второй и есть вставка */
+            /*
+             * Первая кончилась раньше: остаток второй и есть вставка. Граница
+             * c_2 исключающая — так же, как в состоянии C, где цикл
+             * заканчивается при c_2 == m_2_len. Раньше здесь стояло
+             * m_2_len - 1, и один и тот же автомат сообщал границу вставки
+             * двумя разными способами; расхождение нашлось сверкой с
+             * оригиналом из c_fsm (ТД-8).
+             */
             engine->c_1 = engine->s_1;
-            engine->c_2 = engine->m_2_len - 1;
+            engine->c_2 = engine->m_2_len;
             engine->state = INSERTING_A;
             return INSERTING_DETECT_END;
         }

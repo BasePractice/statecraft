@@ -3,8 +3,12 @@
 #include "pneumo_ctrl.h"
 
 #if defined(PNEUMO_SIMULATE)
-#define TIMEOUT_DELTA(timeout) 1
-#define DELAY_DELTA(delay) 1
+/* Шаг выдержки в режиме симуляции. Значение 5 — из оригинала (c_fsm):
+   сценарий рассчитан именно на него, и при 1 автомат проходит шаги
+   циклограммы в пять раз быстрее, чем успевают отработать датчики, и уходит
+   в аварию. Расхождение нашлось сверкой поведения (ТД-8). */
+#define TIMEOUT_DELTA(timeout) 5
+#define DELAY_DELTA(delay) 5
 #else
 #define TIMEOUT_DELTA(timeout) ((timeout) * 1000)
 #define DELAY_DELTA(delay) ((delay) * 1000)
@@ -64,10 +68,13 @@ bool pneumo_engine_tick(struct PneumoEngine *engine) {
 #if defined(PNEUMO_DEBUG)
     fprintf(stdout, "State: %s, Y1(in): [%d, %d], Y2(in): [%d, %d], Y1(out): [%d], Y2(out): [%d]\n",
             state_names[engine->state],
-            engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
+            /* Порядок «вверху, внизу» — тот же, что во входном сценарии и в
+               оригинале; при переносе он был переставлен, и трасса читалась
+               задом наперёд. */
             engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
-            engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
+            engine->cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
             engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_UP],
+            engine->cylinders[PNEUMO_CYLINDER_Y2].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN],
             engine->cylinders[PNEUMO_CYLINDER_Y1].output_signal,
             engine->cylinders[PNEUMO_CYLINDER_Y2].output_signal);
     fflush(stdout);
