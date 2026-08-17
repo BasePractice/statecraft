@@ -1,3 +1,4 @@
+#import "/template/diagrams.typ": fsm-diagram
 #import "/template/lecture.typ": *
 
 #sources[
@@ -87,6 +88,22 @@
   lang: "takt",
   caption: [Светофор с выдержками],
 ) <lst:traffic>
+
+#fsm-diagram(
+  (
+    (id: "t0", pos: (0, 0), label: [красный], entry: true, radius: 0.68cm),
+    (id: "t1", pos: (1.5, 0), label: [зелёный], radius: 0.68cm),
+    (id: "t2", pos: (0.75, 1.1), label: [жёлтый], radius: 0.65cm),
+  ),
+  (
+    (from: "t0", to: "t1", label: [$"timer" = 20$]),
+    (from: "t1", to: "t2", label: [$"timer" = 10$]),
+    (from: "t2", to: "t0", label: [$"timer" = 5$]),
+  ),
+  spacing: 3.2cm,
+  caption: [Автомат светофора из @lst:traffic. Выдержки заданы числом тактов,
+    а не единицами времени: частоту задаёт вызывающая сторона],
+) <fig:takt-traffic>
 
 Читается @lst:traffic так. `model` объявляет автомат. `start` --- начальное
 состояние, `state` --- остальные. Внутри состояния три именованных блока:
@@ -206,11 +223,31 @@
 буквально --- в `tick` корневой модели идут подряд вызовы `PumpPump_tick` и
 `PumpAlarm_tick`.
 
+#fsm-diagram(
+  (
+    (id: "p0", pos: (0, 0), label: [налив], entry: true, radius: 0.6cm),
+    (id: "p1", pos: (1.6, 0), label: [слив], radius: 0.55cm),
+    (id: "a0", pos: (0, 1.1), label: [тихо], entry: true, radius: 0.55cm),
+    (id: "a1", pos: (1.6, 1.1), label: [тревога], radius: 0.7cm),
+  ),
+  (
+    (from: "p0", to: "p1", label: [$"level" >= "HIGH"$]),
+    (from: "p1", to: "p0", label: [$"level" <= "LOW"$], bend: 40deg),
+    (from: "a0", to: "a1", label: [$"level" >= 95$]),
+    (from: "a1", to: "a0", label: [$"level" < 95$], bend: 40deg),
+  ),
+  spacing: 3.4cm,
+  caption: [Композиция из @lst:pump --- два автомата, а не один: насос
+    (вверху) и сигнализация. Оба видят общую переменную `level`, но
+    состояния у каждого свои],
+) <fig:takt-pump>
+
 #remark[
   Композиция в @lst:pump --- то же самое разделение, что и ортогональные
   регионы statecharts из лекции 8, только записанное текстом. Плоский автомат
   для той же системы имел бы произведение состояний: 2 состояния насоса × 2
-  состояния сигнализации.
+  состояния сигнализации, то есть четыре состояния вместо двух автоматов по
+  два, как на @fig:takt-pump.
 ]
 
 = Состояние обязано удерживать управление
@@ -241,6 +278,22 @@
 
 Исправление --- сделать условия выхода #emph[непересекающимися и
 покрывающими], и оба потребовать завершения работы:
+
+#fsm-diagram(
+  (
+    (id: "c0", pos: (0, 0), label: [охлаждение], entry: true, radius: 0.85cm),
+    (id: "c1", pos: (1.9, -0.7), label: [готово], radius: 0.62cm),
+    (id: "c2", pos: (1.9, 0.7), label: [простой], radius: 0.65cm),
+  ),
+  (
+    (from: "c0", to: "c1", label: [$t = 0$]),
+    (from: "c0", to: "c2", label: [$t > 0$]),
+  ),
+  spacing: 3.2cm,
+  caption: [Контрпример из @lst:cool-bad. Оба ребра проверяются на каждом
+    такте, и второе истинно сразу после входа: температура ещё 98, а
+    управление уже ушло в «простой». Состояние «готово» недостижимо],
+) <fig:takt-cooling>
 
 #code-file(
   "/src/12-takt/code/cooling_good.takt",
@@ -450,6 +503,26 @@ takt-sim model/traffic.takt -s scenario.json
   lang: "takt",
   caption: [Свойство «после аварии система обязана вернуться в рабочий режим»],
 ) <lst:recovery>
+
+#fsm-diagram(
+  (
+    (id: "r0", pos: (0, 0), label: [работа], entry: true, radius: 0.62cm),
+    (id: "r1", pos: (1.5, 0), label: [авария], radius: 0.65cm),
+    (id: "r2", pos: (0.75, 1.1), label: [восст.], radius: 0.62cm),
+  ),
+  (
+    (from: "r0", to: "r0", label: [нет ошибки], loop: 270deg),
+    (from: "r0", to: "r1", label: [ошибка]),
+    (from: "r1", to: "r2"),
+    (from: "r2", to: "r0"),
+  ),
+  spacing: 3.2cm,
+  caption: [Автомат из @lst:recovery. Переходы из «аварии» и «восстановления»
+    безусловны, поэтому дуги не подписаны. Проверяемое свойство
+    $G("Fault" -> F "Idle")$ читается прямо по диаграмме: из «аварии» любой
+    путь ведёт обратно в «работу». Верификатор доказывает это для всех путей
+    сразу, а не для одного прогона],
+) <fig:takt-recovery>
 
 #listing(
   ```text
