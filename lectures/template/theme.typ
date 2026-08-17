@@ -55,9 +55,15 @@
   remark: rgb("#5a5a6e"), // замечание
   task: rgb("#8c2f4a"), // задание
   todo: rgb("#a03000"), // блок #todo[...]
+  // Номера разделов и подразделов. Вынесены отдельным цветом, чтобы номер
+  // не сливался с названием; правится в одном месте.
+  heading-number: rgb("#8b1a1a"),
   code-bg: luma(248),
   code-rule: luma(205),
 )
+
+// Отступ между номером раздела и его названием.
+#let heading-number-gap = 0.6em
 
 #let sizes = (
   body: if body-in-mono { mono-body-size } else { 11pt },

@@ -6,7 +6,7 @@
 // Всё остальное — номер, название, дата, автор, институт — берётся из course.typ.
 
 #import "/course.typ": course as _course, lecture-meta, appendix-meta
-#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight
+#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight, heading-number-gap
 #import "i18n.typ" as i18n
 #import "i18n.typ": L, ru-date
 #import "blocks.typ": *
@@ -97,11 +97,28 @@
 
   set heading(numbering: "1.1")
   show heading: set text(font: fonts.head, fill: palette.ink)
+  // Номер раздела печатается отдельно от названия: цветом (palette.heading-number)
+  // и отбивкой (heading-number-gap). Без этого «6.5» и «Проблема вычислимости»
+  // сливаются в одно слово — особенно в моноширинном наборе, где пробел узкий.
+  let head-number(it) = if it.numbering == none {
+    none
+  } else {
+    text(fill: palette.heading-number, numbering(
+      it.numbering, ..counter(heading).at(it.location()),
+    )) + h(heading-number-gap)
+  }
   show heading.where(level: 1): it => block(
-    above: 20pt, below: 11pt, text(size: sizes.h1, weight: 600, it),
+    above: 20pt, below: 11pt,
+    text(size: sizes.h1, weight: 600, head-number(it) + it.body),
   )
-  show heading.where(level: 2): set text(size: sizes.h2, weight: 600)
-  show heading.where(level: 3): set text(size: sizes.h3, weight: 600)
+  show heading.where(level: 2): it => block(
+    above: 14pt, below: 7pt,
+    text(size: sizes.h2, weight: 600, head-number(it) + it.body),
+  )
+  show heading.where(level: 3): it => block(
+    above: 12pt, below: 6pt,
+    text(size: sizes.h3, weight: 600, head-number(it) + it.body),
+  )
 
   show link: set text(fill: palette.accent)
   show ref: set text(fill: palette.accent)

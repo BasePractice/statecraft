@@ -6,7 +6,7 @@
 // — далее обычные заголовки первого уровня.
 
 #import "i18n.typ": L, appendix-numbering
-#import "theme.typ": fonts, sizes
+#import "theme.typ": fonts, palette, sizes
 
 #let appendix(doc) = {
   counter(heading).update(0)
@@ -15,7 +15,10 @@
     pagebreak(weak: true)
     block(above: 0pt, below: 14pt)[
       #set text(font: fonts.head, size: sizes.h1, weight: 600)
-      #L.appendix~#context counter(heading).display(appendix-numbering)
+      #L.appendix~#context text(
+        fill: palette.heading-number,
+        counter(heading).display(appendix-numbering),
+      )
       #linebreak()
       #it.body
     ]
