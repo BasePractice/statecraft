@@ -90,32 +90,120 @@ bool life_get(const struct Life *life, int x, int y) {
     return life->cells[wrap(y, life->height)][wrap(x, life->width)] != 0;
 }
 
-/* Фигуры записаны построчно: '#' — живая клетка, всё остальное — пустая. */
+/* Фигуры записаны построчно: '#' — живая клетка, всё остальное — пустая.
+   Свойство каждой фигуры (период, скорость, время жизни) проверяется тестом
+   практики: фигура, взятая из литературы и не проверенная прогоном, рано или
+   поздно оказывается записанной с ошибкой. */
+/* clang-format off */
+
+/* Натюрморты: не меняются вовсе. */
 static const char *const BLOCK[] = {"##", "##", NULL};
+static const char *const BEEHIVE[] = {".##.", "#..#", ".##.", NULL};
+static const char *const LOAF[] = {".##.", "#..#", ".#.#", "..#.", NULL};
+static const char *const BOAT[] = {"##.", "#.#", ".#.", NULL};
+static const char *const TUB[] = {".#.", "#.#", ".#.", NULL};
+
+/* Осцилляторы: повторяются через период. */
 static const char *const BLINKER[] = {"###", NULL};
 static const char *const TOAD[] = {".###", "###.", NULL};
+static const char *const BEACON[] = {"##..", "##..", "..##", "..##", NULL};
+static const char *const PULSAR[] = {
+    "..###...###..",
+    ".............",
+    "#....#.#....#",
+    "#....#.#....#",
+    "#....#.#....#",
+    "..###...###..",
+    ".............",
+    "..###...###..",
+    "#....#.#....#",
+    "#....#.#....#",
+    "#....#.#....#",
+    ".............",
+    "..###...###..",
+    NULL
+};
+/* Пентадекатлон задаётся рядом из десяти клеток: собственная его форма из
+   этого ряда и получается на первых же ходах. */
+static const char *const PENTADECATHLON[] = {"##########", NULL};
+
+/* Корабли: воспроизводят себя со сдвигом. */
 static const char *const GLIDER[] = {".#.", "..#", "###", NULL};
 static const char *const LWSS[] = {"#..#.", "....#", "#...#", ".####", NULL};
+static const char *const MWSS[] = {"..#...", "#...#.", ".....#", "#....#", ".#####", NULL};
+static const char *const HWSS[] = {"..##...", "#....#.", "......#", "#.....#", ".######", NULL};
+
+/* Долгая эволюция из горстки клеток. */
 static const char *const R_PENTOMINO[] = {".##", "##.", ".#.", NULL};
+static const char *const DIEHARD[] = {"......#.", "##......", ".#...###", NULL};
+static const char *const ACORN[] = {".#.....", "...#...", "##..###", NULL};
+
+/* Пожиратель: натюрморт, который уничтожает налетевший на него планер. */
+static const char *const EATER[] = {"##..", "#.#.", "..#.", "..##", NULL};
+
+/*
+ * Ружьё Госпера — первая найденная конфигурация с неограниченным ростом
+ * (Билл Госпер, 1970): каждые 30 поколений выпускает планер, поэтому
+ * население растёт на пять клеток за период.
+ */
+static const char *const GOSPER_GUN[] = {
+    "........................#...........",
+    "......................#.#...........",
+    "............##......##............##",
+    "...........#...#....##............##",
+    "##........#.....#...##..............",
+    "##........#...#.##....#.#...........",
+    "..........#.....#.......#...........",
+    "...........#...#....................",
+    "............##......................",
+    NULL
+};
+/* clang-format on */
+
+struct Pattern {
+    const char *name;
+    const char *const *rows;
+};
+
+static const struct Pattern PATTERNS[] = {{"block", BLOCK},
+                                          {"beehive", BEEHIVE},
+                                          {"loaf", LOAF},
+                                          {"boat", BOAT},
+                                          {"tub", TUB},
+                                          {"blinker", BLINKER},
+                                          {"toad", TOAD},
+                                          {"beacon", BEACON},
+                                          {"pulsar", PULSAR},
+                                          {"pentadecathlon", PENTADECATHLON},
+                                          {"glider", GLIDER},
+                                          {"lwss", LWSS},
+                                          {"mwss", MWSS},
+                                          {"hwss", HWSS},
+                                          {"r-pentomino", R_PENTOMINO},
+                                          {"diehard", DIEHARD},
+                                          {"acorn", ACORN},
+                                          {"eater", EATER},
+                                          {"gosper-gun", GOSPER_GUN},
+                                          {NULL, NULL}};
 
 static const char *const *pattern_by_name(const char *name) {
-    if (strcmp(name, "block") == 0) {
-        return BLOCK;
+    int i;
+
+    for (i = 0; PATTERNS[i].name != NULL; ++i) {
+        if (strcmp(name, PATTERNS[i].name) == 0) {
+            return PATTERNS[i].rows;
+        }
     }
-    if (strcmp(name, "blinker") == 0) {
-        return BLINKER;
-    }
-    if (strcmp(name, "toad") == 0) {
-        return TOAD;
-    }
-    if (strcmp(name, "glider") == 0) {
-        return GLIDER;
-    }
-    if (strcmp(name, "lwss") == 0) {
-        return LWSS;
-    }
-    if (strcmp(name, "r-pentomino") == 0) {
-        return R_PENTOMINO;
+    return NULL;
+}
+
+const char *life_pattern_name(int index) {
+    int i;
+
+    for (i = 0; PATTERNS[i].name != NULL; ++i) {
+        if (i == index) {
+            return PATTERNS[i].name;
+        }
     }
     return NULL;
 }

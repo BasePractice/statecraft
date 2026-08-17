@@ -1,7 +1,9 @@
 #include <catch2/catch.hpp>
 #include <ant_trail.h>
 #include <cells.h>
+#include <render.h>
 
+#include <cstdio>
 #include <string>
 
 /*
@@ -143,6 +145,132 @@ TEST_CASE("R-пентамино долго не стабилизируется",
     REQUIRE(life_population(&a) > 5);
 }
 
+TEST_CASE("Натюрморты не меняются", "[11.Cells]") {
+    const char *names[] = {"block", "beehive", "loaf", "boat", "tub", "eater"};
+
+    for (const char *name : names) {
+        Life a;
+        Life b;
+        life_init(&a, 16, 16);
+        REQUIRE(life_place(&a, name, 4, 4));
+        b = a;
+        for (int i = 0; i < 4; ++i) {
+            life_step(&a);
+            /* Фигура, взятая из литературы и не проверенная прогоном, рано
+               или поздно оказывается записанной с ошибкой. */
+            REQUIRE(life_equal_shifted(&a, &b, 0, 0));
+        }
+    }
+}
+
+TEST_CASE("Осцилляторы имеют заявленный период", "[11.Cells]") {
+    struct Case {
+        const char *name;
+        int period;
+        int side;
+        int warmup; /* сколько ходов до выхода на цикл */
+    };
+    /* Пентадекатлон задан рядом из десяти клеток — это его предок, а не фаза:
+       сам осциллятор устанавливается через два хода. Остальные фигуры
+       записаны сразу в фазе цикла. */
+    const Case cases[] = {{"blinker", 2, 16, 0}, {"toad", 2, 16, 0},   {"beacon", 2, 16, 0},
+                          {"pulsar", 3, 24, 0},  {"pentadecathlon", 15, 24, 2}};
+
+    for (const Case &c : cases) {
+        Life a;
+        Life start;
+        life_init(&a, c.side, c.side);
+        REQUIRE(life_place(&a, c.name, 4, 4));
+        for (int i = 0; i < c.warmup; ++i) {
+            life_step(&a);
+        }
+        start = a;
+        for (int i = 1; i <= c.period; ++i) {
+            life_step(&a);
+            if (i < c.period) {
+                REQUIRE_FALSE(life_equal_shifted(&a, &start, 0, 0));
+            }
+        }
+        REQUIRE(life_equal_shifted(&a, &start, 0, 0));
+    }
+}
+
+TEST_CASE("Средний и тяжёлый корабли идут со скоростью c/2", "[11.Cells]") {
+    const char *names[] = {"mwss", "hwss"};
+
+    for (const char *name : names) {
+        Life a;
+        Life start;
+        life_init(&a, 32, 16);
+        REQUIRE(life_place(&a, name, 2, 5));
+        start = a;
+        for (int i = 0; i < 4; ++i) {
+            life_step(&a);
+        }
+        REQUIRE(life_equal_shifted(&a, &start, -2, 0));
+    }
+}
+
+TEST_CASE("Ружьё Госпера растёт неограниченно", "[11.Cells]") {
+    Life a;
+    life_init(&a, 60, 60);
+    REQUIRE(life_place(&a, "gosper-gun", 1, 1));
+
+    int start_population = life_population(&a);
+    REQUIRE(start_population == 36);
+    for (int i = 0; i < 30; ++i) {
+        life_step(&a);
+    }
+    /* За период ружьё выпускает планер — пять клеток, которые больше не
+       возвращаются. Это и есть неограниченный рост: на бесконечном поле
+       население растёт линейно. */
+    REQUIRE(life_population(&a) == start_population + 5);
+    for (int i = 0; i < 30; ++i) {
+        life_step(&a);
+    }
+    REQUIRE(life_population(&a) == start_population + 10);
+}
+
+TEST_CASE("Долгие эволюции из горстки клеток", "[11.Cells]") {
+    Life diehard;
+    life_init(&diehard, 32, 32);
+    REQUIRE(life_place(&diehard, "diehard", 8, 8));
+    REQUIRE(life_population(&diehard) == 7);
+    for (int i = 0; i < 130; ++i) {
+        life_step(&diehard);
+    }
+    /* Название говорит само за себя: семь клеток живут 130 поколений и
+       исчезают без следа. На торе поле конечно, поэтому проверяем сам факт
+       вымирания. */
+    REQUIRE(life_population(&diehard) == 0);
+
+    Life acorn;
+    life_init(&acorn, 48, 48);
+    REQUIRE(life_place(&acorn, "acorn", 20, 20));
+    REQUIRE(life_population(&acorn) == 7);
+    for (int i = 0; i < 100; ++i) {
+        life_step(&acorn);
+    }
+    REQUIRE(life_population(&acorn) > 7);
+}
+
+TEST_CASE("Список фигур перебирается по индексу", "[11.Cells]") {
+    Life a;
+    int count = 0;
+
+    for (int i = 0; life_pattern_name(i) != NULL; ++i) {
+        life_init(&a, 60, 60);
+        /* Каждое имя из списка обязано ставиться: список и таблица фигур —
+           одно и то же место, разъехаться они не должны. */
+        REQUIRE(life_place(&a, life_pattern_name(i), 1, 1));
+        REQUIRE(life_population(&a) > 0);
+        ++count;
+    }
+    REQUIRE(count >= 19);
+    REQUIRE(life_pattern_name(count) == NULL);
+    REQUIRE(life_pattern_name(-1) == NULL);
+}
+
 TEST_CASE("Неизвестная фигура отвергается", "[11.Cells]") {
     Life a;
     life_init(&a, 8, 8);
@@ -192,17 +320,48 @@ TEST_CASE("Муравей помечает край и останавливае�
 
 /* --- задача об умном муравье --------------------------------------------- */
 
-TEST_CASE("Эталонный автомат проходит учебную тропу целиком", "[11.Cells]") {
+TEST_CASE("Тропа — каноническая: 89 клеток еды", "[11.Cells]") {
+    /* Число еды на тропе Санта-Фе — стандарт сравнения; если карту случайно
+       поправят, разойдутся все числа тактов ниже, и тест скажет об этом
+       раньше, чем расхождение попадёт в лекцию. */
+    REQUIRE(ant_trail_food_total() == 89);
+}
+
+TEST_CASE("Осмотр четырёх направлений проходит тропу за 315 тактов", "[11.Cells]") {
     AntFsm fsm;
-    ant_fsm_reference(&fsm);
+    ant_fsm_scan(&fsm);
     TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
 
+    REQUIRE(fsm.state_count == 5);
     REQUIRE(r.total == ant_trail_food_total());
     REQUIRE(r.eaten == r.total);
     REQUIRE(r.finished);
-    /* Запас по тактам существен: стратегия обязана укладываться в лимит
-       не впритык, иначе она подогнана под конкретную тропу. */
-    REQUIRE(r.steps < TRAIL_STEPS / 2);
+    REQUIRE(r.steps == 315);
+}
+
+TEST_CASE("Найденный поиском автомат проходит тропу за 181 такт", "[11.Cells]") {
+    AntFsm fsm;
+    ant_fsm_evolved(&fsm);
+    TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
+
+    REQUIRE(fsm.state_count == 17);
+    REQUIRE(r.eaten == r.total);
+    REQUIRE(r.finished);
+    REQUIRE(r.steps == 181);
+    /* 17 состояний против 5 — цена 134 сэкономленных тактов. Именно этот
+       размен и обсуждается в лекции. */
+}
+
+TEST_CASE("Осмотра вправо-влево со слепыми шагами на Санта-Фе не хватает", "[11.Cells]") {
+    AntFsm fsm;
+    ant_fsm_probe(&fsm);
+    TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
+
+    /* Стратегия, достаточная для регулярной учебной тропы, на канонической
+       съедает 59 из 89 и зацикливается: два слепых шага проносят муравья
+       мимо поворота, а осмотр не заглядывает назад. */
+    REQUIRE_FALSE(r.finished);
+    REQUIRE(r.eaten == 59);
 }
 
 TEST_CASE("Осмотра без слепых шагов не хватает на разрыв в две клетки", "[11.Cells]") {
@@ -211,17 +370,162 @@ TEST_CASE("Осмотра без слепых шагов не хватает н�
     TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
 
     REQUIRE_FALSE(r.finished);
+    REQUIRE(r.eaten == 42);
     REQUIRE(r.eaten < r.total / 2);
-    /* Два состояния разницы решают задачу целиком: в этом и смысл вопроса
-       «сколько состояний нужно стратегии». */
 }
 
 TEST_CASE("Прогон детерминирован", "[11.Cells]") {
     AntFsm fsm;
-    ant_fsm_reference(&fsm);
+    ant_fsm_scan(&fsm);
     TrailRun a = ant_trail_run(&fsm, TRAIL_STEPS);
     TrailRun b = ant_trail_run(&fsm, TRAIL_STEPS);
 
     REQUIRE(a.eaten == b.eaten);
     REQUIRE(a.steps == b.steps);
+}
+
+TEST_CASE("Стратегия ищется по имени", "[11.Cells]") {
+    AntFsm named;
+    AntFsm direct;
+
+    REQUIRE(ant_fsm_by_name("scan", &named));
+    ant_fsm_scan(&direct);
+    REQUIRE(named.state_count == direct.state_count);
+    REQUIRE_FALSE(ant_fsm_by_name("нет такой стратегии", &named));
+}
+
+TEST_CASE("Запись автомата разбирается и печатается обратно", "[11.Cells]") {
+    AntFsm fsm;
+    AntFsm parsed;
+    char spec[ANT_FSM_SPEC_SIZE];
+    char again[ANT_FSM_SPEC_SIZE];
+
+    ant_fsm_scan(&fsm);
+    REQUIRE(ant_fsm_format(&fsm, spec, sizeof(spec)));
+    /* Та же запись, что в журнале поиска из репозитория c_fsm. */
+    REQUIRE(std::string(spec) == "3.0.0.1:3.0.0.2:3.0.0.3:3.0.0.4:3.0.2.0");
+
+    REQUIRE(ant_fsm_parse(&parsed, spec));
+    REQUIRE(parsed.state_count == fsm.state_count);
+    REQUIRE(ant_fsm_format(&parsed, again, sizeof(again)));
+    REQUIRE(std::string(again) == std::string(spec));
+
+    TrailRun r = ant_trail_run(&parsed, TRAIL_STEPS);
+    REQUIRE(r.steps == 315);
+}
+
+TEST_CASE("Испорченная запись автомата отвергается", "[11.Cells]") {
+    AntFsm fsm;
+    char small[8];
+
+    REQUIRE_FALSE(ant_fsm_parse(&fsm, ""));
+    REQUIRE_FALSE(ant_fsm_parse(&fsm, "3.0.0.1:"));
+    REQUIRE_FALSE(ant_fsm_parse(&fsm, "3.0.0"));
+    REQUIRE_FALSE(ant_fsm_parse(&fsm, "9.0.0.1"));       /* нет такого действия */
+    REQUIRE_FALSE(ant_fsm_parse(&fsm, "3.0.0.7"));       /* переход в никуда */
+    REQUIRE_FALSE(ant_fsm_parse(&fsm, "3.0.0.1 3.0.2.0"));
+
+    /* Автомат при неудачном разборе остаётся пустым, а не наполовину
+       заполненным: прогон такого автомата не делает ни шага. */
+    TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
+    REQUIRE(r.eaten == 0);
+    REQUIRE(r.steps == 0);
+
+    ant_fsm_scan(&fsm);
+    REQUIRE_FALSE(ant_fsm_format(&fsm, small, sizeof(small)));
+}
+
+/* --- векторный вывод ------------------------------------------------------ */
+
+namespace {
+
+/* SVG проверяется как текст: важно не «картинка красивая», а что файл
+   получился разбираемым и содержит ровно столько кадров, сколько заказано. */
+std::string render_to_string(bool (*draw)(FILE *), bool *ok) {
+    std::string result;
+    FILE *tmp = tmpfile();
+    REQUIRE(tmp != NULL);
+    *ok = draw(tmp);
+    rewind(tmp);
+    char buffer[4096];
+    size_t got;
+    while ((got = fread(buffer, 1, sizeof(buffer), tmp)) > 0) {
+        result.append(buffer, got);
+    }
+    fclose(tmp);
+    return result;
+}
+
+int count_substring(const std::string &text, const std::string &needle) {
+    int count = 0;
+    for (size_t pos = text.find(needle); pos != std::string::npos;
+         pos = text.find(needle, pos + needle.size())) {
+        ++count;
+    }
+    return count;
+}
+
+} /* namespace */
+
+TEST_CASE("Лента «Жизни» рисуется в SVG", "[11.Cells]") {
+    bool ok = false;
+    std::string svg = render_to_string(
+        [](FILE *out) {
+            static const int frames[] = {0, 1, 2, 3, 4};
+            return render_life_svg("glider", 24, 24, frames, 5, NULL, out);
+        },
+        &ok);
+
+    REQUIRE(ok);
+    REQUIRE(svg.find("<svg") != std::string::npos);
+    REQUIRE(svg.find("</svg>") != std::string::npos);
+    /* Пять кадров — пять рамок. */
+    REQUIRE(count_substring(svg, "stroke=\"#666666\"") == 5);
+    /* Глайдер — пять клеток в каждом кадре. */
+    REQUIRE(count_substring(svg, "fill=\"#1a1a1a\"") == 25);
+}
+
+TEST_CASE("Лента прогона муравья рисуется в SVG", "[11.Cells]") {
+    bool ok = false;
+    std::string svg = render_to_string(
+        [](FILE *out) {
+            static const int steps[] = {0, 20, 60};
+            AntFsm fsm;
+            ant_fsm_scan(&fsm);
+            return render_trail_svg(&fsm, steps, 3, NULL, out);
+        },
+        &ok);
+
+    REQUIRE(ok);
+    REQUIRE(count_substring(svg, "stroke=\"#666666\"") == 3);
+    /* Муравей — по треугольнику на кадр, и его видно на любой заливке. */
+    REQUIRE(count_substring(svg, "<polygon") == 3);
+}
+
+TEST_CASE("Узор одномерного автомата рисуется в SVG", "[11.Cells]") {
+    bool ok = false;
+    std::string svg = render_to_string(
+        [](FILE *out) { return render_elementary_svg(90, 21, 10, NULL, out); }, &ok);
+
+    REQUIRE(ok);
+    REQUIRE(svg.find("<svg") != std::string::npos);
+    REQUIRE(count_substring(svg, "fill=\"#1a1a1a\"") > 10);
+}
+
+TEST_CASE("Негодные параметры рисовальщика отвергаются", "[11.Cells]") {
+    bool ok = true;
+    static const int frames[] = {0};
+
+    render_to_string([](FILE *out) { return render_life_svg("нет такой", 24, 24, frames, 1, NULL, out); },
+                     &ok);
+    REQUIRE_FALSE(ok);
+
+    ok = true;
+    render_to_string([](FILE *out) { return render_life_svg("glider", 24, 24, frames, 0, NULL, out); },
+                     &ok);
+    REQUIRE_FALSE(ok);
+
+    ok = true;
+    render_to_string([](FILE *out) { return render_elementary_svg(90, 2, 5, NULL, out); }, &ok);
+    REQUIRE_FALSE(ok);
 }

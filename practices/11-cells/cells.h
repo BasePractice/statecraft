@@ -73,11 +73,20 @@ void life_set(struct Life *life, int x, int y, bool alive);
 bool life_get(const struct Life *life, int x, int y);
 
 /*
- * Расстановка по имени: "blinker", "toad", "block", "glider", "lwss",
- * "r-pentomino". Левый верхний угол фигуры помещается в (x, y).
- * false — имя не распознано.
+ * Расстановка по имени. Левый верхний угол фигуры помещается в (x, y);
+ * false — имя не распознано. Известные имена:
+ *
+ *   натюрморты   block, beehive, loaf, boat, tub, eater;
+ *   осцилляторы  blinker, toad, beacon, pulsar, pentadecathlon;
+ *   корабли      glider, lwss, mwss, hwss;
+ *   эволюции     r-pentomino, diehard, acorn;
+ *   рост         gosper-gun.
  */
 bool life_place(struct Life *life, const char *name, int x, int y);
+
+/* Перебор известных имён фигур: index от нуля, NULL — имена кончились.
+   Нужен программам, которые печатают список фигур или обходят их все. */
+const char *life_pattern_name(int index);
 
 /* Один ход. Поле замкнуто в тор по обеим осям — по той же причине, что и
    кольцо у одномерного автомата. */
