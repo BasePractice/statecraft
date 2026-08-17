@@ -807,7 +807,10 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
 
         fsm_state_center(i, fsm->state_count, radius, cx, cy, &x, &y);
         for (input = 1; input >= 0; --input) {
-            char label[16];
+            /* Метка дуги — «вход/действие»: число, косая черта и буква
+               кириллицей (два байта в UTF-8). Считаем по тому же правилу,
+               что и номер состояния: 11 знаков на число плюс запас. */
+            char label[20];
             int target = fsm->next[i][input];
             double tx;
             double ty;
@@ -823,7 +826,11 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
     }
 
     for (i = 0; i < fsm->state_count; ++i) {
-        char number[8];
+        /* Размер буфера — под любое значение int (11 знаков со знаком минус
+           и завершающий нуль), а не под ожидаемое число состояний: snprintf
+           в ISO C90 нет, и sprintf обрезать вывод не умеет. GCC такую
+           подмену «здесь всегда мало» замечает: -Wformat-overflow. */
+        char number[12];
         double x;
         double y;
 

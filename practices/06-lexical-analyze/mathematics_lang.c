@@ -43,6 +43,7 @@ bool lexer_init_string(struct LexerContext **ctx, const char *text) {
 
 bool lexer_init_file(struct LexerContext **ctx, const char *filename) {
     FILE *fd;
+    size_t read;
 
     if (ctx == 0)
         return false;
@@ -67,8 +68,27 @@ bool lexer_init_file(struct LexerContext **ctx, const char *filename) {
         fclose(fd);
         return false;
     }
-    fread((*ctx)->content, (*ctx)->content_size, 1, fd);
+    /*
+     * Читаем побайтно, а не «одной записью длиной в файл»: файл открыт в
+     * текстовом режиме, и на Windows пара CRLF схлопывается в один символ,
+     * поэтому прочитано будет меньше, чем показал ftell. При чтении записью
+     * такой возврат равен нулю, то есть выглядит как ошибка, хотя файл
+     * прочитан. Длиной содержимого считаем фактически прочитанное.
+     *
+     * Результат fread проверяется не для порядка: glibc помечает функцию
+     * warn_unused_result, и GCC отвергает вызов без проверки. Дефект нашёлся
+     * в CI на ubuntu — clang в macOS такого предупреждения не выдаёт.
+     */
+    read = fread((*ctx)->content, 1, (*ctx)->content_size, fd);
     fclose(fd);
+    if (read == 0 && (*ctx)->content_size > 0) {
+        free((*ctx)->content);
+        free(*ctx);
+        (*ctx) = 0;
+        return false;
+    }
+    (*ctx)->content_size = read;
+    (*ctx)->content[read] = '\0';
     (*ctx)->line_no = 1;
     return true;
 }
