@@ -141,6 +141,11 @@ static bool parse_int(struct Parser *parser, int *value) {
     long result = 0;
     int digits = 0;
 
+    /* Значение определено при любом исходе: контракт «при ошибке не смотреть
+       на результат» стоит одной ошибки вызывающего кода, а GCC в Release
+       (-O2) на такой связке разбора и проверки выдаёт -Wmaybe-uninitialized —
+       предупреждения в курсе включены как ошибки. */
+    *value = 0;
     skip_spaces(parser);
     if (parser->text[parser->pos] == '-') {
         sign = -1;

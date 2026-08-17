@@ -39,6 +39,12 @@ char bool_get(const struct BoolFunction *function, int row) {
 static void row_to_bits(int row, int var_count, char *bits) {
     int i;
 
+    /* Массив заполняется целиком, а не по var_count: все вызывающие держат
+       буфер на BOOL_MAX_VARS, и разряды сверх используемых обязаны быть
+       нулями. На частичном заполнении курс уже обжигался — импликанты
+       получали мусор со стека (см. REPORT.md). GCC в Release видит здесь
+       ровно это: -Wmaybe-uninitialized. */
+    memset(bits, 0, BOOL_MAX_VARS);
     for (i = 0; i < var_count; ++i) {
         bits[i] = (char)((row >> (var_count - 1 - i)) & 1);
     }

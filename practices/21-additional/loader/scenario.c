@@ -77,6 +77,10 @@ static bool read_int(struct Reader *reader, int *value) {
     long result = 0;
     int digits = 0;
 
+    /* Значение определено при любом исходе — по той же причине, что и в
+       factory_map.c: иначе GCC в Release видит путь, на котором переменная
+       вызывающего кода остаётся непроинициализированной. */
+    *value = 0;
     peek(reader);
     if (reader->text[reader->pos] == '-') {
         sign = -1;
