@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "ant_trail.h"
 #include "cells.h"
 
 static int usage(void) {
@@ -20,6 +21,7 @@ static int usage(void) {
     printf("  11-cells rule <0..255> [ширина] [шагов]\n");
     printf("  11-cells life <block|blinker|toad|glider|lwss|r-pentomino> [шагов]\n");
     printf("  11-cells ant [шагов]\n");
+    printf("  11-cells trail [тактов]      задача об умном муравье\n");
     return 1;
 }
 
@@ -108,6 +110,20 @@ static int run_ant(int argc, char **argv) {
     return 0;
 }
 
+/* Задача об умном муравье: прогон эталонного автомата по учебной тропе. */
+static int run_trail(int argc, char **argv) {
+    struct AntFsm fsm;
+    int steps = TRAIL_STEPS;
+
+    if (argc > 2) {
+        steps = (int)strtol(argv[2], NULL, 10);
+    }
+    ant_fsm_reference(&fsm);
+    printf("Автомат из %d состояний, лимит %d тактов\n\n", fsm.state_count, steps);
+    ant_trail_print(&fsm, steps, stdout);
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         return usage();
@@ -120,6 +136,9 @@ int main(int argc, char **argv) {
     }
     if (strcmp(argv[1], "ant") == 0) {
         return run_ant(argc, argv);
+    }
+    if (strcmp(argv[1], "trail") == 0) {
+        return run_trail(argc, argv);
     }
     return usage();
 }

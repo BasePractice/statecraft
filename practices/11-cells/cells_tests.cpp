@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <ant_trail.h>
 #include <cells.h>
 
 #include <string>
@@ -187,4 +188,40 @@ TEST_CASE("Муравей помечает край и останавливае�
     }
     REQUIRE(ant.escaped);
     REQUIRE(ant_black_count(&ant) > 0);
+}
+
+/* --- задача об умном муравье --------------------------------------------- */
+
+TEST_CASE("Эталонный автомат проходит учебную тропу целиком", "[11.Cells]") {
+    AntFsm fsm;
+    ant_fsm_reference(&fsm);
+    TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
+
+    REQUIRE(r.total == ant_trail_food_total());
+    REQUIRE(r.eaten == r.total);
+    REQUIRE(r.finished);
+    /* Запас по тактам существен: стратегия обязана укладываться в лимит
+       не впритык, иначе она подогнана под конкретную тропу. */
+    REQUIRE(r.steps < TRAIL_STEPS / 2);
+}
+
+TEST_CASE("Осмотра без слепых шагов не хватает на разрыв в две клетки", "[11.Cells]") {
+    AntFsm fsm;
+    ant_fsm_lookaround(&fsm);
+    TrailRun r = ant_trail_run(&fsm, TRAIL_STEPS);
+
+    REQUIRE_FALSE(r.finished);
+    REQUIRE(r.eaten < r.total / 2);
+    /* Два состояния разницы решают задачу целиком: в этом и смысл вопроса
+       «сколько состояний нужно стратегии». */
+}
+
+TEST_CASE("Прогон детерминирован", "[11.Cells]") {
+    AntFsm fsm;
+    ant_fsm_reference(&fsm);
+    TrailRun a = ant_trail_run(&fsm, TRAIL_STEPS);
+    TrailRun b = ant_trail_run(&fsm, TRAIL_STEPS);
+
+    REQUIRE(a.eaten == b.eaten);
+    REQUIRE(a.steps == b.steps);
 }
