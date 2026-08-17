@@ -1,0 +1,127 @@
+#ifndef STATECRAFT_BULK_FSM_H
+#define STATECRAFT_BULK_FSM_H
+
+/*
+ * Лекция 8. Управление загрузкой сыпучих материалов — пример промышленного
+ * размера.
+ *
+ * Установка: по рельсу ездит контейнер, над рельсом стоят несколько
+ * резервуаров с сыпучим материалом. Контейнер подъезжает под нужный резервуар,
+ * открывает его заслонку, набирает материал в течение выдержки, закрывает
+ * заслонку и едет к следующему. Что и в каком порядке набирать, задаёт
+ * рецепт.
+ *
+ * Автомат перенесён из репозитория c_fsm (модуль fsm_bulk) и отличается от
+ * оригинала тем, что здесь он ничего не знает ни о файлах, ни о печати:
+ *
+ *   вход  — регистр датчиков (bulk_input_set до такта);
+ *   выход — регистр команд (bulk_output после такта);
+ *   такт  — одна функция без побочных действий, кроме смены состояния.
+ *
+ * Такое разделение — не украшение. Автомат, который сам читает файл и сам
+ * печатает, невозможно ни проверить тестом, ни подключить к другой установке;
+ * ровно этим и страдал оригинал.
+ *
+ * Модель самой установки (физика, датчики, таймеры) — в bulk_plant.h.
+ */
+
+#include "base_types.h"
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+/* Сколько резервуаров над рельсом. Больше восьми не нужно: рецепт на один
+   цикл — битовая маска в одной десятичной цифре. */
+#define BULK_TANK_COUNT 3
+
+/* Сколько малых циклов в рецепте: по циклу на цифру. */
+#define BULK_CYCLE_COUNT 4
+
+enum BulkState {
+    BULK_POWER_ON,   /* включение питания */
+    BULK_HOMING,     /* выход в исходное положение (крайнее правое) */
+    BULK_CYCLE_IDLE, /* ждём команды на малый цикл */
+    BULK_CYCLE_PICK, /* смотрим рецепт: нужен ли этот резервуар */
+    BULK_MOVING,     /* едем к резервуару */
+    BULK_OPENING,    /* ждём открытия заслонки */
+    BULK_FILLING,    /* набираем материал по выдержке */
+    BULK_CLOSING,    /* ждём закрытия заслонки */
+    BULK_CYCLE_DONE, /* малый цикл закончен: набранное надо отвезти */
+    BULK_RETURN,     /* возврат в исходное положение, где контейнер разгружают */
+    BULK_FINISHED,   /* рецепт исполнен */
+    BULK_FAULT,      /* авария: дальше автомат не работает */
+    BULK_STATE_COUNT
+};
+
+/* Входы — то, что автомат видит от установки. */
+enum BulkInput {
+    BULK_IN_RUNNING,     /* установка под напряжением */
+    BULK_IN_START_CYCLE, /* оператор дал команду на малый цикл */
+    BULK_IN_AT_HOME,     /* концевик исходного положения */
+    BULK_IN_AT_TANK,     /* контейнер под резервуаром номер current_tank */
+    BULK_IN_GATE_OPEN,   /* заслонка этого резервуара открыта */
+    BULK_IN_GATE_CLOSED, /* заслонка этого резервуара закрыта */
+    BULK_IN_TIMER_DONE,  /* выдержка наполнения истекла */
+    BULK_IN_FAULT,       /* установка сообщила об аварии */
+    BULK_INPUT_COUNT
+};
+
+/* Выходы — команды установке. */
+enum BulkOutput {
+    BULK_OUT_MOVE_RIGHT,  /* ехать вправо (к исходному положению) */
+    BULK_OUT_MOVE_LEFT,   /* ехать влево (к резервуарам) */
+    BULK_OUT_OPEN_GATE,   /* открыть заслонку текущего резервуара */
+    BULK_OUT_CLOSE_GATE,  /* закрыть её */
+    BULK_OUT_START_TIMER, /* запустить выдержку наполнения */
+    BULK_OUT_CYCLE_END,   /* малый цикл завершён */
+    BULK_OUT_DONE,        /* рецепт исполнен целиком */
+    BULK_OUTPUT_COUNT
+};
+
+struct BulkFsm {
+    enum BulkState state;
+    unsigned long tick;
+
+    /* Рецепт: на каждый малый цикл — маска резервуаров. */
+    unsigned char recipe[BULK_CYCLE_COUNT];
+    int cycle; /* номер текущего малого цикла */
+    int tank;  /* номер резервуара, к которому едем */
+
+    unsigned long inputs;  /* регистр входов: бит на датчик */
+    unsigned long outputs; /* регистр выходов: бит на команду */
+};
+
+/*
+ * Рецепт задаётся десятичным числом: младшая цифра — первый малый цикл.
+ * Каждая цифра — маска резервуаров этого цикла: бит 0 — первый резервуар,
+ * бит 1 — второй, бит 2 — третий. Например 5 = 101 — первый и третий.
+ *
+ * Возвращает false, если в числе есть цифра, требующая несуществующего
+ * резервуара (8 или 9 при трёх резервуарах): молча отбрасывать такую цифру
+ * нельзя — рецепт будет исполнен не тот, который задали.
+ */
+bool bulk_fsm_init(struct BulkFsm *fsm, unsigned long recipe);
+
+/* Один такт. Автомат читает регистр входов и обновляет регистр выходов. */
+void bulk_fsm_tick(struct BulkFsm *fsm);
+
+void bulk_input_set(struct BulkFsm *fsm, enum BulkInput input, bool value);
+bool bulk_input(const struct BulkFsm *fsm, enum BulkInput input);
+bool bulk_output(const struct BulkFsm *fsm, enum BulkOutput output);
+
+/* Работа окончена: рецепт исполнен либо случилась авария. */
+bool bulk_fsm_finished(const struct BulkFsm *fsm);
+
+const char *bulk_state_name(enum BulkState state);
+const char *bulk_input_name(enum BulkInput input);
+const char *bulk_output_name(enum BulkOutput output);
+
+/* Маска резервуаров для малого цикла (0, если цикла с таким номером нет). */
+unsigned char bulk_recipe_mask(const struct BulkFsm *fsm, int cycle);
+
+#if defined(__cplusplus)
+}
+#endif
+
+#endif /* STATECRAFT_BULK_FSM_H */
