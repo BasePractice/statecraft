@@ -78,8 +78,9 @@ static bool run_words(int count, const char *const *words, struct BarrierTable *
 
     for (i = 0; i < count; ++i) {
         if (!barrier_event_by_name(words[i], &event)) {
-            fprintf(stderr, "неизвестное событие «%s»: ожидались card, opened, passed, "
-                            "closed, tick\n",
+            fprintf(stderr,
+                    "неизвестное событие «%s»: ожидались card, opened, passed, "
+                    "closed, tick\n",
                     words[i]);
             return false;
         }

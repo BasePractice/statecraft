@@ -15,16 +15,15 @@
  * четыре игнорируемых события в каждом состоянии плюс шесть содержательных
  * переходов. Проверку покрытия делает тест, а не человек глазами.
  */
-const char *const BARRIER_SCENARIOS[] = {
-    "opened passed closed tick",                  /* игноры в CLOSED */
-    "card card passed closed tick opened",        /* игноры в OPENING */
-    "card opened opened card closed passed closed", /* игноры в OPEN */
-    "card opened passed opened passed tick closed", /* игноры в CLOSING */
-    "card opened passed card opened passed closed", /* реверс из CLOSING */
-    "card opened tick tick tick closed"};         /* закрытие по выдержке */
+const char *const BARRIER_SCENARIOS[]
+        = {"opened passed closed tick",                    /* игноры в CLOSED */
+           "card card passed closed tick opened",          /* игноры в OPENING */
+           "card opened opened card closed passed closed", /* игноры в OPEN */
+           "card opened passed opened passed tick closed", /* игноры в CLOSING */
+           "card opened passed card opened passed closed", /* реверс из CLOSING */
+           "card opened tick tick tick closed"};           /* закрытие по выдержке */
 
-const int BARRIER_SCENARIO_COUNT =
-    (int)(sizeof(BARRIER_SCENARIOS) / sizeof(BARRIER_SCENARIOS[0]));
+const int BARRIER_SCENARIO_COUNT = (int)(sizeof(BARRIER_SCENARIOS) / sizeof(BARRIER_SCENARIOS[0]));
 
 void barrier_trace_init(struct BarrierTrace *trace) {
     memset(trace, 0, sizeof(*trace));

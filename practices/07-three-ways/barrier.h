@@ -37,21 +37,16 @@
 extern "C" {
 #endif
 
-enum BarrierState {
-    BARRIER_CLOSED,
-    BARRIER_OPENING,
-    BARRIER_OPEN,
-    BARRIER_CLOSING
-};
+enum BarrierState { BARRIER_CLOSED, BARRIER_OPENING, BARRIER_OPEN, BARRIER_CLOSING };
 
 #define BARRIER_STATE_COUNT 4
 
 enum BarrierEvent {
-    BARRIER_CARD,   /* пропуск разрешён контроллером доступа */
-    BARRIER_OPENED, /* сработал концевик «створка вверху» */
-    BARRIER_PASSED, /* фотобарьер: машина освободила проезд */
+    BARRIER_CARD,         /* пропуск разрешён контроллером доступа */
+    BARRIER_OPENED,       /* сработал концевик «створка вверху» */
+    BARRIER_PASSED,       /* фотобарьер: машина освободила проезд */
     BARRIER_CLOSED_LIMIT, /* сработал концевик «створка внизу» */
-    BARRIER_TICK    /* такт таймера: отсчёт выдержки в OPEN */
+    BARRIER_TICK          /* такт таймера: отсчёт выдержки в OPEN */
 };
 
 #define BARRIER_EVENT_COUNT 5

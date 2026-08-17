@@ -20,8 +20,7 @@ void barrier_log_state(struct BarrierTrace *trace, enum BarrierState state);
  * деле: обычно это `next` из таблицы, но клетка со сторожевым условием
  * (OPEN по tick) может вернуть текущее состояние и оставить автомат на месте.
  */
-typedef enum BarrierState (*BarrierAct)(struct BarrierTable *fsm,
-                                        enum BarrierState next);
+typedef enum BarrierState (*BarrierAct)(struct BarrierTable *fsm, enum BarrierState next);
 
 struct BarrierCell {
     enum BarrierState next;
@@ -71,6 +70,9 @@ static enum BarrierState act_tick(struct BarrierTable *fsm, enum BarrierState ne
  * (card, opened, passed, closed, tick). Клетка «остаться на месте без
  * действий» задана явно: пустых клеток в таблице нет.
  */
+/* Разметка таблицы по столбцам значима: подпись строки должна стоять рядом
+   со своей строкой, поэтому таблица не переформатируется. */
+/* clang-format off */
 static const struct BarrierCell TABLE[BARRIER_STATE_COUNT][BARRIER_EVENT_COUNT] = {
     /* CLOSED  */ {{BARRIER_OPENING, act_open},
                    {BARRIER_CLOSED, NULL},
@@ -93,6 +95,7 @@ static const struct BarrierCell TABLE[BARRIER_STATE_COUNT][BARRIER_EVENT_COUNT] 
                    {BARRIER_CLOSED, act_closed},
                    {BARRIER_CLOSING, NULL}}};
 
+/* clang-format on */
 void barrier_table_init(struct BarrierTable *fsm, struct BarrierTrace *trace) {
     int state;
     int event;
