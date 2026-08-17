@@ -3,7 +3,7 @@
 type u8 = [bit;8];
 
 model Watchdog {
-    in  kick:  bit := 0;        /* вход: сигнал «система жива» */
+    in  kick:  bit;             /* вход: сигнал «система жива» */
     out alarm: bit := 0;        /* выход: авария */
     var idle:  u8  := 0;        /* тактов без сигнала */
 

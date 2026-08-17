@@ -31,7 +31,7 @@ struct Bench {
 static bool bench_read_bit(Watchdog_In_BitPort port, void *userdata) {
     struct Bench *bench = (struct Bench *)userdata;
 
-    if (port == WATCHDOG_WATCHDOG_KICK) {
+    if (port == WATCHDOG_WATCHDOG_PORT_KICK) {
         if (bench->tick >= 0 && bench->tick < SCENARIO_LEN)
             return SCENARIO[bench->tick] != 0;
     }
@@ -41,7 +41,7 @@ static bool bench_read_bit(Watchdog_In_BitPort port, void *userdata) {
 static void bench_write_bit(Watchdog_Out_BitPort port, bool value, void *userdata) {
     struct Bench *bench = (struct Bench *)userdata;
 
-    if (port == WATCHDOG_WATCHDOG_ALARM) {
+    if (port == WATCHDOG_WATCHDOG_PORT_ALARM) {
         bench->alarm = value ? 1 : 0;
         if (bench->alarm && bench->alarm_raised_at < 0)
             bench->alarm_raised_at = bench->tick + 1;
@@ -57,10 +57,13 @@ int main(void) {
     bench.alarm = 0;
     bench.alarm_raised_at = -1;
 
-    Watchdog_init(&model);
+    /* Порядок существен: Watchdog_init выполняет enter начального состояния,
+       а тот пишет в выходной порт — то есть вызывает write_bit. Установка
+       обработчиков после init даёт разыменование нулевого указателя. */
     model.userdata = &bench;
     model.read_bit = bench_read_bit;
     model.write_bit = bench_write_bit;
+    Watchdog_init(&model);
 
     for (i = 0; i < SCENARIO_LEN; ++i) {
         bench.tick = i;

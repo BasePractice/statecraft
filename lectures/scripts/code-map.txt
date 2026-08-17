@@ -12,8 +12,9 @@
 #   practices/08-fsm-control-pneumo/generated/*.inc и *.log — в CP1251,
 #   копии в лекции 8 перекодированы в UTF-8, побайтовое сравнение
 #   неприменимо;
-#   lectures/src/12-takt/code/driver.c — написан для лекции, в практикуме
-#   исходника нет.
+#   (раньше здесь значился lectures/src/12-takt/code/driver.c как «написанный
+#   для лекции» — на деле это копия practices/12-takt/main.c, и она успела
+#   разойтись с оригиналом; теперь синхронизируется наравне с остальными).
 
 practices/02-fsm-delay/delay_fsm.c              lectures/src/02-fsm/code/delay_fsm.c
 practices/02-fsm-delay/delay_fsm.h              lectures/src/02-fsm/code/delay_fsm.h
@@ -54,6 +55,7 @@ practices/10-turing-machine/turing_machine_test.cpp lectures/src/10-limits/code/
 practices/10-turing-machine/change_sharp_algorithm.c lectures/src/10-limits/code/mt/change_sharp_algorithm.c
 practices/10-turing-machine/main.c              lectures/src/10-limits/code/mt/main.c
 
+practices/12-takt/main.c                        lectures/src/12-takt/code/driver.c
 practices/12-takt/model/button_led.takt         lectures/src/12-takt/code/button_led.takt
 practices/12-takt/model/cooling_bad.takt        lectures/src/12-takt/code/cooling_bad.takt
 practices/12-takt/model/cooling_good.takt       lectures/src/12-takt/code/cooling_good.takt

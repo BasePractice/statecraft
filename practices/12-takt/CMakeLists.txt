@@ -63,3 +63,21 @@ statecraft_generated_c99(${PROJECT_NAME}-watchdog)
 if (STATECRAFT_BUILD_TESTS)
     add_test(NAME ${PROJECT_NAME}-watchdog COMMAND ${PROJECT_NAME}-watchdog)
 endif ()
+
+# Сценарий симулятора — тест самой модели, а не порождённого кода: он подаёт
+# входы по тактам и проверяет состояние после каждого (`guard`). Симулятор,
+# как и компилятор, внешний, поэтому цель заводится только когда он найден.
+find_program(TAKT_SIM_BIN
+        NAMES takt-sim
+        HINTS "${STATECRAFT_TAKTC}" "$ENV{STATECRAFT_TAKTC}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../../BuT/target/release"
+        DOC "Симулятор языка Takt")
+
+if (TAKT_SIM_BIN AND STATECRAFT_BUILD_TESTS)
+    add_test(NAME ${PROJECT_NAME}-scenario
+            COMMAND "${TAKT_SIM_BIN}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/model/watchdog.takt"
+            -s "${CMAKE_CURRENT_SOURCE_DIR}/scenario/watchdog.json")
+elseif (NOT TAKT_SIM_BIN)
+    message(STATUS "statecraft: takt-sim не найден — сценарии Takt не прогоняются")
+endif ()

@@ -8,7 +8,7 @@ extern fn led_write(value: u8);
 fn toggle(value: u8) -> u8 { return ~value; }
 
 model ButtonLED {
-    in  BTN: bit := 0;
+    in  BTN: bit;
     out LED: u8  := 0;
 
     var level: u8 := 0;

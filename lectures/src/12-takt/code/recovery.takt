@@ -5,8 +5,8 @@
 var error: bit := false;
 
 start Idle {
-    ref Fault: error = 1;
-    ref Idle: error = 0;
+    ref Fault: error;
+    ref Idle: !error;
 }
 
 state Fault { ref Recovery; }
