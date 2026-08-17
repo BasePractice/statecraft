@@ -98,6 +98,28 @@ $hat(delta)(q, alpha a) = delta(hat(delta)(q, alpha), a)$.
   caption: [ДКА для языка «слово оканчивается на $a b b$», выписанный по смыслу],
 ) <tab:dfa-abb-hand>
 
+#fsm-diagram(
+  (
+    (id: "h0", pos: (0, 0), label: $q_0$, entry: true),
+    (id: "h1", pos: (1.2, 0), label: $q_1$),
+    (id: "h2", pos: (2.4, 0), label: $q_2$),
+    (id: "h3", pos: (3.6, 0), label: $q_3$, final: true),
+  ),
+  (
+    (from: "h0", to: "h0", label: $b$, loop: 90deg),
+    (from: "h0", to: "h1", label: $a$),
+    (from: "h1", to: "h1", label: $a$, loop: 90deg),
+    (from: "h1", to: "h2", label: $b$),
+    (from: "h2", to: "h3", label: $b$),
+    (from: "h2", to: "h1", label: $a$, bend: 40deg),
+    (from: "h3", to: "h1", label: $a$, bend: 45deg),
+    (from: "h3", to: "h0", label: $b$, bend: 60deg),
+  ),
+  caption: [Тот же автомат диаграммой. Состояние хранит длину уже прочитанного
+    куска $a b b$; по «неподходящей» букве автомат возвращается не в начало, а
+    в состояние, отвечающее наибольшему совпавшему суффиксу],
+) <fig:dfa-abb-hand>
+
 == Два примера из прежних лекций в новой нотации <sec:two-notations>
 
 Оба примера курса, разобранные «через выход», ниже перестроены в акцепторы.
@@ -535,6 +557,28 @@ $ Pi_2 = { {S_0, S_2}, {S_1}, {S_3}, {S_4} }. $
   ),
   caption: [Минимальный ДКА: четыре состояния],
 ) <tab:dfa-abb-min>
+
+#fsm-diagram(
+  (
+    (id: "m0", pos: (0, 0), label: [$S_0 S_2$], entry: true, radius: 0.5cm),
+    (id: "m1", pos: (1.3, 0), label: $S_1$),
+    (id: "m3", pos: (2.6, 0), label: $S_3$),
+    (id: "m4", pos: (3.9, 0), label: $S_4$, final: true),
+  ),
+  (
+    (from: "m0", to: "m0", label: $b$, loop: 90deg),
+    (from: "m0", to: "m1", label: $a$),
+    (from: "m1", to: "m1", label: $a$, loop: 90deg),
+    (from: "m1", to: "m3", label: $b$),
+    (from: "m3", to: "m4", label: $b$),
+    (from: "m3", to: "m1", label: $a$, bend: 40deg),
+    (from: "m4", to: "m1", label: $a$, bend: 45deg),
+    (from: "m4", to: "m0", label: $b$, bend: 60deg),
+  ),
+  caption: [Минимальный ДКА диаграммой. Сравните с @fig:dfa-abb-hand: это тот
+    же автомат с точностью до имён состояний, полученный не по смыслу задачи,
+    а тремя механическими шагами],
+) <fig:dfa-abb-min>
 
 Сравнив @tab:dfa-abb-min с @tab:dfa-abb-hand, видим один и тот же автомат:
 ${S_0, S_2} = q_0$, ${S_1} = q_1$, ${S_3} = q_2$, ${S_4} = q_3$. Цепочка
