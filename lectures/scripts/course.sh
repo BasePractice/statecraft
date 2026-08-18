@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lectures/scripts/course.sh [--version | --check ТЕГ | --lectures]
+# lectures/scripts/course.sh [--version | --check ТЕГ | --lectures | --appendices]
 #
 # Сведения о курсе из course.typ — единственного источника правды. Скрипт
 # нужен там, где эти сведения читает не typst, а сборка: проверка тега при
@@ -9,6 +9,7 @@
 #   --check ТЕГ  сверить версию с тегом релиза вида v{MAJOR}.{MINOR}.{BUILD}
 #                (префикс v необязателен)
 #   --lectures   напечатать реестр лекций: «номер<TAB>название»
+#   --appendices напечатать реестр приложений курса: «id<TAB>название»
 #
 # Версия печатается на титульном листе каждой лекции, поэтому её смена
 # означает переиздание всего комплекта, а расхождение с тегом — что выложены
@@ -22,8 +23,9 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --version)  MODE="version" ;;
     --lectures) MODE="lectures" ;;
+    --appendices) MODE="appendices" ;;
     --check)    MODE="check"; CHECK="${2:-}"; shift ;;
-    -h|--help)  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help)  sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "неизвестный аргумент: $1" ;;
   esac
   shift
@@ -33,6 +35,11 @@ command -v "$TYPST_BIN" >/dev/null 2>&1 || die "typst не найден, зап�
 
 if [ "$MODE" = "lectures" ]; then
   list_lectures | cut -f2,3
+  exit 0
+fi
+
+if [ "$MODE" = "appendices" ]; then
+  list_appendices
   exit 0
 fi
 
