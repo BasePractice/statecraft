@@ -1,6 +1,6 @@
 // lectures/template/frontmatter.typ — титульный лист и оглавления.
 
-#import "theme.typ": fonts, palette, sizes
+#import "theme.typ": fonts, palette, sizes, heading-gaps
 #import "i18n.typ": L, ru-date
 
 #let title-page(meta, course) = page(
@@ -62,16 +62,51 @@
   set outline.entry(fill: repeat[.#h(3pt)])
   show outline.entry.where(level: 1): it => { v(6pt, weak: true); strong(it) }
   let gap = if separate { pagebreak(weak: true) } else { v(20pt, weak: true) }
+  // Заголовок печатается отдельно от списка, а не параметром `title`, и за ним
+  // ставится явная отбивка. Причина: строка списка первого уровня начинается с
+  // `v(6pt, weak: true)` (правило выше), а слабая отбивка в typst не берёт
+  // максимум с блочной, а вытесняет её — из-за этого `below` у заголовка
+  // пропадал и первая строка списка прилипала к заголовку, сколько ни
+  // увеличивай отступ. Явная (не weak) отбивка вытеснению не поддаётся.
+  // `outlined: false` сохраняет прежнее поведение: сами списки в «Содержание»
+  // не попадают, но закладка в PDF остаётся.
+  let head(title) = {
+    heading(level: 1, numbering: none, outlined: false, bookmarked: true, title)
+    v(heading-gaps.service.below)
+  }
   // Пустые списки не печатаются: в исходных лекциях «Список таблиц»
   // выводился заголовком без единой строки.
-  let non-empty(target, title) = context {
+  let non-empty(target, title, kind: none, short: none) = context {
     if query(target).len() > 0 {
       gap
-      outline(title: title, target: target)
+      head(title)
+      // В списке слово «Рисунок» повторялось бы в каждой строке и съедало
+      // место, поэтому там оно сокращается («Рис. 3»). Подпись под самим
+      // рисунком остаётся полной: сокращение задано здесь, а не supplement'ом.
+      if short == none {
+        outline(title: none, target: target)
+      } else {
+        show outline.entry.where(level: 1): it => {
+          v(6pt, weak: true)
+          strong(it.indented(
+            [#short~#numbering(
+              it.element.numbering,
+              ..counter(figure.where(kind: kind)).at(it.element.location()),
+            )],
+            it.inner(),
+          ))
+        }
+        outline(title: none, target: target)
+      }
     }
   }
-  if contents { outline(title: [#L.contents], depth: depth) }
-  if figures { non-empty(figure.where(kind: image), [#L.figures]) }
+  if contents {
+    head([#L.contents])
+    outline(title: none, depth: depth)
+  }
+  if figures {
+    non-empty(figure.where(kind: image), [#L.figures], kind: image, short: L.figure-list)
+  }
   if tables { non-empty(figure.where(kind: table), [#L.tables]) }
   if listings { non-empty(figure.where(kind: raw), [#L.listings]) }
 }

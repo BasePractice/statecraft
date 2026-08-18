@@ -6,7 +6,7 @@
 // Всё остальное — номер, название, дата, автор, институт — берётся из course.typ.
 
 #import "/course.typ": course as _course, lecture-meta, appendix-meta
-#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight, heading-number-gap
+#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight, heading-number-gap, heading-gaps, service-heading-align, hyphenation-cost, justify-in-tables
 #import "i18n.typ" as i18n
 #import "i18n.typ": L, ru-date
 #import "blocks.typ": *
@@ -90,6 +90,9 @@
     weight: body-weight,
     fill: palette.ink,
     hyphenate: true,
+    // Выключка по формату растягивает пробелы; чтобы вместо этого чаще
+    // переносилось слово, перенос сделан дешевле (см. theme.typ).
+    costs: (hyphenation: hyphenation-cost),
   )
   show math.equation: set text(font: fonts.math)
   set par(..par-setup)
@@ -107,17 +110,28 @@
       it.numbering, ..counter(heading).at(it.location()),
     )) + h(heading-number-gap)
   }
+  // Отступы вокруг заголовков заданы в theme.typ (`heading-gaps`): правятся
+  // в одном месте и одинаковы в отдельной лекции и в сводном томе.
   show heading.where(level: 1): it => block(
-    above: 20pt, below: 11pt,
+    above: heading-gaps.section.above, below: heading-gaps.section.below,
     text(size: sizes.h1, weight: 600, head-number(it) + it.body),
   )
   show heading.where(level: 2): it => block(
-    above: 14pt, below: 7pt,
+    above: heading-gaps.subsection.above, below: heading-gaps.subsection.below,
     text(size: sizes.h2, weight: 600, head-number(it) + it.body),
   )
   show heading.where(level: 3): it => block(
-    above: 12pt, below: 6pt,
+    above: heading-gaps.subsubsection.above, below: heading-gaps.subsubsection.below,
     text(size: sizes.h3, weight: 600, head-number(it) + it.body),
+  )
+  // Служебный раздел — заголовок без номера: «Содержание», списки рисунков и
+  // таблиц, «Обозначения и сокращения», «Контрольные вопросы», «Задачи»,
+  // «Список литературы». Такие заголовки центрируются и отделяются от текста
+  // заметно большим отступом, чем разделы лекции (`heading-gaps.service`).
+  show heading.where(level: 1, numbering: none): it => block(
+    above: heading-gaps.service.above, below: heading-gaps.service.below,
+    width: 100%,
+    align(service-heading-align, text(size: sizes.h1, weight: 600, it.body)),
   )
 
   show link: set text(fill: palette.accent)
@@ -126,6 +140,8 @@
   show: figure-rules
   show: raw-show-rules
   show table: set table(stroke: 0.5pt + palette.rule, inset: 5pt)
+  // Внутри таблицы выключка отключена: см. `justify-in-tables` в theme.typ.
+  show table: set par(justify: justify-in-tables)
   // Утверждения занимают всю ширину и не центрируются как обычные figure.
   show blocks.stmt-selector: set figure(gap: 0pt)
   show blocks.stmt-selector: set block(width: 100%)

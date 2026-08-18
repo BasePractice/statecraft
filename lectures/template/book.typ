@@ -11,7 +11,7 @@
 // set-правила ниже повторяют lecture() и должны меняться вместе с ней.
 
 #import "/course.typ": course as _course, lectures, appendices
-#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight, heading-number-gap
+#import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight, heading-number-gap, heading-gaps, service-heading-align, hyphenation-cost, justify-in-tables
 #import "i18n.typ" as i18n
 #import "i18n.typ": L, ru-date
 #import "blocks.typ": *
@@ -121,6 +121,9 @@
     weight: body-weight,
     fill: palette.ink,
     hyphenate: true,
+    // Выключка по формату растягивает пробелы; чтобы вместо этого чаще
+    // переносилось слово, перенос сделан дешевле (см. theme.typ).
+    costs: (hyphenation: hyphenation-cost),
   )
   show math.equation: set text(font: fonts.math)
   set par(..par-setup)
@@ -137,22 +140,39 @@
   }
   // Заголовок первого уровня в томе — целая лекция, поэтому он крупнее, чем
   // раздел внутри неё, и начинает страницу.
+  // Отступы — из theme.typ (`heading-gaps`), общие с отдельной лекцией; уровни
+  // здесь на один ниже, потому что первый занят самой лекцией.
   show heading.where(level: 1): it => block(
-    above: 0pt, below: 16pt,
+    above: heading-gaps.part.above, below: heading-gaps.part.below,
     text(size: sizes.title, weight: 600, head-number(it) + it.body),
   )
   show heading.where(level: 2): it => block(
-    above: 20pt, below: 11pt,
+    above: heading-gaps.section.above, below: heading-gaps.section.below,
     text(size: sizes.h1, weight: 600, head-number(it) + it.body),
   )
   show heading.where(level: 3): it => block(
-    above: 14pt, below: 7pt,
+    above: heading-gaps.subsection.above, below: heading-gaps.subsection.below,
     text(size: sizes.h2, weight: 600, head-number(it) + it.body),
   )
   show heading.where(level: 4): it => block(
-    above: 12pt, below: 6pt,
+    above: heading-gaps.subsubsection.above, below: heading-gaps.subsubsection.below,
     text(size: sizes.h3, weight: 600, head-number(it) + it.body),
   )
+  // Служебные разделы тома: «Содержание», списки рисунков, таблиц и листингов,
+  // «Обозначения и сокращения», «Список литературы». Как и в отдельной лекции,
+  // они центрируются и отделяются от текста большим отступом.
+  //
+  // Уровней два, потому что часть служебных разделов печатается внутри лекции
+  // («Контрольные вопросы», «Задачи»), а там действует `set heading(offset: 1)`
+  // и заголовок оказывается вторым уровнем. Номера у них нет ни там, ни там —
+  // по этому признаку они и отбираются.
+  let service-head(it) = block(
+    above: heading-gaps.service.above, below: heading-gaps.service.below,
+    width: 100%,
+    align(service-heading-align, text(size: sizes.h1, weight: 600, it.body)),
+  )
+  show heading.where(level: 1, numbering: none): service-head
+  show heading.where(level: 2, numbering: none): service-head
 
   show link: set text(fill: palette.accent)
   show ref: set text(fill: palette.accent)
@@ -160,6 +180,8 @@
   show: figure-rules
   show: raw-show-rules
   show table: set table(stroke: 0.5pt + palette.rule, inset: 5pt)
+  // Внутри таблицы выключка отключена: см. `justify-in-tables` в theme.typ.
+  show table: set par(justify: justify-in-tables)
   show blocks.stmt-selector: set figure(gap: 0pt)
   show blocks.stmt-selector: set block(width: 100%)
 

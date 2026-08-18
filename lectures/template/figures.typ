@@ -1,6 +1,7 @@
 // lectures/template/figures.typ — подписи «Рисунок N — …», картинки, подрисунки.
 
 #import "i18n.typ": L
+#import "theme.typ": justify-in-captions
 
 #let figure-rules(doc) = {
   set figure(numbering: "1")
@@ -12,6 +13,9 @@
   set figure.caption(separator: [ --- ])
   show figure.caption: it => [
     #set text(size: 9.5pt)
+    // Подпись короткая и центрированная: выключка по формату дала бы в ней
+    // растянутые пробелы (см. `justify-in-captions` в theme.typ).
+    #set par(justify: justify-in-captions)
     #strong[#it.supplement~#context it.counter.display(it.numbering)]#it.separator#it.body
   ]
   // Ссылка @eq:canon печатается как «(1)», а не «Уравнение 1».
