@@ -501,7 +501,7 @@ $ cases(delim: "{", q_1(1)= 0, q_2(1)= 0, q_1(t + 1)=(x_1(t)tilde.op x_2(t))q_2(
   caption: [
     Автоматная схема разменного аппарата после перекодировки алфавитов
   ],
-) <fig:03-1> <fig:KA_Structurly_MoneyAutomate_Simplified>
+) <fig:KA_Structurly_MoneyAutomate_Simplified>
 
 = Построение автомата наращиванием состояний <sec:state-growth>
 

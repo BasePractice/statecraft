@@ -59,6 +59,9 @@ practices/10-turing-machine/turing_machine.h    lectures/src/10-limits/code/mt/t
 practices/10-turing-machine/turing_machine_test.cpp lectures/src/10-limits/code/mt/turing_machine_test.cpp
 practices/10-turing-machine/change_sharp_algorithm.c lectures/src/10-limits/code/mt/change_sharp_algorithm.c
 practices/10-turing-machine/main.c              lectures/src/10-limits/code/mt/main.c
+practices/10-turing-machine/mt_programs.c       lectures/src/10-limits/code/mt/mt_programs.c
+practices/10-turing-machine/mt_programs.h       lectures/src/10-limits/code/mt/mt_programs.h
+practices/10-turing-machine/mt_programs_test.cpp lectures/src/10-limits/code/mt/mt_programs_test.cpp
 
 practices/12-takt/main.c                        lectures/src/12-takt/code/driver.c
 practices/12-takt/model/button_led.takt         lectures/src/12-takt/code/button_led.takt
