@@ -99,10 +99,12 @@ add_subdirectory(07-fsm-insert-element)
 add_subdirectory(07-three-ways)
 add_subdirectory(08-fsm-control-pneumo)
 add_subdirectory(08-bulk-loading)
+# У моделей Promela своей сборки нет: их проверяет внешний инструмент (SPIN),
+# и подпроект добавляет только тесты, а без инструмента пропускается.
+add_subdirectory(09-promela)
 add_subdirectory(10-turing-machine)
 add_subdirectory(11-cells)
 add_subdirectory(11-ant-search)
 add_subdirectory(12-takt)
 add_subdirectory(20-welding-line)
 add_subdirectory(21-additional)
-# 09-promela собирается внешним инструментом (SPIN), см. PLAN.md § 5.8
