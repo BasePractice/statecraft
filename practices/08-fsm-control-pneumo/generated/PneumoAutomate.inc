@@ -38,7 +38,7 @@ default:{
    UID=0
    GeneratorClassName=TInputPin
    Name=Const_source18
-   Type=Âõîäíîé êîíòàêò */
+   Type=Ğ’Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 state_vars->pneumoautomatev0_out_0_ = ((input_0));
 
@@ -46,7 +46,7 @@ state_vars->pneumoautomatev0_out_0_ = ((input_0));
    UID=1
    GeneratorClassName=TInputPin
    Name=Const_source19
-   Type=Âõîäíîé êîíòàêò */
+   Type=Ğ’Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 state_vars->pneumoautomatev1_out_0_ = ((input_1));
 
@@ -54,7 +54,7 @@ state_vars->pneumoautomatev1_out_0_ = ((input_1));
    UID=2
    GeneratorClassName=TInputPin
    Name=Const_source20
-   Type=Âõîäíîé êîíòàêò */
+   Type=Ğ’Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 state_vars->pneumoautomatev2_out_0_ = ((input_2));
 
@@ -62,7 +62,7 @@ state_vars->pneumoautomatev2_out_0_ = ((input_2));
    UID=3
    GeneratorClassName=TInputPin
    Name=Const_source21
-   Type=Âõîäíîé êîíòàêò */
+   Type=Ğ’Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 state_vars->pneumoautomatev3_out_0_ = ((input_3));
 
@@ -70,7 +70,7 @@ state_vars->pneumoautomatev3_out_0_ = ((input_3));
    UID=4
    GeneratorClassName=TLanguage
    Name=Automate
-   Type=ßçûê ïğîãğàììèğîâàíèÿ */
+   Type=Ğ¯Ğ·Ñ‹Ğº Ğ¿Ñ€Ğ¾Ğ³Ñ€Ğ°Ğ¼Ğ¼Ğ¸Ñ€Ğ¾Ğ²Ğ°Ğ½Ğ¸Ñ */
 
 engine.cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP] = state_vars->pneumoautomatev0_out_0_;
 engine.cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_DOWN] = state_vars->pneumoautomatev1_out_0_;
@@ -85,7 +85,7 @@ state_vars->pneumoautomatev4_out_1_ = engine.cylinders[PNEUMO_CYLINDER_Y2].outpu
    UID=5
    GeneratorClassName=TOutPin
    Name=OutPin15
-   Type=Âûõîäíîé êîíòàêò */
+   Type=Ğ’Ñ‹Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 out_0 = (state_vars->pneumoautomatev4_out_0_ > 0.5);
 
@@ -93,7 +93,7 @@ out_0 = (state_vars->pneumoautomatev4_out_0_ > 0.5);
    UID=6
    GeneratorClassName=TOutPin
    Name=OutPin16
-   Type=Âûõîäíîé êîíòàêò */
+   Type=Ğ’Ñ‹Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 out_1 = (state_vars->pneumoautomatev4_out_1_ > 0.5);
 
@@ -101,7 +101,7 @@ out_1 = (state_vars->pneumoautomatev4_out_1_ > 0.5);
    UID=7
    GeneratorClassName=TOutPin
    Name=OutPin17
-   Type=Âûõîäíîé êîíòàêò */
+   Type=Ğ’Ñ‹Ñ…Ğ¾Ğ´Ğ½Ğ¾Ğ¹ ĞºĞ¾Ğ½Ñ‚Ğ°ĞºÑ‚ */
 
 out_2 = (state_vars->pneumoautomatev4_out_2_ > 0.5);
 };break;

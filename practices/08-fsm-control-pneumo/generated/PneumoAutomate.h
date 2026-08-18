@@ -105,6 +105,12 @@ const ext_var_info_record state_vars_names[state_vars_count] = {
 };
 typedef char t_consts;
 typedef char t_local;
-#include "E:\GitHub\automata_programming\_2.Practice\11.FSM_ControlPneumo\pneumo_ctrl.h"
-#include "E:\GitHub\automata_programming\_2.Practice\11.FSM_ControlPneumo\pneumo_ctrl.c"
+/* Здесь генератор SimInTech подставил абсолютный путь машины, на которой
+   собиралась модель: E:\GitHub\automata_programming\_2.Practice\
+   11.FSM_ControlPneumo\. Каталог давно называется иначе, диска E у
+   большинства нет, и воспроизвести такую сборку по этому файлу невозможно.
+   Пути заменены относительными — это единственная правка в порождённом
+   файле, и она описана в README практики. */
+#include "../pneumo_ctrl.h"
+#include "../pneumo_ctrl.c"
 struct PneumoEngine engine;

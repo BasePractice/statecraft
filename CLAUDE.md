@@ -1408,8 +1408,12 @@ SPIN нужен `scripts/check-promela.sh` и ищется в `PATH` (перео
   `video/`, около 60 файлов бэкапов SimInTech (`.prt.1` … `.prt.30`).
 - Сборка проверена только на macOS (arm64, clang) и в CI на ubuntu; ветки
   MSVC и MinGW в `StatecraftStrictC.cmake` не проверялись ни разу.
-- `practices/08-fsm-control-pneumo/generated/*` — в CP1251, с вшитым
-  windows-путём `E:\GitHub\automata_programming\…`.
+- `practices/08-fsm-control-pneumo/generated/*` — вывод SimInTech, в сборку
+  не входит. С 18.08.2026 приведён в порядок: `.inc` и `.log` перекодированы
+  из CP1251 в UTF-8, абсолютные пути машины сборки заменены относительными.
+  Обе правки описаны в шапке `pneumo_ctrl.h`, чтобы файл не выдавался за
+  нетронутый вывод генератора; копии в лекции 8 синхронизируются через
+  `code-map.txt` наравне с остальными листингами.
 - `main.c` в `06-regular-expression` и `06-lexical-analyze` — заглушки:
   движок и лексер показываются только тестами.
 - `practices/09-promela` вне сборки: SPIN — внешний инструмент (см.
