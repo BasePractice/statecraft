@@ -59,6 +59,37 @@
   if label == none { f } else { [#f #label] }
 }
 
+// Карта Карно функции трёх переменных: один разряд входа против двух
+// разрядов состояния.
+//
+// name  — обозначение функции, например $phi_1$
+// cells — 2×4 массив значений: строки — x1 = 0, 1; столбцы — (q1 q2) = 00,
+//         01, 11, 10 (код Грея); значение none печатается звёздочкой.
+#let karnaugh-map3(name, cells, caption: none, label: none) = {
+  let cell(v) = if v == none { $*$ } else { [#v] }
+  let gray-q1 = (0, 0, 1, 1)
+  let gray-q2 = (0, 1, 1, 0)
+  let f = figure(
+    table(
+      columns: (auto, auto, auto, auto, auto, auto),
+      align: center,
+      stroke: none,
+      inset: 5pt,
+      table.vline(x: 2, stroke: 0.5pt),
+      name, [$q_1$], ..gray-q1.map(v => [#v]),
+      [], [$q_2$], ..gray-q2.map(v => [#v]),
+      [$x_1$], [], table.cell(colspan: 4)[],
+      table.hline(y: 3, stroke: 0.5pt),
+      ..(0, 1)
+        .map(x => ([#x], [], ..cells.at(x).map(cell)))
+        .flatten(),
+    ),
+    caption: caption,
+    kind: table,
+  )
+  if label == none { f } else { [#f #label] }
+}
+
 // Карта Карно функции четырёх переменных.
 //
 // name  — обозначение функции, например $phi_1$

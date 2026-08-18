@@ -131,6 +131,48 @@ TEST_CASE("Синтез разменного аппарата воспроизв
     REQUIRE(synthesis_verify(&synthesis, &machine));
 }
 
+TEST_CASE("Синтез детектора 1101 даёт формулы лекции", "[03.Synthesis]") {
+    /* Тот же автомат, что в лекции 2, и та же таблица, что в
+       machine/detector.fsm. Тест закрепляет числа, напечатанные в лекции 3:
+       разойдутся формулы — разойдётся и лекция. */
+    const char *text = "name detector\n"
+                       "inputs 0 1\n"
+                       "outputs 0 1\n"
+                       "states q0 q1 q2 q3\n"
+                       "q0 0 -> q0 0\n"
+                       "q0 1 -> q1 0\n"
+                       "q1 0 -> q0 0\n"
+                       "q1 1 -> q2 0\n"
+                       "q2 0 -> q3 0\n"
+                       "q2 1 -> q2 0\n"
+                       "q3 0 -> q0 0\n"
+                       "q3 1 -> q1 1\n";
+    struct Machine machine;
+    struct Synthesis synthesis;
+    FILE *in = std::tmpfile();
+
+    REQUIRE(in != NULL);
+    std::fputs(text, in);
+    std::rewind(in);
+    REQUIRE(machine_read(&machine, in));
+    std::fclose(in);
+
+    REQUIRE(synthesis_run(&synthesis, &machine));
+
+    /* Вход двоичный, состояний четыре, выход двоичный: безразличных
+       наборов у этого автомата нет — в отличие от разменного аппарата. */
+    REQUIRE(synthesis.input_bits == 1);
+    REQUIRE(synthesis.state_bits == 2);
+    REQUIRE(synthesis.output_bits == 1);
+
+    /* Числа из таблицы «Цена схемы детектора» в лекции 3. */
+    REQUIRE(dnf_literals(&synthesis.phi_dnf[0]) == 5);
+    REQUIRE(dnf_literals(&synthesis.phi_dnf[1]) == 9);
+    REQUIRE(dnf_literals(&synthesis.psi_dnf[0]) == 3);
+
+    REQUIRE(synthesis_verify(&synthesis, &machine));
+}
+
 TEST_CASE("Чтение описания автомата", "[03.Synthesis]") {
     const char *text = "name demo\n"
                        "inputs a b\n"
