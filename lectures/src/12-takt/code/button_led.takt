@@ -3,25 +3,27 @@
    extern fn — вызов процедуры, реализованной вне модели (в C-драйвере). */
 extern fn led_write(value: u8);
 
-fn toggle(value: u8) -> u8 { return ~value; }
+fn toggle(value: u8) -> u8 {
+    return ~value;
+}
 
 model ButtonLED {
-    in  BTN: bit;
-    out LED: u8  := 0;
+    in btn: bit;
+    out led: u8 := 0;
 
     var level: u8 := 0;
 
     start Idle {
-        ref Pressed: BTN = 1;
+        ref Pressed: btn = 1;
     }
 
     state Pressed {
         enter {
             level := toggle(level);
-            LED := level;
+            led := level;
             led_write(level);
         }
-        ref Idle: BTN = 0;
+        ref Idle: btn = 0;
     }
 }
 

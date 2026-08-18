@@ -94,6 +94,13 @@ if (STATECRAFT_BUILD_TESTS)
             --file "${CMAKE_CURRENT_SOURCE_DIR}/factory.json")
 endif ()
 
+# Оформление модели задаёт язык (`taktc fmt`), и расхождение с каноном ловится
+# тестом, а не обзором. То же самое сделано в practices/12-takt.
+if (STATECRAFT_BUILD_TESTS)
+    add_test(NAME 21-additional-format
+            COMMAND "${TAKTC_BIN}" fmt --check "${CMAKE_CURRENT_SOURCE_DIR}/model")
+endif ()
+
 # Сценарий симулятора проверяет саму модель — до того, как порождён код.
 if (TAKT_SIM_BIN AND STATECRAFT_BUILD_TESTS
         AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/scenario/loader.json")

@@ -59,6 +59,10 @@
   label: none,
 ) = {
   let lines = read(path).split("\n")
+  // Файл кончается переводом строки, поэтому split даёт последним пустой
+  // элемент — без этого у каждого листинга «файл целиком» появлялась лишняя
+  // пронумерованная пустая строка в конце.
+  if lines.len() > 0 and lines.last() == "" { lines = lines.slice(0, -1) }
   let a = if from == none { 0 } else { from - 1 }
   let b = if to == none { lines.len() } else { to }
   let f = figure(

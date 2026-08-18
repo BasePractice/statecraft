@@ -104,6 +104,14 @@ if (STATECRAFT_BUILD_TESTS)
     add_test(NAME ${PROJECT_NAME}-watchdog COMMAND ${PROJECT_NAME}-watchdog)
 endif ()
 
+# Оформление моделей задаёт сам язык, и канон исполним командой: `taktc fmt`.
+# Тест проверяет, не разошлись ли модели с ним, — иначе стиль расползается
+# незаметно, как это уже было с версией компилятора (см. CLAUDE.md, ТД-3).
+if (STATECRAFT_BUILD_TESTS)
+    add_test(NAME ${PROJECT_NAME}-format
+            COMMAND "${TAKTC_BIN}" fmt --check "${CMAKE_CURRENT_SOURCE_DIR}/model")
+endif ()
+
 # Сценарий симулятора — тест самой модели, а не порождённого кода: он подаёт
 # входы по тактам и проверяет состояние после каждого (`guard`).
 if (TAKT_SIM_BIN AND STATECRAFT_BUILD_TESTS)

@@ -6,11 +6,15 @@ var temperature: u8 := 101;
 start Cooling {
     always {
         for var i: u8 := 0; i < 3; i := i + 1 {
-            if temperature > 0 { temperature := temperature - 1; }
+            if temperature > 0 {
+                temperature := temperature - 1;
+            }
         }
     }
-    ref Done: temperature = 0;   /* недостижимо при любом нагреве */
-    ref Idle: temperature > 0;   /* сработает на ПЕРВОМ такте: 101 -> 98 > 0 */
+    // недостижимо при любом нагреве
+    ref Done: temperature = 0;
+    // сработает на ПЕРВОМ такте: 101 -> 98 > 0
+    ref Idle: temperature > 0;
 }
 
 state Done;

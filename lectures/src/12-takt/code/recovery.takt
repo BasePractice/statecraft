@@ -9,5 +9,9 @@ start Idle {
     ref Idle: !error;
 }
 
-state Fault { ref Recovery; }
-state Recovery { ref Idle; }
+state Fault {
+    ref Recovery;
+}
+state Recovery {
+    ref Idle;
+}

@@ -8,14 +8,24 @@ model Pump {
     const LOW: u8 := 20;
 
     start Filling {
-        enter  { pump_on := 1; }
-        always { level := level + 5; }
+        enter {
+            pump_on := 1;
+        }
+        always {
+            level := level + 5;
+        }
         ref Draining: level >= HIGH;
     }
 
     state Draining {
-        enter  { pump_on := 0; }
-        always { if level > 0 { level := level - 3; } }
+        enter {
+            pump_on := 0;
+        }
+        always {
+            if level > 0 {
+                level := level - 3;
+            }
+        }
         ref Filling: level <= LOW;
     }
 }
@@ -28,7 +38,9 @@ model Alarm {
     }
 
     state Screaming {
-        enter { siren := 1; }
+        enter {
+            siren := 1;
+        }
         ref Quiet: level < 95;
     }
 }
