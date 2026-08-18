@@ -55,8 +55,8 @@ jobs:
           {
             echo "Курс «Автоматное программирование систем управления», версия $VERSION."
             echo
-            echo "В архиве \`statecraft-lectures-$VERSION.zip\` — PDF лекций и"
-            echo "приложений курса под читаемыми именами."
+            echo "В архиве \`statecraft-lectures-$VERSION.zip\` — PDF лекций,"
+            echo "приложений и лабораторных работ под читаемыми именами."
             echo
             echo "## Лекции"
             echo
@@ -70,6 +70,13 @@ jobs:
             ( cd lectures && ./scripts/course.sh --appendices ) \
               | while IFS="$(printf '\t')" read -r id title; do
                   printf -- '- %s\n' "$title"
+                done
+            echo
+            echo "## Лабораторные работы"
+            echo
+            ( cd lectures && ./scripts/course.sh --labs ) \
+              | while IFS="$(printf '\t')" read -r n title; do
+                  printf -- '%d. %s\n' "$n" "$title"
                 done
           } > release-notes.md
           cat release-notes.md
