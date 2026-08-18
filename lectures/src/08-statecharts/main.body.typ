@@ -566,7 +566,7 @@ statechart'у.
 ...
 state_vars->pneumoautomatev4_out_2_ = pneumo_engine_tick(&engine);
 state_vars->pneumoautomatev4_out_0_ =
-    engine.cylinders[PNEUMO_CYLINDER_Y1].output_signal;", block: true)
+    engine.cylinders[PNEUMO_CYLINDER_Y1].output_signal;", block: true, lang: "c")
 
 Это и есть ответ на вопрос «куда встраивается ручной код» из @tab:codegen-tools
 для SimInTech: генератор владеет связыванием контактов и порядком вызова,
