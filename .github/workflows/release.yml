@@ -24,7 +24,7 @@ jobs:
     name: Версия курса ${{ github.ref_name }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Установить typst
         uses: typst-community/setup-typst@v5
@@ -77,7 +77,7 @@ jobs:
       # Артефакт прогона остаётся в любом случае: он нужен и для промежуточных
       # сборок, где релиз не создаётся.
       - name: Выложить PDF артефактом прогона
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lectures-pdf-${{ github.ref_name }}
           path: release/statecraft-lectures-*.zip

@@ -12,7 +12,7 @@ jobs:
     name: Оформление кода
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Версия зафиксирована намеренно. clang-format 18 и старше сжимает
       # завершающие комментарии, начиная с 19-й они выравниваются в столбик:
@@ -39,7 +39,7 @@ jobs:
         # «работал» за счёт срабатывания assert, ломается именно здесь.
         build_type: [Debug, Release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Конфигурация
         run: >
@@ -58,7 +58,7 @@ jobs:
     name: Документация практикума (Doxygen)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Установить doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen
@@ -70,7 +70,7 @@ jobs:
         run: ./scripts/build-docs.sh --strict
 
       - name: Выложить документацию
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: practices-docs
           path: build/docs/html
@@ -80,7 +80,7 @@ jobs:
     name: Модели Promela (SPIN)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Установить SPIN
         run: sudo apt-get update && sudo apt-get install -y spin
@@ -92,7 +92,7 @@ jobs:
     name: Лекции (typst)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Установить typst
         uses: typst-community/setup-typst@v5
@@ -120,7 +120,7 @@ jobs:
           echo "todo=$count" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Выложить PDF
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lectures-pdf
           path: build/lectures/*.pdf
@@ -134,7 +134,7 @@ jobs:
     # и падать от них сборка курса не должна.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Установить cppcheck
         run: sudo apt-get update && sudo apt-get install -y cppcheck
@@ -152,7 +152,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Выложить полный вывод
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: misra-raw
           path: misra-raw.txt
@@ -174,7 +174,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - name: Забрать исходники Takt
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: Pastor/Takt
           ref: v2
@@ -183,7 +183,7 @@ jobs:
       # Версию компилятора Rust задаёт rust-toolchain.toml самого Takt —
       # rustup поставит её сам при первой сборке.
       - name: Кеш сборки Rust
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -199,7 +199,7 @@ jobs:
           cargo build --release -p takt-sim --bin takt-sim
 
       - name: Выложить инструменты
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: takt-${{ matrix.os }}
           path: |
@@ -217,10 +217,10 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Взять инструменты Takt
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: takt-${{ matrix.os }}
           path: takt-bin
