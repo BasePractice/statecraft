@@ -17,7 +17,7 @@
   email:      "viruszold@gmail.com",
   // Версия курса и версия релиза — одно и то же число: тег вида
   // v{MAJOR}.{MINOR}.{BUILD} обязан совпадать с этой строкой (ТД-3).
-  version:    "1.1.0",
+  version:    "1.2.0",
   year:       2026,
   repo:       "https://github.com/BasePractice/statecraft",
 
