@@ -66,9 +66,14 @@ pacman -S mingw-w64-x86_64-graphviz     # MSYS2; на macOS: brew install graphv
 ./pan -D > pan.dot && dot -Tpng pan.dot > pan.png
 ```
 
-Работа с репозиторием и порядок сдачи — [docs/version-control.md](../docs/version-control.md).
+Работа с репозиторием и порядок сдачи — приложение курса «Система управления
+версиями Git» (`lectures/src/a1-version-control`).
 
 ## Требования к коду
+
+Полный текст требований — приложение курса «Требования к коду курса»
+(`lectures/src/a2-code-style`); собирается вместе с лекциями и лежит в
+комплекте рядом с ними. Ниже — то же самое в виде рабочей справки.
 
 Весь код курса — ISO C90 без расширений и без предупреждений
 (`cmake/StatecraftStrictC.cmake`). Оформление задаётся файлом `.clang-format`

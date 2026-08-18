@@ -93,6 +93,8 @@
 #let appendices = (
   (id: "a1-version-control", title: "Система управления версиями Git",
       date: datetime(year: 2026, month: 9, day: 1)),
+  (id: "a2-code-style", title: "Требования к коду курса",
+      date: datetime(year: 2026, month: 9, day: 1)),
 )
 
 #let appendix-meta(id) = {
