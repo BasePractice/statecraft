@@ -23,12 +23,17 @@
   #v(5mm)
   #line(length: 62%, stroke: 0.7pt + palette.rule)
   #v(6mm)
-  // У приложений номера в расписании нет: вместо «Лекция N» печатается
-  // «Приложение».
-  #text(size: sizes.subtitle, fill: palette.muted)[#if meta.n == none {
-    L.appendix
-  } else {
-    [#L.lecture~#meta.n]
+  // Что за документ: у приложения номера в расписании нет, у лабораторной
+  // работы номер свой. Вид приходит полем `kind`.
+  #text(size: sizes.subtitle, fill: palette.muted)[#{
+    let kind = meta.at("kind", default: if meta.n == none { "appendix" } else { "lecture" })
+    if kind == "appendix" {
+      L.appendix
+    } else if kind == "lab" {
+      [#L.lab~#meta.n]
+    } else {
+      [#L.lecture~#meta.n]
+    }
   }]
   #v(3mm)
   #text(size: sizes.title, weight: 600, meta.title)

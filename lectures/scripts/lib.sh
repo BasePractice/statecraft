@@ -76,6 +76,17 @@ list_appendices() {
   }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
 }
 
+# Реестр лабораторных работ из course.typ. Работа — не лекция и не приложение:
+# у неё есть номер и лекция, к которой она относится.
+# Печатает строки вида "id<TAB>номер<TAB>название".
+list_labs() {
+  typst_args
+  "$TYPST_BIN" eval "${TYPST_ARGS[@]}" --format json '{
+    import "/course.typ": labs
+    labs.map(l => l.id + "\t" + str(l.n) + "\t" + l.title).join("\n")
+  }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
+}
+
 # Название дисциплины из course.typ: им подписывается сводный том.
 course_discipline() {
   typst_args

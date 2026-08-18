@@ -74,6 +74,7 @@ typst_args
 
 LECT="$(list_lectures)" || die "не удалось прочитать реестр из course.typ"
 APPX="$(list_appendices)" || die "не удалось прочитать реестр приложений"
+LABS="$(list_labs)" || die "не удалось прочитать реестр лабораторных работ"
 
 # Без явных аргументов собирается весь комплект: лекции и приложения курса.
 if [ "${#IDS[@]}" -eq 0 ]; then
@@ -86,6 +87,11 @@ EOF
     [ -n "${id:-}" ] && IDS+=( "$id" )
   done <<EOF
 $APPX
+EOF
+  while IFS="$(printf '\t')" read -r id n title; do
+    [ -n "${id:-}" ] && IDS+=( "$id" )
+  done <<EOF
+$LABS
 EOF
   # Сводный том собирается последним: он длиннее всех остальных вместе взятых,
   # и при параллельной сборке его лучше запускать одновременно с ними.
@@ -139,6 +145,14 @@ EOF
     fi
   done <<EOF
 $APPX
+EOF
+  while IFS="$(printf '\t')" read -r id n title; do
+    if [ "$id" = "$want" ]; then
+      printf 'Лабораторная %d — %s.pdf' "$n" "$(safe_title "$title")"
+      return
+    fi
+  done <<EOF
+$LABS
 EOF
   printf '%s.pdf' "$want"
 }

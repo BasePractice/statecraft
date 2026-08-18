@@ -95,6 +95,18 @@ done <<EOF
 $APPX
 EOF
 
+LABS="$(list_labs)" || die "не удалось прочитать реестр лабораторных работ"
+while IFS="$(printf '\t')" read -r id n title; do
+  [ -z "${id:-}" ] && continue
+  if [ -f "$SRC_DIR/$id/main.typ" ]; then
+    ok "Л$(printf '%s' "$n")  $id — $title"
+  else
+    fail "Л$(printf '%s' "$n")  $id — нет src/$id/main.typ"
+  fi
+done <<EOF
+$LABS
+EOF
+
 # Сводный том: не лекция и не приложение, в реестрах course.typ его нет.
 # Проверяется отдельно — вместе с тем, что все включаемые им тела на месте.
 if [ -f "$BOOK_SRC" ]; then

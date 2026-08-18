@@ -5,7 +5,7 @@
 //     #show: lecture.with(id: "02-fsm")
 // Всё остальное — номер, название, дата, автор, институт — берётся из course.typ.
 
-#import "/course.typ": course as _course, lecture-meta, appendix-meta
+#import "/course.typ": course as _course, lecture-meta, appendix-meta, lab-meta
 #import "theme.typ": fonts, palette, sizes, page-setup, par-setup, body-weight, heading-number-gap, heading-gaps, service-heading-align, hyphenation-cost, justify-in-tables
 #import "i18n.typ" as i18n
 #import "i18n.typ": L, ru-date
@@ -33,6 +33,9 @@
   // расписании, поэтому вместо «Лекция N» на титуле и в колонтитуле стоит
   // метка вида «Приложение». Задаётся `appendix-id` (реестр в course.typ).
   appendix-id: none,
+  // Лабораторная работа печатается тем же шаблоном: номер у неё свой, а на
+  // титуле и в колонтитуле стоит «Лабораторная работа N» (реестр в course.typ).
+  lab-id: none,
   // Точечные переопределения — обычно не нужны.
   number: none,
   title: none,
@@ -60,8 +63,18 @@
   } else if appendix-id != none {
     let a = appendix-meta(appendix-id)
     (n: none, id: a.id, title: a.title, date: a.date)
+  } else if lab-id != none {
+    let l = lab-meta(lab-id)
+    (n: l.n, id: l.id, title: l.title, date: l.date)
   } else {
     (n: number, id: "-", title: title, date: date)
+  }
+  // Чем документ является: от этого зависит только надпись на титуле и в
+  // колонтитуле — «Лекция N», «Приложение» или «Лабораторная работа N».
+  let kind = if lab-id != none { "lab" } else if appendix-id != none {
+    "appendix"
+  } else {
+    "lecture"
   }
   let n = if number != none { number } else { m.n }
   let ttl = if title != none { title } else { m.title }
@@ -147,7 +160,7 @@
   show blocks.stmt-selector: set block(width: 100%)
 
   // Титул
-  title-page((n: n, title: ttl, date: dt), c)
+  title-page((n: n, kind: kind, title: ttl, date: dt), c)
 
   // Фронт-материя, римская нумерация
   set page(numbering: "i", number-align: center)
@@ -175,7 +188,13 @@
       grid(
         columns: (1fr, auto),
         align: (left, right),
-        if n == none { [#L.appendix.~#ttl] } else { [#L.lecture~#n.~#ttl] },
+        if kind == "appendix" {
+          [#L.appendix.~#ttl]
+        } else if kind == "lab" {
+          [#L.lab-short~#n.~#ttl]
+        } else {
+          [#L.lecture~#n.~#ttl]
+        },
         if cur != none {
           let num = counter(heading).at(cur.location())
           [#numbering(cur.numbering, ..num)~#cur.body]

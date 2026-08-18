@@ -54,6 +54,8 @@ practices/09-promela/08.MutexAlgorithm.pml      lectures/src/09-verification/cod
 practices/09-promela/09.Semaphore.pml           lectures/src/09-verification/code/09.Semaphore.pml
 practices/09-promela/10.TrafficLight.pml        lectures/src/09-verification/code/10.TrafficLight.pml
 
+practices/03-synthesis/machine/detector.fsm    lectures/src/lab-1-synthesis/code/detector.fsm
+
 practices/03-control-program/sensor.h           lectures/src/07-automata-prog/code/sensor.h
 practices/03-control-program/engine.h           lectures/src/07-automata-prog/code/engine.h
 
