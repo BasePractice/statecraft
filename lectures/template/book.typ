@@ -175,6 +175,7 @@
     tables: tables-list,
     listings: listings-list,
     depth: 2,
+    separate: true,
   )
   if glossary { glossary-section() }
 

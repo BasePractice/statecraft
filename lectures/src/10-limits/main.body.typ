@@ -1525,11 +1525,27 @@ $q_1$ (см. @MT_Simple_Iteration_Two). Получим машину Тьюрин
 Необходимо описать машину Тьюринга для замены всех вхождений символа $\#$ в слове $w$ на символ $1$. Начальное
 положение головки машины обозревает любой символ слова $w$
 
-#code-file("/src/10-limits/code/mt/change_sharp_algorithm.c", lang: "c") // TODO: from/to/caption
+#code-file(
+  "/src/10-limits/code/mt/change_sharp_algorithm.c",
+  lang: "c",
+  caption: [Замена символов \# на \$ таблицей переходов],
+) <lst:mt-change-sharp>
 
 == Внешнее описание алгоритма
-#code-file("/src/10-limits/code/mt/main.c", lang: "c") // TODO: from/to/caption
+#code-file(
+  "/src/10-limits/code/mt/main.c",
+  lang: "c",
+  caption: [Точка входа: лента, программа и прогон машины],
+) <lst:mt-main>
 
-#code-file("/src/10-limits/code/mt/turing_machine.c", lang: "c") // TODO: from/to/caption
+#code-file(
+  "/src/10-limits/code/mt/turing_machine.c",
+  lang: "c",
+  caption: [Интерпретатор машины Тьюринга: лента, головка, шаг],
+) <lst:mt-machine-c>
 
-#code-file("/src/10-limits/code/mt/turing_machine.h", lang: "c") // TODO: from/to/caption
+#code-file(
+  "/src/10-limits/code/mt/turing_machine.h",
+  lang: "c",
+  caption: [Интерфейс интерпретатора],
+) <lst:mt-machine-h>

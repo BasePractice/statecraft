@@ -52,13 +52,23 @@
   tables: true,
   listings: true,
   depth: 3,
+  // separate: каждый список — с новой страницы. Нужно там, где списки длинные
+  // (сводный том: только рисунков четыре страницы) и заголовок следующего
+  // списка иначе прилипает к последней строке предыдущего. В отдельной лекции
+  // списки короткие, и разрыв дал бы полупустые страницы, поэтому там они
+  // разделяются отбивкой.
+  separate: false,
 ) = {
   set outline.entry(fill: repeat[.#h(3pt)])
   show outline.entry.where(level: 1): it => { v(6pt, weak: true); strong(it) }
+  let gap = if separate { pagebreak(weak: true) } else { v(20pt, weak: true) }
   // Пустые списки не печатаются: в исходных лекциях «Список таблиц»
   // выводился заголовком без единой строки.
   let non-empty(target, title) = context {
-    if query(target).len() > 0 { outline(title: title, target: target) }
+    if query(target).len() > 0 {
+      gap
+      outline(title: title, target: target)
+    }
   }
   if contents { outline(title: [#L.contents], depth: depth) }
   if figures { non-empty(figure.where(kind: image), [#L.figures]) }
