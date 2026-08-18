@@ -213,7 +213,7 @@ $\[w = a_1 dots.h a_1$, оставляет этот символ без изме
   )]
   , caption: [$M_1$]
   , kind: table
-  )
+  ) <tab:10-1>
 
 #figure(
   align(center)[#table(
@@ -226,7 +226,7 @@ $\[w = a_1 dots.h a_1$, оставляет этот символ без изме
   )]
   , caption: [$M_2$]
   , kind: table
-  )
+  ) <tab:10-2>
 
 #figure(
   align(center)[#table(
@@ -239,7 +239,7 @@ $\[w = a_1 dots.h a_1$, оставляет этот символ без изме
   )]
   , caption: [$M_3$]
   , kind: table
-  )
+  ) <tab:10-3>
 
 Немного больше примеров работы машины описаны в приложении
 

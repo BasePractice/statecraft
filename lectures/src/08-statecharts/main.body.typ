@@ -561,12 +561,13 @@ statechart'у.
 контакта. Логика целиком живёт в `pneumo_ctrl.c`, а блок `TLanguage`
 раскрывается в десяток строк, переносящих сигналы в структуру и обратно:
 
-#raw("engine.cylinders[PNEUMO_CYLINDER_Y1].input_signal[PNEUMO_CYLINDER_SIGNAL_UP]
-    = state_vars->pneumoautomatev0_out_0_;
-...
-state_vars->pneumoautomatev4_out_2_ = pneumo_engine_tick(&engine);
-state_vars->pneumoautomatev4_out_0_ =
-    engine.cylinders[PNEUMO_CYLINDER_Y1].output_signal;", block: true, lang: "c")
+#code-file(
+  "/src/08-statecharts/code/generated/PneumoAutomate.inc",
+  lang: "c",
+  from: 75,
+  to: 83,
+  caption: [Блок «Язык программирования»: перенос сигналов между схемой и кодом],
+) <lst:pneumo-tlanguage>
 
 Это и есть ответ на вопрос «куда встраивается ручной код» из @tab:codegen-tools
 для SimInTech: генератор владеет связыванием контактов и порядком вызова,
