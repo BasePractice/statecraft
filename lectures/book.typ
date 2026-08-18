@@ -12,7 +12,7 @@
 //   typst compile --root . book.typ out/statecraft-book.pdf
 
 #import "/template/book.typ": *
-#import "/course.typ": lecture-meta, appendix-meta
+#import "/course.typ": lecture-meta, appendix-meta, lab-meta
 
 #show: book
 
@@ -27,6 +27,14 @@
 #let app(id, body) = {
   let m = appendix-meta(id)
   part([#L.appendix. #m.title], body)
+}
+
+// Лабораторная работа в томе: та же часть, что и приложение, но с номером
+// работы в заголовке. Задания печатаются после справочных приложений —
+// сначала то, чем пользуются при чтении, потом то, что делают руками.
+#let lab(id, body) = {
+  let m = lab-meta(id)
+  part([#L.lab~#m.n. #m.title], body)
 }
 
 #lec("01-intro", include "src/01-intro/main.body.typ")
@@ -52,3 +60,9 @@
 
 #app("a1-version-control", include "src/a1-version-control/main.body.typ")
 #app("a2-code-style", include "src/a2-code-style/main.body.typ")
+
+#lab("lab-1-synthesis", include "src/lab-1-synthesis/main.body.typ")
+#lab("lab-2-dfa", include "src/lab-2-dfa/main.body.typ")
+#lab("lab-3-format", include "src/lab-3-format/main.body.typ")
+#lab("lab-4-turing", include "src/lab-4-turing/main.body.typ")
+#lab("lab-5-three-ways", include "src/lab-5-three-ways/main.body.typ")
