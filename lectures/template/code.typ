@@ -6,7 +6,14 @@
 // Применяется show-правилами в lecture().
 #let raw-show-rules(doc) = {
   // Языки, которых typst не знает из коробки. Путь абсолютный от --root.
-  set raw(syntaxes: "/syntaxes/takt.sublime-syntax")
+  // Takt — язык лекции 12, Promela — входной язык SPIN (лекция 9), БНФ —
+  // грамматики лексера (лекция 6). Без этого списка такие листинги
+  // набирались бы одним цветом, то есть неотличимо от вывода программы.
+  set raw(syntaxes: (
+    "/syntaxes/takt.sublime-syntax",
+    "/syntaxes/promela.sublime-syntax",
+    "/syntaxes/bnf.sublime-syntax",
+  ))
   // Fira Code — variable-шрифт с Default weight 300, поэтому вес задаётся явно.
   // calt: 0 гасит лигатуры (!= → ≠): в лекции по Си они мешают читать код.
   show raw: set text(

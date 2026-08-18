@@ -14,6 +14,17 @@
 #import "theme.typ": fonts, palette, sizes
 #import "i18n.typ": L
 
+// В osifont (ГОСТ 2.304-81) глиф «ё» есть, но нарисован залитым
+// прямоугольником — то есть подпись «жёлтый» печатается как «ж■лтый».
+// Обычный запасной шрифт тут не спасает: typst подставляет его только когда
+// глифа нет вовсе, а здесь он формально есть. Поэтому эти две буквы
+// подменяются явно; остальной текст остаётся чертёжным.
+#let _yo-fix(body) = {
+  show "ё": text(font: fonts.text, "ё")
+  show "Ё": text(font: fonts.text, "Ё")
+  body
+}
+
 // Диаграмма Мура: узлы-состояния и помеченные дуги.
 //
 // states — массив (id: "0", pos: (x, y), label: [0], initial: false)
@@ -41,7 +52,7 @@
         node(
           s.pos,
           // Перенос внутри узла («за-крыт») читается как две строки шума.
-          text(font: fonts.diagram, size: 11pt, hyphenate: false, s.label),
+          text(font: fonts.diagram, size: 11pt, hyphenate: false, _yo-fix(s.label)),
           name: label(s.id),
           // Длинная подпись («G_REQ», «закрыт») не влезает в круг стандартного
           // радиуса — такому состоянию радиус задаётся полем `radius`.
@@ -77,6 +88,11 @@
             "-|>",
             bend: a.at("bend", default: 0deg),
             label-pos: a.at("pos", default: 0.5),
+            // Сторону метки fletcher выбирает сам, и на замкнутом цикле из
+            // трёх состояний все три подписи сходятся внутрь фигуры, где и
+            // накладываются друг на друга. Поле `side` (left/right/center)
+            // позволяет вынести метку наружу.
+            label-side: a.at("side", default: auto),
             label-sep: 3pt,
           )
         }
@@ -91,14 +107,14 @@
   // навешивается на содержимое figure, а не `set` на выходе функции: иначе
   // метка <fig:…> цепляется к styled-контенту, и ссылка на рисунок ломается.
   figure(
-    text(font: fonts.diagram, layout(area => context {
+    text(font: fonts.diagram, _yo-fix(layout(area => context {
       let w = measure(body).width
       if w > area.width {
         scale(x: area.width / w * 100%, y: area.width / w * 100%, reflow: true, body)
       } else {
         body
       }
-    })),
+    }))),
     caption: caption,
   )
 }
@@ -113,7 +129,7 @@
 // Обёртка: холст CeTZ внутри figure с подписью.
 #let scheme(body, caption: none, length: 1cm, label: none) = {
   let f = figure(
-    text(font: fonts.diagram, cetz.canvas(length: length, body)),
+    text(font: fonts.diagram, _yo-fix(cetz.canvas(length: length, body))),
     caption: caption,
   )
   if label == none { f } else { [#f #label] }

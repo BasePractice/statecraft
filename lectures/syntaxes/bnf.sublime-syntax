@@ -1,0 +1,42 @@
+%YAML 1.2
+---
+# Подсветка грамматик в форме БНФ (лекция 6: грамматика учебного лексера).
+# typst такого языка не знает, а грамматика — не «просто текст»: в ней
+# различимы определяемый нетерминал, литералы и классы символов.
+name: BNF
+file_extensions:
+  - bnf
+scope: source.bnf
+
+contexts:
+  main:
+    - match: '^\s*([A-Za-z_][A-Za-z_0-9]*)\s*(::=|:=|->)'
+      captures:
+        1: entity.name.function.bnf
+        2: keyword.operator.bnf
+    - match: '<[A-Za-z_][A-Za-z_0-9 -]*>'
+      scope: entity.name.function.bnf
+    - match: "'"
+      scope: punctuation.definition.string.begin.bnf
+      push: single_string
+    - match: '"'
+      scope: punctuation.definition.string.begin.bnf
+      push: double_string
+    - match: '\[[^\]]*\]'
+      scope: constant.character.class.bnf
+    - match: '[|*+?]'
+      scope: keyword.operator.bnf
+    - match: '#.*$'
+      scope: comment.line.number-sign.bnf
+
+  single_string:
+    - meta_scope: string.quoted.single.bnf
+    - match: "'"
+      scope: punctuation.definition.string.end.bnf
+      pop: true
+
+  double_string:
+    - meta_scope: string.quoted.double.bnf
+    - match: '"'
+      scope: punctuation.definition.string.end.bnf
+      pop: true

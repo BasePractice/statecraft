@@ -1,0 +1,68 @@
+%YAML 1.2
+---
+# Подсветка Promela — входного языка верификатора SPIN (лекция 9).
+# typst этого языка не знает, а помечать модели как «text» значит терять
+# различие между кодом и выводом программы. Ключевые слова — по описанию
+# языка в документации SPIN.
+name: Promela
+file_extensions:
+  - pml
+  - promela
+scope: source.promela
+
+contexts:
+  main:
+    - match: /\*
+      scope: punctuation.definition.comment.promela
+      push: block_comment
+    - match: //
+      scope: punctuation.definition.comment.promela
+      push: line_comment
+    - match: '"'
+      scope: punctuation.definition.string.begin.promela
+      push: string
+
+    # объявления процессов и типов
+    - match: \b(proctype|init|active|never|trace|notrace|typedef|inline|ltl)\b
+      scope: keyword.declaration.promela
+    # типы
+    - match: \b(bit|bool|byte|short|int|unsigned|chan|mtype|pid)\b
+      scope: storage.type.promela
+    # управление
+    - match: \b(if|fi|do|od|for|select|goto|break|else|unless|atomic|d_step)\b
+      scope: keyword.control.promela
+    # утверждения и встроенные функции
+    - match: \b(assert|printf|printm|run|len|empty|nempty|full|nfull|eval|skip|timeout)\b
+      scope: support.function.promela
+    # модификаторы видимости и приоритетов
+    - match: \b(hidden|show|local|xr|xs|provided|priority)\b
+      scope: storage.modifier.promela
+    - match: \b(true|false)\b
+      scope: constant.language.promela
+
+    # операторы Promela: посылка, приём, охрана альтернативы
+    - match: '::|->|!!|\?\?|!|\?'
+      scope: keyword.operator.promela
+    - match: '==|!=|<=|>=|&&|\|\||[-+*/%<>&|^~]'
+      scope: keyword.operator.promela
+
+    - match: \b\d+\b
+      scope: constant.numeric.promela
+
+  block_comment:
+    - meta_scope: comment.block.promela
+    - match: \*/
+      pop: true
+
+  line_comment:
+    - meta_scope: comment.line.double-slash.promela
+    - match: $\n?
+      pop: true
+
+  string:
+    - meta_scope: string.quoted.double.promela
+    - match: \\.
+      scope: constant.character.escape.promela
+    - match: '"'
+      scope: punctuation.definition.string.end.promela
+      pop: true

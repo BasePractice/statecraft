@@ -98,8 +98,11 @@
   ),
   (
     (from: "t0", to: "t1", label: [$"timer" = 20$]),
-    (from: "t1", to: "t2", label: [$"timer" = 10$]),
-    (from: "t2", to: "t0", label: [$"timer" = 5$]),
+    // На цикле из трёх состояний середины двух дуг оказываются рядом, и
+    // подписи печатались одна поверх другой. Разнесены по длине дуги: ближе
+    // к тому состоянию, из которого переход идёт.
+    (from: "t1", to: "t2", label: [$"timer" = 10$], pos: 0.15),
+    (from: "t2", to: "t0", label: [$"timer" = 5$], pos: 0.85),
   ),
   spacing: 3.2cm,
   caption: [Автомат светофора из @lst:traffic. Выдержки заданы числом тактов,
@@ -460,7 +463,7 @@ takt-sim model/traffic.takt -s scenario.json
 симуляцию с ненулевым кодом возврата --- то есть сценарий годится и как тест
 в сборке:
 
-```
+```text
 Шаг   1:  [Watching]  in:kick=1  out:alarm=0  vars:idle=0
 Шаг   2 (     1ms):  [Watching]  in:kick=0  out:alarm=0  vars:idle=1
 ...
@@ -470,7 +473,7 @@ takt-sim model/traffic.takt -s scenario.json
 
 Если ожидание не сбылось, симулятор называет шаг, поле и оба значения:
 
-```
+```text
 Ошибка: Guard шага 1: out (lamp): ожидалось Number(2), получено Some(Number(0))
 ```
 
