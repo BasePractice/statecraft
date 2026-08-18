@@ -8,7 +8,14 @@
 #import "i18n.typ": L, appendix-numbering
 #import "theme.typ": fonts, palette, sizes
 
-#let appendix(doc) = {
+// В сводном томе (book.typ) лекция — раздел первого уровня, а её собственные
+// приложения оказываются подразделами. Буквенная нумерация им там не нужна и
+// только сбивала бы сквозную: `counter(heading).update(0)` ниже — глобальный
+// сброс, из-за которого после лекции 10 нумерация частей тома начиналась
+// заново. Признак тома выставляет book().
+#let book-mode = state("statecraft-book-mode", false)
+
+#let appendix(doc) = context if book-mode.get() { doc } else {
   counter(heading).update(0)
   set heading(numbering: appendix-numbering)
   show heading.where(level: 1): it => {

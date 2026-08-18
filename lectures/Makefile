@@ -12,6 +12,7 @@
 #   make pack       комплект для раздачи: PDF под читаемыми именами в zip
 #   make watch L=03-synthesis   пересборка одной лекции при изменении
 #   make one L=03-synthesis     собрать одну лекцию
+#   make book       только сводный том: все лекции и приложения одним PDF
 #   make pretty     собрать и разложить копии под читаемыми именами
 #   make draft      собрать с водяным знаком «ЧЕРНОВИК»
 #   make clean      очистить out/
@@ -29,7 +30,7 @@ S := ./scripts
 OUT ?= out
 export OUT_DIR := $(abspath $(OUT))
 
-.PHONY: all check fix fonts build one watch pretty draft sync sync-check version pack clean distclean help
+.PHONY: all check fix fonts build one book watch pretty draft sync sync-check version pack clean distclean help
 
 all: pretty
 
@@ -39,6 +40,9 @@ build:
 one:
 	@test -n "$(L)" || { echo "укажите лекцию: make one L=03-synthesis"; exit 1; }
 	@$(S)/build.sh "$(L)"
+
+book:
+	@$(S)/build.sh --book --pretty
 
 watch:
 	@test -n "$(L)" || { echo "укажите лекцию: make watch L=03-synthesis"; exit 1; }
@@ -78,4 +82,4 @@ distclean:
 	@$(S)/clean.sh --all
 
 help:
-	@sed -n '3,24p' Makefile | sed 's/^# \{0,1\}//'
+	@sed -n '3,25p' Makefile | sed 's/^# \{0,1\}//'

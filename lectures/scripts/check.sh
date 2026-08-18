@@ -95,6 +95,18 @@ done <<EOF
 $APPX
 EOF
 
+# Сводный том: не лекция и не приложение, в реестрах course.typ его нет.
+# Проверяется отдельно — вместе с тем, что все включаемые им тела на месте.
+if [ -f "$BOOK_SRC" ]; then
+  missing=0
+  while IFS= read -r rel; do
+    [ -f "$ROOT/$rel" ] || { fail " —  сводный том ссылается на $rel, которого нет"; missing=1; }
+  done < <(grep -oE 'include "(src/[^"]+\.typ)"' "$BOOK_SRC" | sed 's/include "//; s/"$//' | sort -u)
+  [ "$missing" = 0 ] && ok " —  сводный том (book.typ) — все включаемые тела на месте"
+else
+  fail " —  нет book.typ: сводный том не соберётся"
+fi
+
 echo
 echo "== 5. пути к картинкам и коду =="
 python3 - "$ROOT" >"$FAILFILE.paths" <<'PY' || true

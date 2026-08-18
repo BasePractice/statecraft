@@ -10,6 +10,8 @@
 #   -d, --draft      водяной знак «ЧЕРНОВИК»
 #   -p, --pretty     дополнительно положить копию под читаемым именем
 #                    «03 — Синтез автоматов и автоматные схемы.pdf»
+#       --book       собрать только сводный том (book.typ)
+#       --no-book    не собирать сводный том
 #       --out DIR    каталог результата (по умолчанию lectures/out);
 #                    этим ключом пользуется сборка из CMake
 #   -h, --help       эта справка
@@ -21,7 +23,13 @@ if [ "${1:-}" = "--build-one" ]; then
   id="$2"
   draft="${3:-0}"
   typst_args
-  src="$SRC_DIR/$id/main.typ"
+  # Сводный том лежит не в src/<id>/, а отдельным файлом в корне lectures:
+  # он не лекция, а сборка всех лекций и приложений.
+  if [ "$id" = "$BOOK_ID" ]; then
+    src="$BOOK_SRC"
+  else
+    src="$SRC_DIR/$id/main.typ"
+  fi
   if [ ! -f "$src" ]; then
     warn "$id: нет src/$id/main.typ, пропускаю"
     exit 0
@@ -39,7 +47,7 @@ if [ "${1:-}" = "--build-one" ]; then
 fi
 # ---------------------------------------------------------------------------
 
-WATCH=0; OPEN=0; DRAFT=0; PRETTY=0; JOBS=""
+WATCH=0; OPEN=0; DRAFT=0; PRETTY=0; JOBS=""; BOOK=1; ONLY_BOOK=0
 IDS=()
 
 while [ $# -gt 0 ]; do
@@ -48,6 +56,8 @@ while [ $# -gt 0 ]; do
     -o|--open)   OPEN=1 ;;
     -d|--draft)  DRAFT=1 ;;
     -p|--pretty) PRETTY=1 ;;
+    --book)      ONLY_BOOK=1 ;;
+    --no-book)   BOOK=0 ;;
     -j)          JOBS="${2:-}"; shift ;;
     --out)       OUT_DIR="${2:-}"; shift ;;
     --all)       ;;
@@ -77,6 +87,14 @@ EOF
   done <<EOF
 $APPX
 EOF
+  # Сводный том собирается последним: он длиннее всех остальных вместе взятых,
+  # и при параллельной сборке его лучше запускать одновременно с ними.
+  [ "$BOOK" = 1 ] && IDS+=( "$BOOK_ID" )
+fi
+
+# --book: собрать только том.
+if [ "$ONLY_BOOK" = 1 ]; then
+  IDS=( "$BOOK_ID" )
 fi
 
 # Название лекции, пригодное для имени файла.
@@ -102,6 +120,10 @@ safe_title() {
 # читается.
 pretty_name() {
   local want="$1"
+  if [ "$want" = "$BOOK_ID" ]; then
+    printf '00 — %s (полный курс).pdf' "$(safe_title "$(course_discipline)")"
+    return
+  fi
   while IFS="$(printf '\t')" read -r id n title; do
     if [ "$id" = "$want" ]; then
       printf '%02d — %s.pdf' "$n" "$(safe_title "$title")"

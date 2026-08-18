@@ -7,6 +7,10 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
 
 SRC_DIR="$ROOT/src"
+# Сводный том: все лекции и приложения одним PDF (lectures/book.typ). Это не
+# лекция и не приложение, поэтому в реестрах course.typ его нет — только здесь.
+BOOK_ID="${BOOK_ID:-book}"
+BOOK_SRC="$ROOT/book.typ"
 # Каталог результата переопределяется извне: так сборка из CMake кладёт PDF в
 # build/lectures, а ручная — в lectures/out, и обе идут по одному коду.
 OUT_DIR="${OUT_DIR:-$ROOT/out}"
@@ -69,6 +73,15 @@ list_appendices() {
   "$TYPST_BIN" eval "${TYPST_ARGS[@]}" --format json '{
     import "/course.typ": appendices
     appendices.map(a => a.id + "\t" + a.title).join("\n")
+  }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
+}
+
+# Название дисциплины из course.typ: им подписывается сводный том.
+course_discipline() {
+  typst_args
+  "$TYPST_BIN" eval "${TYPST_ARGS[@]}" --format json '{
+    import "/course.typ": course
+    course.discipline
   }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
 }
 
