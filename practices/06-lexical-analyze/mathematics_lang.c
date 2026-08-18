@@ -243,43 +243,35 @@ bool lexer_next(struct LexerContext *ctx, struct LexerToken *token) {
     token->it_end = ctx->it;
     token->line_no = ctx->line_no;
     token->error = 0;
+    /* Односимвольные лексемы различаются только видом, поэтому сдвиг и
+       закрытие отрезка вынесены в общий хвост: раньше каждая ветвь
+       возвращала управление сама и `it_end` оставался равным `it_start`,
+       то есть длина лексемы выходила нулевой. Заодно ушла недостижимая
+       ветвь: условие `is_rpar` было записано дважды, и во второй раз
+       закрывающей скобке приписывался вид TokenMul. */
     if (lexer_symbol_is_plus(ctx)) {
         token->type = TokenPlus;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_minus(ctx)) {
         token->type = TokenMinus;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_div(ctx)) {
         token->type = TokenDiv;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_mul(ctx)) {
         token->type = TokenMul;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_lpar(ctx)) {
         token->type = TokenLPar;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_rpar(ctx)) {
         token->type = TokenRPar;
-        lexer_symbol_next(ctx);
-        return true;
-    } else if (lexer_symbol_is_rpar(ctx)) {
-        token->type = TokenMul;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_pol(ctx)) {
         token->type = TokenPol;
-        lexer_symbol_next(ctx);
-        return true;
     } else if (lexer_symbol_is_digit(ctx)) {
         return lexer_symbol_parse_numeric(ctx, token);
     } else if (lexer_symbol_is_alpha(ctx)) {
         return lexer_symbol_parse_id(ctx, token);
+    } else {
+        token->error = "Unknown input token";
+        return false;
     }
-    token->error = "Unknown input token";
-    return false;
+    lexer_symbol_next(ctx);
+    token->it_end = ctx->it;
+    return true;
 }
