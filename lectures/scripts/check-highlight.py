@@ -85,5 +85,8 @@ def main(paths):
 
 
 if __name__ == "__main__":
+    # Раньше здесь отсеивались копии под читаемыми именами: сборка клала в
+    # каталог оба набора, и каждый листинг считался дважды. Теперь --pretty
+    # оставляет только читаемые имена, и отсеивать нечего.
     args = sys.argv[1:] or sorted(glob.glob("out/*.pdf"))
-    sys.exit(main([a for a in args if " — " not in a]))
+    sys.exit(main(args))

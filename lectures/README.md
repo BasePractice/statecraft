@@ -42,7 +42,7 @@ make fix && make
 в одном месте.
 
 ```bash
-make                     # все лекции + копии под читаемыми именами (= make pretty)
+make                     # все лекции под читаемыми именами (= make pretty)
 make build               # только <id>.pdf, без читаемых копий
 make one L=03-synthesis  # одну лекцию
 make book                # только сводный том (все лекции и приложения одним PDF)

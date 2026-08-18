@@ -175,11 +175,17 @@ export OUT_DIR
 printf '%s\0' "${IDS[@]}" | xargs -0 -P "$JOBS" -I{} \
   bash "$0" --build-one {} "$DRAFT" || FAILED=1
 
+# --pretty оставляет в каталоге ТОЛЬКО файлы под читаемыми именами: сборочное
+# имя (`03-synthesis.pdf`) — промежуточное, и держать оба набора незачем.
+# Раньше рядом лежали обе копии, и это путало дважды: комплект приходилось
+# фильтровать по имени, а проверка подсветки считала каждый листинг по два
+# раза. Собрать одну лекцию под сборочным именем по-прежнему можно —
+# `build.sh <id>` без --pretty.
 if [ "$PRETTY" = 1 ]; then
   for id in "${IDS[@]}"; do
-    [ -f "$OUT_DIR/$id.pdf" ] && cp -f "$OUT_DIR/$id.pdf" "$OUT_DIR/$(pretty_name "$id")"
+    [ -f "$OUT_DIR/$id.pdf" ] && mv -f "$OUT_DIR/$id.pdf" "$OUT_DIR/$(pretty_name "$id")"
   done
-  ok "копии под читаемыми именами: ${OUT_DIR#"$ROOT/"}"
+  ok "PDF под читаемыми именами: ${OUT_DIR#"$ROOT/"}"
 fi
 
 if [ "$OPEN" = 1 ]; then
