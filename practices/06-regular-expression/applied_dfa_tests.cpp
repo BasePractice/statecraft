@@ -158,3 +158,176 @@ TEST_CASE("Число состояний считается по таблице"
     REQUIRE(dfa_state_count(dfa_isbn()) == 16);
     REQUIRE(dfa_state_count(dfa_tag()) == 30);
 }
+
+/*
+ * UTF-8. Здесь важна не столько таблица, сколько то, что она отвергает:
+ * наивный декодер («узнать длину по первому байту и проглотить остальное»)
+ * принимает переполненную кодировку, суррогаты и коды за пределом U+10FFFF.
+ */
+
+namespace {
+
+/* Независимая проверка по RFC 3629, написанная обычным разбором: длина по
+   первому байту, продолжающие байты, диапазон полученного кода. Нужна как
+   эталон — автомат сверяется с ней перебором, а не с самим собой. */
+bool utf8_valid_ref(const unsigned char *bytes, size_t length) {
+    size_t i = 0;
+
+    while (i < length) {
+        unsigned char lead = bytes[i];
+        size_t extra;
+        unsigned long code;
+        size_t k;
+
+        if (lead < 0x80u) {
+            code = lead;
+            extra = 0;
+        } else if (lead >= 0xC2u && lead <= 0xDFu) {
+            code = lead & 0x1Fu;
+            extra = 1;
+        } else if (lead >= 0xE0u && lead <= 0xEFu) {
+            code = lead & 0x0Fu;
+            extra = 2;
+        } else if (lead >= 0xF0u && lead <= 0xF4u) {
+            code = lead & 0x07u;
+            extra = 3;
+        } else {
+            return false; /* C0, C1 и всё старше F4 недопустимы как ведущие */
+        }
+        if (extra > 0 && i + extra >= length) {
+            return false; /* последовательность оборвана */
+        }
+        for (k = 1; k <= extra; ++k) {
+            unsigned char cont = bytes[i + k];
+
+            if (cont < 0x80u || cont > 0xBFu) {
+                return false;
+            }
+            code = (code << 6) | (cont & 0x3Fu);
+        }
+        if (extra == 1 && code < 0x80u) {
+            return false;
+        }
+        if (extra == 2 && code < 0x800u) {
+            return false; /* переполненная кодировка */
+        }
+        if (extra == 3 && code < 0x10000u) {
+            return false;
+        }
+        if (code >= 0xD800u && code <= 0xDFFFu) {
+            return false; /* суррогаты в UTF-8 не кодируются */
+        }
+        if (code > 0x10FFFFu) {
+            return false;
+        }
+        i += extra + 1;
+    }
+    return true;
+}
+
+/* Кодирование кодовой точки в UTF-8 — тоже своё, чтобы не зависеть от
+   локали и от того, в какой кодировке сохранён этот файл. */
+std::string utf8_encode(unsigned long code) {
+    std::string out;
+
+    if (code < 0x80u) {
+        out += (char)code;
+    } else if (code < 0x800u) {
+        out += (char)(0xC0u | (code >> 6));
+        out += (char)(0x80u | (code & 0x3Fu));
+    } else if (code < 0x10000u) {
+        out += (char)(0xE0u | (code >> 12));
+        out += (char)(0x80u | ((code >> 6) & 0x3Fu));
+        out += (char)(0x80u | (code & 0x3Fu));
+    } else {
+        out += (char)(0xF0u | (code >> 18));
+        out += (char)(0x80u | ((code >> 12) & 0x3Fu));
+        out += (char)(0x80u | ((code >> 6) & 0x3Fu));
+        out += (char)(0x80u | (code & 0x3Fu));
+    }
+    return out;
+}
+
+} /* namespace */
+
+TEST_CASE("UTF-8: принимается корректное, отвергается запрещённое", "[06.AppliedDfa]") {
+    const Dfa *utf8 = dfa_utf8();
+
+    REQUIRE(dfa_match(utf8, "ASCII text 123"));
+    REQUIRE(dfa_match(utf8, "\xD0\x9F\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82")); /* Привет */
+    REQUIRE(dfa_match(utf8, "\xE2\x82\xAC"));                                     /* U+20AC € */
+    REQUIRE(dfa_match(utf8, "\xF0\x9F\x99\x82"));                                 /* U+1F642 */
+    REQUIRE(dfa_match(utf8, "\xF4\x8F\xBF\xBF"));                                 /* U+10FFFF — предел */
+
+    REQUIRE_FALSE(dfa_match(utf8, "\xC0\xAF"));         /* «/» переполненной кодировкой */
+    REQUIRE_FALSE(dfa_match(utf8, "\xE0\x80\xAF"));     /* она же тремя байтами */
+    REQUIRE_FALSE(dfa_match(utf8, "\xF0\x80\x80\xAF")); /* и четырьмя */
+    REQUIRE_FALSE(dfa_match(utf8, "\xED\xA0\x80"));     /* суррогат U+D800 */
+    REQUIRE_FALSE(dfa_match(utf8, "\xED\xBF\xBF"));     /* суррогат U+DFFF */
+    REQUIRE_FALSE(dfa_match(utf8, "\xF4\x90\x80\x80")); /* U+110000 — за пределом */
+    REQUIRE_FALSE(dfa_match(utf8, "\xF5\x80\x80\x80")); /* ведущий байт вне RFC 3629 */
+    REQUIRE_FALSE(dfa_match(utf8, "\x80"));             /* продолжающий байт без ведущего */
+    REQUIRE_FALSE(dfa_match(utf8, "\xD0"));             /* оборванная последовательность */
+    REQUIRE_FALSE(dfa_match(utf8, "\xD0\x41"));         /* продолжение подменено буквой */
+}
+
+TEST_CASE("UTF-8: автомат принимает все кодовые точки", "[06.AppliedDfa]") {
+    const Dfa *utf8 = dfa_utf8();
+    unsigned long code;
+    int accepted = 0;
+
+    /* U+0000 в строке C неотличим от её конца, поэтому перебор с единицы. */
+    for (code = 1; code <= 0x10FFFFu; ++code) {
+        if (code >= 0xD800u && code <= 0xDFFFu) {
+            continue;
+        }
+        if (!dfa_match(utf8, utf8_encode(code).c_str())) {
+            FAIL("не принята кодовая точка U+" << std::hex << code);
+        }
+        ++accepted;
+    }
+    /* Точки 1..U+10FFFF без 2048 суррогатов D800..DFFF. */
+    REQUIRE(accepted == 0x10FFFF - 2048);
+}
+
+TEST_CASE("UTF-8: автомат совпадает с прямым разбором по RFC", "[06.AppliedDfa]") {
+    const Dfa *utf8 = dfa_utf8();
+    unsigned first;
+    unsigned second;
+    unsigned third;
+
+    /* Все одно- и двухбайтовые последовательности: 1 + 255 + 255 * 255. */
+    for (first = 1; first < 256; ++first) {
+        unsigned char one[1];
+        std::string text;
+
+        one[0] = (unsigned char)first;
+        text.assign((const char *)one, 1);
+        REQUIRE(dfa_match(utf8, text.c_str()) == utf8_valid_ref(one, 1));
+
+        for (second = 1; second < 256; ++second) {
+            unsigned char two[2];
+
+            two[0] = (unsigned char)first;
+            two[1] = (unsigned char)second;
+            text.assign((const char *)two, 2);
+            REQUIRE(dfa_match(utf8, text.c_str()) == utf8_valid_ref(two, 2));
+        }
+    }
+
+    /* Трёхбайтовые с ведущим E0..EF: здесь живут суррогаты и переполнение. */
+    for (first = 0xE0u; first <= 0xEFu; ++first) {
+        for (second = 1; second < 256; ++second) {
+            for (third = 1; third < 256; ++third) {
+                unsigned char three[3];
+                std::string text;
+
+                three[0] = (unsigned char)first;
+                three[1] = (unsigned char)second;
+                three[2] = (unsigned char)third;
+                text.assign((const char *)three, 3);
+                REQUIRE(dfa_match(utf8, text.c_str()) == utf8_valid_ref(three, 3));
+            }
+        }
+    }
+}

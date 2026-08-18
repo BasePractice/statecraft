@@ -5,7 +5,7 @@
  *   06-regular-expression <имя> <строка>...    прогон по строкам
  *   06-regular-expression --table <имя>        таблица переходов автомата
  *
- * Имена: isbn, tag, number. Например:
+ * Имена: isbn, tag, number, utf8. Например:
  *
  *   06-regular-expression isbn ISBN:012345678X 12345
  *   06-regular-expression tag '<kill><</kill>'
