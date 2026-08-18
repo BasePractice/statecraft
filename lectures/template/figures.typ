@@ -9,6 +9,13 @@
   show figure.where(kind: table): set figure(supplement: [#L.table])
   show figure.where(kind: raw): set figure(supplement: [#L.listing])
   show figure.where(kind: table): set figure(placement: none)
+  // Листинг длиннее страницы обязан разрываться. Блок `raw` сам по себе
+  // breakable, но figure вокруг него — нет, и длинный листинг просто вылезал
+  // за нижнее поле: подпись и колонцифра оказывались НАПЕЧАТАНЫ ПОВЕРХ кода
+  // (было на девяти страницах тома). Таблицы разрываются по той же причине:
+  // таблица переходов на сотню строк в лекции 10 не помещается на страницу.
+  show figure.where(kind: raw): set block(breakable: true)
+  show figure.where(kind: table): set block(breakable: true)
   // ГОСТ: «Рисунок 3 — Автомат Мили», через тире, а не двоеточие.
   set figure.caption(separator: [ --- ])
   show figure.caption: it => [

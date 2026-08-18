@@ -29,15 +29,24 @@
     inset: (x: 9pt, y: 8pt),
     radius: 2pt,
     stroke: (left: 2pt + palette.code-rule),
-  )[#it]
+  )[
+    // Строки кода набираются двумя колонками: номер и код. Так перенос
+    // длинной строки остаётся в колонке кода, а не уходит под номера, где
+    // его не отличить от новой строки.
+    #set block(spacing: 0pt)
+    #it
+  ]
   show raw.line: it => context {
     if it.count > 1 {
-      box(width: 2.6em, align(
-        right,
-        text(fill: luma(155), size: 0.85em, str(it.number)) + h(0.7em),
-      ))
+      grid(
+        columns: (2.6em, 1fr),
+        column-gutter: 0.7em,
+        align(right + top, text(fill: luma(155), size: 0.85em, str(it.number))),
+        it.body,
+      )
+    } else {
+      it.body
     }
-    it.body
   }
   doc
 }
