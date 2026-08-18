@@ -113,6 +113,18 @@
   (n: 1, id: "lab-1-synthesis", lecture: 3,
       title: "Синтез автомата и его схемы",
       date: datetime(year: 2026, month: 9, day: 15)),
+  (n: 2, id: "lab-2-dfa", lecture: 4,
+      title: "От регулярного выражения к минимальному автомату",
+      date: datetime(year: 2026, month: 9, day: 22)),
+  (n: 3, id: "lab-3-format", lecture: 6,
+      title: "Распознаватель формата как конечный автомат",
+      date: datetime(year: 2026, month: 10, day: 6)),
+  (n: 4, id: "lab-4-turing", lecture: 10,
+      title: "Программа для машины Тьюринга",
+      date: datetime(year: 2026, month: 11, day: 3)),
+  (n: 5, id: "lab-5-three-ways", lecture: 7,
+      title: "Прикладной автомат в трёх реализациях",
+      date: datetime(year: 2026, month: 10, day: 13)),
 )
 
 #let lab-meta(id) = {
