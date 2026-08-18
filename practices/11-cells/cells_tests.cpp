@@ -25,6 +25,26 @@ std::string row(const Elementary &ca) {
 
 } /* namespace */
 
+TEST_CASE("Ширина элементарного автомата приводится к допустимой", "[11.Cells]") {
+    struct Elementary ca;
+
+    /* Контракт публичной функции: ни одно значение ширины не должно
+       приводить к порче памяти на шаге. Отрицательная ширина раньше давала
+       memcpy на (size_t)(-1) байт — вызывающие её просто не передавали. */
+    elementary_init(&ca, 90, -5);
+    REQUIRE(ca.width == 1);
+    elementary_step(&ca);
+    REQUIRE(ca.width == 1);
+
+    elementary_init(&ca, 90, 0);
+    REQUIRE(ca.width == 1);
+
+    elementary_init(&ca, 90, CELLS_MAX_WIDTH + 100);
+    REQUIRE(ca.width == CELLS_MAX_WIDTH);
+    elementary_step(&ca);
+    REQUIRE(ca.width == CELLS_MAX_WIDTH);
+}
+
 TEST_CASE("Правило 90 даёт треугольник Серпинского", "[11.Cells]") {
     Elementary ca;
     elementary_init(&ca, 90, 17);

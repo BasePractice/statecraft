@@ -14,8 +14,15 @@
 /* --- одномерный автомат Вольфрама ---------------------------------------- */
 
 void elementary_init(struct Elementary *ca, unsigned char rule, int width) {
+    /* Ширина приводится к допустимому диапазону с обеих сторон. Верхняя
+       граница очевидна, нижняя важнее: при отрицательной ширине memcpy в
+       elementary_step получил бы (size_t)(-1) байт. Ни один вызывающий такого
+       не делает, но контракт публичной функции не должен на это полагаться. */
     if (width > CELLS_MAX_WIDTH) {
         width = CELLS_MAX_WIDTH;
+    }
+    if (width < 1) {
+        width = 1;
     }
     memset(ca, 0, sizeof(*ca));
     ca->rule = rule;
