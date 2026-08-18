@@ -5,8 +5,13 @@ project(03-control-program)
 option(ENABLE_NETWORK_EMULATE "Эмуляция показаний датчиков по сети" OFF)
 option(ENABLE_FILE_EMULATE "Эмуляция показаний датчиков через файл" OFF)
 
-set(CONTROL_SOURCES sensor.c engine.c device.c properties.c
-        sensor.h engine.h device.h properties.h)
+# Логика автомата и настройки не зависят от того, откуда берутся входы,
+# поэтому вынесены в библиотеку: её же линкует тест, подставляя вместо
+# установки её модель.
+statecraft_library(control_engine
+        SOURCES engine.c engine.h properties.c properties.h device.h sensor.h)
+
+set(CONTROL_SOURCES sensor.c device.c sensor.h device.h)
 set(CONTROL_DEFINES "")
 set(CONTROL_SOURCES_EXTRA "")
 set(CONTROL_LIBS "")
@@ -37,4 +42,10 @@ statecraft_example(${PROJECT_NAME}
         SOURCES main.c ${CONTROL_SOURCES} ${CONTROL_SOURCES_EXTRA}
         INCLUDES ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../common/network
         DEFINES ${CONTROL_DEFINES}
-        LIBS ${CONTROL_LIBS})
+        LIBS control_engine ${CONTROL_LIBS})
+
+# Автомат отделён от ввода-вывода тремя интерфейсами — значит, проверяется
+# тестом: на место установки ставится её модель (tests/engine_test.cpp).
+statecraft_tests(${PROJECT_NAME}-tests
+        SOURCES tests/engine_test.cpp
+        LIBS control_engine)

@@ -102,6 +102,7 @@ void engine_execute(struct PropertyInterface *pi, struct SensorInterface *si,
         case ENGINE_FIND_PROCESS: {
             enum Property pointType;
             int v;
+            int distance;
 
             (*di->print)("Find point process");
             if (point_it == 0) {
@@ -116,10 +117,15 @@ void engine_execute(struct PropertyInterface *pi, struct SensorInterface *si,
             }
 
             v = (*pi->get_integer)(pointType);
+            /* Знак настройки задаёт сторону, а не число шагов: счётчик
+               step_it считает вверх, поэтому сравнивать с ним нужно
+               расстояние. До исправления точка с отрицательным смещением
+               не находилась никогда — аппарат уезжал влево без предела. */
+            distance = v < 0 ? -v : v;
             next_move_state = ENGINE_FIND_PROCESS;
             state = ENGINE_MOVE_WELDING_DEVICE;
             welding_step_direct = v > 0 ? DEVICE_WELDING_RIGHT : DEVICE_WELDING_LEFT;
-            if (v == step_it) {
+            if (distance == step_it) {
                 state = ENGINE_CONCRETE_NEXT_POINT_POSITION;
             }
             break;
