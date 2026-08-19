@@ -50,7 +50,10 @@ bool elementary_init_from(struct Elementary *ca, unsigned char rule, const char 
 }
 
 void elementary_step(struct Elementary *ca) {
-    char next[CELLS_MAX_WIDTH];
+    /* Буфер обнуляется целиком, хотя заполняется только начало: курс уже
+       обжигался на частичном заполнении массива фиксированного размера
+       (см. REPORT.md), и статический анализ указывает сюда же. */
+    char next[CELLS_MAX_WIDTH] = {0};
     int i;
 
     for (i = 0; i < ca->width; ++i) {
@@ -59,8 +62,9 @@ void elementary_step(struct Elementary *ca) {
         int right = ca->cells[(i + 1) % ca->width];
         /* Номер окрестности — трёхбитное число «левый центр правый»,
            состояние берётся как соответствующий бит номера правила. */
-        int index = (left << 2) | (self << 1) | right;
-        next[i] = (char)((ca->rule >> index) & 1);
+        unsigned int index
+                = ((unsigned int)left << 2) | ((unsigned int)self << 1) | (unsigned int)right;
+        next[i] = (char)(((unsigned int)ca->rule >> index) & 1U);
     }
     memcpy(ca->cells, next, (size_t)ca->width);
 }

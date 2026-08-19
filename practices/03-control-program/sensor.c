@@ -160,7 +160,7 @@ static void simulate_update(void) {
         emulator.running = true;
     }
 
-    if (step_timeout > 0) {
+    if (step_timeout > 0U) {
         /* Спецификаторы приведены к фактическим типам: size_t печатается
            через приведение к unsigned long (в C90 нет %zu), а выдержка
            беззнаковая — %u, а не %d. Несоответствие нашёл анализатор:

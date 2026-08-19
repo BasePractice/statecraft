@@ -22,15 +22,20 @@ void bool_set_name(struct BoolFunction *function, int var, const char *name) {
     function->names[var][BOOL_MAX_NAME - 1] = '\0';
 }
 
+int bool_row_count(int var_count) {
+    assert(var_count >= 0 && var_count <= BOOL_MAX_VARS);
+    return (int)(1U << var_count);
+}
+
 void bool_set(struct BoolFunction *function, int row, char value) {
     assert(function != NULL);
-    assert(row >= 0 && row < (1 << function->var_count));
+    assert(row >= 0 && row < bool_row_count(function->var_count));
     function->values[row] = value;
 }
 
 char bool_get(const struct BoolFunction *function, int row) {
     assert(function != NULL);
-    assert(row >= 0 && row < (1 << function->var_count));
+    assert(row >= 0 && row < bool_row_count(function->var_count));
     return function->values[row];
 }
 
@@ -46,7 +51,7 @@ static void row_to_bits(int row, int var_count, char *bits) {
        ровно это: -Wmaybe-uninitialized. */
     memset(bits, 0, BOOL_MAX_VARS);
     for (i = 0; i < var_count; ++i) {
-        bits[i] = (char)((row >> (var_count - 1 - i)) & 1);
+        bits[i] = (char)(((unsigned int)row >> (var_count - 1 - i)) & 1U);
     }
 }
 
@@ -146,7 +151,7 @@ bool bool_minimize(struct Dnf *dnf, const struct BoolFunction *function) {
     int v;
 
     assert(dnf != NULL && function != NULL);
-    rows = 1 << function->var_count;
+    rows = bool_row_count(function->var_count);
     dnf->count = 0;
     primes.count = 0;
 
@@ -283,7 +288,7 @@ bool dnf_equals(const struct Dnf *dnf, const struct BoolFunction *function) {
     int row;
 
     assert(dnf != NULL && function != NULL);
-    rows = 1 << function->var_count;
+    rows = bool_row_count(function->var_count);
     for (row = 0; row < rows; ++row) {
         if (function->values[row] == BOOL_DONT_CARE)
             continue;

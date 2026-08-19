@@ -63,9 +63,12 @@ static bool join_arguments(char *buffer, size_t size, int argc, char **argv) {
 
     for (i = 0; i < argc; ++i) {
         size_t length = strlen(argv[i]);
-        if (used + length + 2 > size)
+        /* Нужно место под пробел, слово и завершающий ноль. Записано
+           вычитанием: `used + length + 2` при большом length переполняется,
+           и проверка перестаёт защищать (MISRA 10.4 указывает сюда же). */
+        if (size < 2U || length > (size - 2U) - used)
             return false;
-        if (used > 0)
+        if (used > 0U)
             buffer[used++] = ' ';
         memcpy(buffer + used, argv[i], length);
         used += length;

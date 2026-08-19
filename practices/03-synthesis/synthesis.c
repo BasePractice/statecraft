@@ -153,11 +153,13 @@ int synthesis_bits(int count) {
    Старшие разряды — код входа, младшие — код состояния: тот же порядок,
    что в картах Карно лекции. */
 static int row_of(const struct Synthesis *synthesis, int state, int input) {
-    return (input << synthesis->state_bits) | state;
+    /* Сдвиг беззнаковый: у знакового он неопределён при переполнении, а
+       разрядность здесь приходит из данных (MISRA 10.1). */
+    return (int)(((unsigned int)input << synthesis->state_bits) | (unsigned int)state);
 }
 
 static int bit_of(int value, int bit_index, int bit_count) {
-    return (value >> (bit_count - 1 - bit_index)) & 1;
+    return (int)(((unsigned int)value >> (bit_count - 1 - bit_index)) & 1U);
 }
 
 bool synthesis_run(struct Synthesis *synthesis, const struct Machine *machine) {
@@ -177,7 +179,7 @@ bool synthesis_run(struct Synthesis *synthesis, const struct Machine *machine) {
         fprintf(stderr, "synthesis: нужно %d переменных, предел — %d\n", var_count, BOOL_MAX_VARS);
         return false;
     }
-    rows = 1 << var_count;
+    rows = bool_row_count(var_count);
 
     /* Имена переменных: x1..xk — разряды входа, q1..qm — разряды состояния. */
     for (i = 0; i < synthesis->state_bits; ++i) {
@@ -281,11 +283,11 @@ bool synthesis_verify(const struct Synthesis *synthesis, const struct Machine *m
             if (machine->next[s][a] < 0)
                 continue;
             for (i = 0; i < synthesis->state_bits; ++i) {
-                next_state = (next_state << 1)
-                             | dnf_eval(&synthesis->phi_dnf[i], &synthesis->phi[i], row);
+                next_state = (next_state * 2)
+                             + dnf_eval(&synthesis->phi_dnf[i], &synthesis->phi[i], row);
             }
             for (i = 0; i < synthesis->output_bits; ++i) {
-                output = (output << 1) | dnf_eval(&synthesis->psi_dnf[i], &synthesis->psi[i], row);
+                output = (output * 2) + dnf_eval(&synthesis->psi_dnf[i], &synthesis->psi[i], row);
             }
             if (next_state != machine->next[s][a] || output != machine->emit[s][a])
                 return false;

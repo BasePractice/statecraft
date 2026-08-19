@@ -13,7 +13,10 @@ bool word_concat(char *result, size_t capacity, const char *left, const char *ri
 
     assert(result != NULL && left != NULL && right != NULL);
     total = strlen(left) + strlen(right);
-    if (total + 1 > capacity)
+    /* Проверка записана без сложения: `total + 1` при огромном total
+       переполняется и проверка становится ложно истинной, а знаковая единица
+       рядом с size_t смешивает категории типов (MISRA 10.4). */
+    if (total >= capacity)
         return false;
     strcpy(result, left);
     strcat(result, right);
@@ -28,7 +31,7 @@ bool word_power(char *result, size_t capacity, const char *word, int n) {
     if (n < 0)
         return false;
     total = strlen(word) * (size_t)n;
-    if (total + 1 > capacity)
+    if (total >= capacity)
         return false;
 
     result[0] = '\0';
@@ -44,7 +47,7 @@ bool word_reverse(char *result, size_t capacity, const char *word) {
 
     assert(result != NULL && word != NULL);
     length = strlen(word);
-    if (length + 1 > capacity)
+    if (length >= capacity)
         return false;
     for (i = 0; i < length; ++i) {
         result[i] = word[length - 1 - i];
@@ -87,7 +90,7 @@ bool word_prefix(char *result, size_t capacity, const char *word, size_t n) {
     length = strlen(word);
     if (n > length)
         n = length;
-    if (n + 1 > capacity)
+    if (n >= capacity)
         return false;
     memcpy(result, word, n);
     result[n] = '\0';
@@ -112,7 +115,7 @@ bool language_contains(const struct Language *language, const char *word) {
 
 bool language_add(struct Language *language, const char *word) {
     assert(language != NULL && word != NULL);
-    if (strlen(word) > WORDS_MAX_WORD)
+    if (strlen(word) > (size_t)WORDS_MAX_WORD)
         return false;
     if (language_contains(language, word))
         return true; /* язык — множество: повтор не ошибка */
