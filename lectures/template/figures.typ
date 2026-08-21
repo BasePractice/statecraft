@@ -57,11 +57,22 @@
 
 // Замена subfig/subfloat: сетка подрисунков внутри одного figure.
 // items — массив словарей (body: …, caption: …).
+// Буквы, которыми помечаются части составного рисунка. Порядок по ГОСТ 7.32:
+// Ё, З, Й, О, Ч, Ь, Ы, Ъ не используются.
+#let part-letters = ("а", "б", "в", "г", "д", "е", "ж", "и", "к", "л", "м", "н")
+
+// Сетка подрисунков внутри одного figure. Каждая часть помечается буквой,
+// чтобы на неё можно было сослаться из текста: «на рис. 12,б». Без пометки
+// читателю приходится считать части самому, и он ошибается — особенно когда
+// частей больше трёх.
 #let subfigures(items, caption: none, columns: 2, gutter: 8pt, label: none) = {
-  let cells = items.map(it => [
+  let cells = items.enumerate().map(((i, it)) => [
     #it.at("body")
     #v(3pt)
-    #text(size: 9pt, emph(it.at("caption", default: none)))
+    #text(size: 9pt)[#part-letters.at(i, default: "?"))#{
+      let c = it.at("caption", default: none)
+      if c != none [ #emph(c)]
+    }]
   ])
   let f = figure(
     grid(columns: columns, gutter: gutter, align: center, ..cells),

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1980 492" width="1980" height="492">
-<rect width="1980" height="492" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1980 527" width="1980" height="527">
+<rect width="1980" height="527" fill="#ffffff"/>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="6" y1="6" x2="6" y2="486"/>
 <line x1="16" y1="6" x2="16" y2="486"/>
@@ -107,6 +107,7 @@
 <rect x="26" y="26" width="10" height="10" fill="#1a1a1a"/>
 <rect x="26" y="36" width="10" height="10" fill="#1a1a1a"/>
 <rect x="6" y="6" width="480" height="480" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="246.0" y="503.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">а)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="502" y1="6" x2="502" y2="486"/>
 <line x1="512" y1="6" x2="512" y2="486"/>
@@ -240,6 +241,7 @@
 <rect x="522" y="476" width="10" height="10" fill="#1a1a1a"/>
 <rect x="932" y="476" width="10" height="10" fill="#1a1a1a"/>
 <rect x="502" y="6" width="480" height="480" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="742.0" y="503.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">б)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="998" y1="6" x2="998" y2="486"/>
 <line x1="1008" y1="6" x2="1008" y2="486"/>
@@ -405,6 +407,7 @@
 <rect x="1048" y="476" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1058" y="476" width="10" height="10" fill="#1a1a1a"/>
 <rect x="998" y="6" width="480" height="480" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="1238.0" y="503.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">в)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="1494" y1="6" x2="1494" y2="486"/>
 <line x1="1504" y1="6" x2="1504" y2="486"/>
@@ -615,4 +618,5 @@
 <rect x="1624" y="476" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1644" y="476" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1494" y="6" width="480" height="480" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="1734.0" y="503.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">г)</text>
 </svg>

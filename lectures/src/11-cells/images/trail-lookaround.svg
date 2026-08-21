@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 332" width="1340" height="332">
-<rect width="1340" height="332" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1340 367" width="1340" height="367">
+<rect width="1340" height="367" fill="#ffffff"/>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="6" y1="6" x2="6" y2="326"/>
 <line x1="16" y1="6" x2="16" y2="326"/>
@@ -162,6 +162,7 @@
 <rect x="6" y="6" width="10" height="10" fill="#f4f4f4"/>
 <polygon points="7,7 7,15 15,11" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="6" y="6" width="320" height="320" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="166.0" y="343.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">а)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="342" y1="6" x2="342" y2="326"/>
 <line x1="352" y1="6" x2="352" y2="326"/>
@@ -323,6 +324,7 @@
 <rect x="342" y="6" width="10" height="10" fill="#f4f4f4"/>
 <polygon points="601,57 601,65 593,61" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="342" y="6" width="320" height="320" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="502.0" y="343.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">б)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="678" y1="6" x2="678" y2="326"/>
 <line x1="688" y1="6" x2="688" y2="326"/>
@@ -484,6 +486,7 @@
 <rect x="678" y="6" width="10" height="10" fill="#f4f4f4"/>
 <polygon points="937,57 937,65 929,61" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="678" y="6" width="320" height="320" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="838.0" y="343.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">в)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="1014" y1="6" x2="1014" y2="326"/>
 <line x1="1024" y1="6" x2="1024" y2="326"/>
@@ -645,4 +648,5 @@
 <rect x="1014" y="6" width="10" height="10" fill="#f4f4f4"/>
 <polygon points="1273,57 1273,65 1265,61" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="1014" y="6" width="320" height="320" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="1174.0" y="343.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">г)</text>
 </svg>

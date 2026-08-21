@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3900 972" width="3900" height="972">
-<rect width="3900" height="972" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3900 1007" width="3900" height="1007">
+<rect width="3900" height="1007" fill="#ffffff"/>
 <rect x="466" y="446" width="10" height="10" fill="#1a1a1a"/>
 <rect x="476" y="446" width="10" height="10" fill="#1a1a1a"/>
 <rect x="486" y="446" width="10" height="10" fill="#1a1a1a"/>
@@ -43,6 +43,7 @@
 <rect x="506" y="526" width="10" height="10" fill="#1a1a1a"/>
 <polygon points="447,515 455,515 451,507" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="6" y="6" width="960" height="960" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="486.0" y="983.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">а)</text>
 <rect x="1422" y="346" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1432" y="346" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1482" y="346" width="10" height="10" fill="#1a1a1a"/>
@@ -247,6 +248,7 @@
 <rect x="1502" y="546" width="10" height="10" fill="#1a1a1a"/>
 <polygon points="1583,487 1591,487 1587,495" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="982" y="6" width="960" height="960" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="1462.0" y="983.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">б)</text>
 <rect x="2418" y="326" width="10" height="10" fill="#1a1a1a"/>
 <rect x="2428" y="326" width="10" height="10" fill="#1a1a1a"/>
 <rect x="2438" y="326" width="10" height="10" fill="#1a1a1a"/>
@@ -737,6 +739,7 @@
 <rect x="2668" y="656" width="10" height="10" fill="#1a1a1a"/>
 <polygon points="2599,475 2607,475 2603,467" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="1958" y="6" width="960" height="960" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="2438.0" y="983.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">в)</text>
 <rect x="3334" y="266" width="10" height="10" fill="#1a1a1a"/>
 <rect x="3344" y="266" width="10" height="10" fill="#1a1a1a"/>
 <rect x="3374" y="266" width="10" height="10" fill="#1a1a1a"/>
@@ -1573,4 +1576,5 @@
 <rect x="3614" y="706" width="10" height="10" fill="#1a1a1a"/>
 <polygon points="3075,627 3083,627 3079,635" fill="#000000" stroke="#ffffff" stroke-width="0.8"/>
 <rect x="2934" y="6" width="960" height="960" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="3414.0" y="983.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">г)</text>
 </svg>

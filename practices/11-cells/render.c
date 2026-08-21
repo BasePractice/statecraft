@@ -26,6 +26,26 @@
 #define COLOR_GRID "#cccccc"
 #define COLOR_ANT "#000000"
 
+/* Чертёжный шрифт по ГОСТ 2.304-81; запасные — на случай, если osifont не
+   установлен (ставится lectures/scripts/fetch-fonts.sh). */
+#define FSM_FONT "osifont, ISOCPEUR, sans-serif"
+
+/*
+ * Автомат из полутора десятков состояний номерами не читается: цифры мелкие,
+ * дуги пересекают их, и глаз всё равно не удерживает, где какая вершина.
+ * Начиная с этого числа состояний вершины различаются заливкой, а номер не
+ * печатается вовсе: рисунок в этом случае показывает не «какое состояние
+ * куда», а плотность связей — ровно то, ради чего он в лекции и стоит.
+ */
+#define FSM_COLOR_THRESHOLD 8
+
+/* Заливки вершин: светлые, чтобы дуги поверх оставались различимы. */
+static const char *const FSM_STATE_COLORS[]
+        = {"#f4f4f4", "#dfe7f2", "#e6dff2", "#f2dfe4", "#f2e8df", "#dff2e8",
+           "#e4f2df", "#f2f0df", "#dfeef2", "#eadff2", "#f2dfdf", "#dfe2f2",
+           "#e9f2df", "#f2e3df", "#dff2f0", "#efdff2", "#f2ecdf", "#e0e0e0"};
+#define FSM_STATE_COLOR_COUNT ((int)(sizeof(FSM_STATE_COLORS) / sizeof(FSM_STATE_COLORS[0])))
+
 void render_style_default(struct RenderStyle *style) {
     style->cell = RENDER_CELL;
     style->gap = RENDER_GAP;
@@ -61,6 +81,37 @@ static void svg_open(FILE *out, int width, int height) {
 
 static void svg_close(FILE *out) {
     fprintf(out, "</svg>\n");
+}
+
+/* Буквы, которыми помечаются кадры составного рисунка. Порядок по ГОСТ 7.32:
+   Ё, З, Й, О, Ч, Ь, Ы, Ъ не используются. */
+static const char *const PANEL_LETTERS[]
+        = {"а", "б", "в", "г", "д", "е", "ж", "и", "к", "л", "м", "н"};
+#define PANEL_LETTER_COUNT ((int)(sizeof(PANEL_LETTERS) / sizeof(PANEL_LETTERS[0])))
+
+/*
+ * Полоса под буквой кадра: составной рисунок без такой пометки нельзя
+ * разобрать в тексте — «на втором кадре» читатель считает сам и ошибается.
+ *
+ * Размеры считаются от клетки поля, а не берутся числом: рисунок вписывается
+ * в полосу набора целиком, поэтому чем больше в нём кадров, тем сильнее он
+ * ужимается — буква фиксированного кегля становится нечитаемой.
+ */
+#define PANEL_MARK_BAND(cell) ((cell) * 7 / 2)
+#define PANEL_MARK_SIZE(cell) ((cell) * 5 / 2)
+
+static void svg_panel_mark(FILE *out, double cx, double cy, int index, int count, int cell) {
+    const char *letter = (index >= 0 && index < PANEL_LETTER_COUNT) ? PANEL_LETTERS[index] : "?";
+
+    /* У рисунка из одного кадра помечать нечего. */
+    if (count < 2) {
+        return;
+    }
+
+    fprintf(out,
+            "<text x=\"%.1f\" y=\"%.1f\" font-family=\"%s\" font-size=\"%d\" "
+            "text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#1a1a1a\">%s)</text>\n",
+            cx, cy, FSM_FONT, PANEL_MARK_SIZE(cell), letter);
 }
 
 static void svg_cell(FILE *out, int x, int y, int size, const char *color) {
@@ -197,7 +248,7 @@ static bool render_field_svg(const char *name, int width, int height, const int 
     rows = bounds.bottom - bounds.top + 1;
     frame_width = cols * st.cell;
     total_width = 2 * st.margin + count * frame_width + (count - 1) * st.gap;
-    total_height = 2 * st.margin + rows * st.cell;
+    total_height = 2 * st.margin + rows * st.cell + (count > 1 ? PANEL_MARK_BAND(st.cell) : 0);
     svg_open(out, total_width, total_height);
 
     for (i = 0; i < count; ++i) {
@@ -221,6 +272,9 @@ static bool render_field_svg(const char *name, int width, int height, const int 
             }
         }
         svg_frame(out, ox, oy, cols, rows, st.cell);
+        svg_panel_mark(out, (double)ox + (double)frame_width / 2.0,
+                       (double)(oy + rows * st.cell) + (double)PANEL_MARK_BAND(st.cell) / 2.0, i,
+                       count, st.cell);
     }
     svg_close(out);
     return true;
@@ -428,7 +482,8 @@ bool render_trail_svg(const struct AntFsm *fsm, const int *steps, int count,
 
     frame_width = TRAIL_SIDE * st.cell;
     total_width = 2 * st.margin + count * frame_width + (count - 1) * st.gap;
-    total_height = 2 * st.margin + TRAIL_SIDE * st.cell;
+    total_height
+            = 2 * st.margin + TRAIL_SIDE * st.cell + (count > 1 ? PANEL_MARK_BAND(st.cell) : 0);
     svg_open(out, total_width, total_height);
 
     for (i = 0; i < count; ++i) {
@@ -472,6 +527,9 @@ bool render_trail_svg(const struct AntFsm *fsm, const int *steps, int count,
         }
         svg_ant(out, ox + snapshot.x * st.cell, oy + snapshot.y * st.cell, st.cell, snapshot.dir);
         svg_frame(out, ox, oy, TRAIL_SIDE, TRAIL_SIDE, st.cell);
+        svg_panel_mark(out, (double)ox + (double)frame_width / 2.0,
+                       (double)(oy + TRAIL_SIDE * st.cell) + (double)PANEL_MARK_BAND(st.cell) / 2.0,
+                       i, count, st.cell);
     }
     svg_close(out);
     return true;
@@ -496,7 +554,7 @@ bool render_langton_svg(int side, const long *steps, int count, const struct Ren
 
     frame_width = ant.side * st.cell;
     total_width = 2 * st.margin + count * frame_width + (count - 1) * st.gap;
-    total_height = 2 * st.margin + ant.side * st.cell;
+    total_height = 2 * st.margin + ant.side * st.cell + (count > 1 ? PANEL_MARK_BAND(st.cell) : 0);
     svg_open(out, total_width, total_height);
 
     for (i = 0; i < count; ++i) {
@@ -523,6 +581,9 @@ bool render_langton_svg(int side, const long *steps, int count, const struct Ren
                 : (ant.dir == ANT_LEFT) ? 2
                                         : 3);
         svg_frame(out, ox, oy, ant.side, ant.side, st.cell);
+        svg_panel_mark(out, (double)ox + (double)frame_width / 2.0,
+                       (double)(oy + ant.side * st.cell) + (double)PANEL_MARK_BAND(st.cell) / 2.0,
+                       i, count, st.cell);
     }
     svg_close(out);
     return true;
@@ -543,10 +604,6 @@ bool render_langton_svg(int side, const long *steps, int count, const struct Ren
 #define FSM_PADDING 54   /* поле под метки и петли */
 #define FSM_LABEL_SIZE 11
 #define FSM_ARROW_GAP 3.0 /* зазор между наконечником стрелки и кружком */
-
-/* Чертёжный шрифт по ГОСТ 2.304-81; запасные — на случай, если osifont не
-   установлен (ставится lectures/scripts/fetch-fonts.sh). */
-#define FSM_FONT "osifont, ISOCPEUR, sans-serif"
 
 static const char *action_label(enum AntAction action) {
     switch (action) {
@@ -785,11 +842,13 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
     int size;
     int i;
     int input;
+    bool colored;
 
     (void)style;
     if (fsm == NULL || fsm->state_count < 1 || fsm->state_count > ANT_FSM_MAX_STATES) {
         return false;
     }
+    colored = fsm->state_count >= FSM_COLOR_THRESHOLD;
     radius = fsm_layout_radius(fsm->state_count);
     size = (int)(2.0 * (radius + FSM_STATE_RADIUS + FSM_PADDING));
     cx = size / 2.0;
@@ -836,11 +895,14 @@ bool render_fsm_svg(const struct AntFsm *fsm, const struct RenderStyle *style, F
 
         fsm_state_center(i, fsm->state_count, radius, cx, cy, &x, &y);
         fprintf(out,
-                "<circle cx=\"%.1f\" cy=\"%.1f\" r=\"%d\" fill=\"#ffffff\" stroke=\"#1a1a1a\" "
+                "<circle cx=\"%.1f\" cy=\"%.1f\" r=\"%d\" fill=\"%s\" stroke=\"#1a1a1a\" "
                 "stroke-width=\"1.2\"/>\n",
-                x, y, FSM_STATE_RADIUS);
-        sprintf(number, "%d", i);
-        svg_state_number(out, x, y, number);
+                x, y, FSM_STATE_RADIUS,
+                colored ? FSM_STATE_COLORS[i % FSM_STATE_COLOR_COUNT] : "#ffffff");
+        if (!colored) {
+            sprintf(number, "%d", i);
+            svg_state_number(out, x, y, number);
+        }
     }
 
     /*

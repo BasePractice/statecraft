@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1532 252" width="1532" height="252">
-<rect width="1532" height="252" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1532 287" width="1532" height="287">
+<rect width="1532" height="287" fill="#ffffff"/>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="6" y1="6" x2="6" y2="246"/>
 <line x1="16" y1="6" x2="16" y2="246"/>
@@ -72,6 +72,7 @@
 <rect x="76" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="86" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="6" y="6" width="240" height="240" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="126.0" y="263.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">а)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="262" y1="6" x2="262" y2="246"/>
 <line x1="272" y1="6" x2="272" y2="246"/>
@@ -143,6 +144,7 @@
 <rect x="282" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="352" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="262" y="6" width="240" height="240" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="382.0" y="263.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">б)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="518" y1="6" x2="518" y2="246"/>
 <line x1="528" y1="6" x2="528" y2="246"/>
@@ -216,6 +218,7 @@
 <rect x="608" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="618" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="518" y="6" width="240" height="240" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="638.0" y="263.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">в)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="774" y1="6" x2="774" y2="246"/>
 <line x1="784" y1="6" x2="784" y2="246"/>
@@ -287,6 +290,7 @@
 <rect x="854" y="26" width="10" height="10" fill="#1a1a1a"/>
 <rect x="884" y="26" width="10" height="10" fill="#1a1a1a"/>
 <rect x="774" y="6" width="240" height="240" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="894.0" y="263.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">г)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="1030" y1="6" x2="1030" y2="246"/>
 <line x1="1040" y1="6" x2="1040" y2="246"/>
@@ -356,6 +360,7 @@
 <rect x="1100" y="26" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1120" y="26" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1030" y="6" width="240" height="240" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="1150.0" y="263.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">д)</text>
 <g stroke="#cccccc" stroke-width="0.5">
 <line x1="1286" y1="6" x2="1286" y2="246"/>
 <line x1="1296" y1="6" x2="1296" y2="246"/>
@@ -427,4 +432,5 @@
 <rect x="1356" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1366" y="236" width="10" height="10" fill="#1a1a1a"/>
 <rect x="1286" y="6" width="240" height="240" fill="none" stroke="#666666" stroke-width="1"/>
+<text x="1406.0" y="263.5" font-family="osifont, ISOCPEUR, sans-serif" font-size="25" text-anchor="middle" dominant-baseline="central" fill="#1a1a1a">е)</text>
 </svg>
