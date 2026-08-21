@@ -664,8 +664,14 @@ TEST_CASE("Лента «Жизни» рисуется в SVG", "[11.Cells]") {
     REQUIRE(svg.find("</svg>") != std::string::npos);
     /* Пять кадров — пять рамок. */
     REQUIRE(count_substring(svg, "stroke=\"#666666\"") == 5);
-    /* Глайдер — пять клеток в каждом кадре. */
-    REQUIRE(count_substring(svg, "fill=\"#1a1a1a\"") == 25);
+    /* Глайдер — пять клеток в каждом кадре. Считается заливка клетки
+       (`fill="…"/>` закрывает прямоугольник), а не любое появление цвета
+       чернил: тем же цветом печатается буква кадра. */
+    REQUIRE(count_substring(svg, "fill=\"#1a1a1a\"/>") == 25);
+    /* Кадры составного рисунка помечены буквами: на них ссылается подпись. */
+    REQUIRE(count_substring(svg, ">а)</text>") == 1);
+    REQUIRE(count_substring(svg, ">д)</text>") == 1);
+    REQUIRE(count_substring(svg, "</text>") == 5);
 }
 
 TEST_CASE("Лента прогона муравья рисуется в SVG", "[11.Cells]") {
