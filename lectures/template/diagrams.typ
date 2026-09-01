@@ -14,14 +14,21 @@
 #import "theme.typ": fonts, palette, sizes
 #import "i18n.typ": L
 
-// В osifont (ГОСТ 2.304-81) глиф «ё» есть, но нарисован залитым
-// прямоугольником — то есть подпись «жёлтый» печатается как «ж■лтый».
-// Обычный запасной шрифт тут не спасает: typst подставляет его только когда
-// глифа нет вовсе, а здесь он формально есть. Поэтому эти две буквы
-// подменяются явно; остальной текст остаётся чертёжным.
-#let _yo-fix(body) = {
+// В osifont (ГОСТ 2.304-81) глифы «ё», «Ё» и прописной «Э» есть, но нарисованы
+// залитым прямоугольником — подпись «жёлтый» печатается как «ж■лтый», «Этап»
+// как «■тап». Обычный запасной шрифт тут не спасает: typst подставляет его
+// только когда глифа нет вовсе, а здесь он формально есть. Поэтому эти три
+// буквы подменяются явно; остальной текст остаётся чертёжным.
+//
+// Список проверен сплошным рендерингом всего кириллического алфавита
+// закреплённой версией шрифта (01.09.2026) — и только им: считать контуры в
+// glyf бесполезно, «Ё» набрана прямоугольником с точками сверху и по числу
+// контуров неотличима от нормальной буквы. Строчная «э», в отличие от
+// прописной, нарисована.
+#let _glyph-fix(body) = {
   show "ё": text(font: fonts.text, "ё")
   show "Ё": text(font: fonts.text, "Ё")
+  show "Э": text(font: fonts.text, "Э")
   body
 }
 
@@ -52,7 +59,7 @@
         node(
           s.pos,
           // Перенос внутри узла («за-крыт») читается как две строки шума.
-          text(font: fonts.diagram, size: 11pt, hyphenate: false, _yo-fix(s.label)),
+          text(font: fonts.diagram, size: 11pt, hyphenate: false, _glyph-fix(s.label)),
           name: label(s.id),
           // Длинная подпись («G_REQ», «закрыт») не влезает в круг стандартного
           // радиуса — такому состоянию радиус задаётся полем `radius`.
@@ -107,7 +114,7 @@
   // навешивается на содержимое figure, а не `set` на выходе функции: иначе
   // метка <fig:…> цепляется к styled-контенту, и ссылка на рисунок ломается.
   figure(
-    text(font: fonts.diagram, _yo-fix(layout(area => context {
+    text(font: fonts.diagram, _glyph-fix(layout(area => context {
       let w = measure(body).width
       if w > area.width {
         scale(x: area.width / w * 100%, y: area.width / w * 100%, reflow: true, body)
@@ -129,7 +136,7 @@
 // Обёртка: холст CeTZ внутри figure с подписью.
 #let scheme(body, caption: none, length: 1cm, label: none) = {
   let f = figure(
-    text(font: fonts.diagram, _yo-fix(cetz.canvas(length: length, body))),
+    text(font: fonts.diagram, _glyph-fix(cetz.canvas(length: length, body))),
     caption: caption,
   )
   if label == none { f } else { [#f #label] }
