@@ -24,7 +24,13 @@
 
 #let _serif = ("PT Serif", "Libertinus Serif", "New Computer Modern")
 #let _sans = ("PT Sans", "PT Serif", "Libertinus Serif")
-#let _mono = ("Fira Code", "PT Mono", "DejaVu Sans Mono")
+// Список из одного имени — по тому же доводу, что и `_draw` ниже: typst
+// предупреждает о каждом неустановленном семействе, и запасные «PT Mono» и
+// «DejaVu Sans Mono» давали 166 предупреждений на комплект при сборке без
+// системных шрифтов (STRICT_FONTS=1), в которых терялось настоящее — про
+// отсутствующий osifont. Запасные и не были нужны: Fira Code лежит в
+// репозитории (fonts/), а до неё очередь не доходила никогда.
+#let _mono = ("Fira Code",)
 
 // Надписи внутри рисунков набираются чертёжным шрифтом по ГОСТ 2.304-81
 // (ISO 3098): osifont — свободная реализация, ставится `make fonts`.
