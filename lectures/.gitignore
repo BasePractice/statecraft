@@ -1,5 +1,4 @@
 out/
-fonts/
 .typst-packages/
 .DS_Store
 *.pdf.part

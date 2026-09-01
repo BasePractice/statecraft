@@ -101,7 +101,7 @@ printf '%s\n' "$PT_FILES" | while read -r rel; do
   base="$(basename "$rel")"
   dst="$FONT_DIR/$base"
   if [ "$FORCE" = 0 ] && [ -f "$dst" ]; then continue; fi
-  info "Скачиваю $base…"
+  info "Скачиваю ${base}…"
   if curl -fsSL --retry 3 --connect-timeout 15 -o "$dst.part" "$GF_BASE/$rel"; then
     mv -f "$dst.part" "$dst"
   else
