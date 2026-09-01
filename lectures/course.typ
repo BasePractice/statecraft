@@ -95,6 +95,8 @@
       date: datetime(year: 2026, month: 9, day: 1)),
   (id: "a2-code-style", title: "Требования к коду курса",
       date: datetime(year: 2026, month: 9, day: 1)),
+  (id: "a3-c-standard", title: "Стандарт языка Си: справочник курса",
+      date: datetime(year: 2026, month: 9, day: 1)),
 )
 
 #let appendix-meta(id) = {

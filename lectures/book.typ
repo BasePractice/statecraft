@@ -60,6 +60,7 @@
 
 #app("a1-version-control", include "src/a1-version-control/main.body.typ")
 #app("a2-code-style", include "src/a2-code-style/main.body.typ")
+#app("a3-c-standard", include "src/a3-c-standard/main.body.typ")
 
 #lab("lab-1-synthesis", include "src/lab-1-synthesis/main.body.typ")
 #lab("lab-2-dfa", include "src/lab-2-dfa/main.body.typ")
