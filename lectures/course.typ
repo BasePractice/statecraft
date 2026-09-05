@@ -10,14 +10,14 @@
 #let course = (
   discipline: "Автоматное программирование систем управления",
   short:      "АПСУ",
-  institute:  "",   // TODO: заполнить (в исходных материалах не указано)
-  department: "",   // TODO: заполнить (в исходных материалах не указано)
+  institute:  "МТУ МИРЭА",
+  department: "Институт Искусственного Интеллекта каф. Промышленной Информатики",
   city:       "Москва",
   authors:    ("Хлебников Андрей",),
   email:      "viruszold@gmail.com",
   // Версия курса и версия релиза — одно и то же число: тег вида
   // v{MAJOR}.{MINOR}.{BUILD} обязан совпадать с этой строкой (ТД-3).
-  version:    "1.8.0",
+  version:    "1.9.0",
   year:       2026,
   repo:       "https://github.com/BasePractice/statecraft",
 

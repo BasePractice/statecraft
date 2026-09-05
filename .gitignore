@@ -11,3 +11,9 @@ compile_commands.json
 
 .DS_Store
 .idea/
+
+# презентация курса и задание дизайнеру: собираются отдельно, в репозиторий
+# не кладутся (файл на 9 МБ и его исходники живут вне git)
+apsu-course.pptx
+PRESENTATION.md
+lectures/.figtmp/
