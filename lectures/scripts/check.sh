@@ -5,10 +5,11 @@
 #   1. typst нужной версии;
 #   2. шрифты (с --fix — скачивает недостающие);
 #   3. структуру каталога;
-#   4. что у каждой лекции и приложения из реестра course.typ есть main.typ;
-#   5. что все пути в img(...), image(...) и code-file(...) существуют;
-#   6. что @preview-пакеты либо не нужны, либо доступны;
-#   7. что шаблон реально компилируется.
+#   4. что поля титульного листа в course.typ заполнены;
+#   5. что у каждой лекции и приложения из реестра course.typ есть main.typ;
+#   6. что все пути в img(...), image(...) и code-file(...) существуют;
+#   7. что @preview-пакеты либо не нужны, либо доступны;
+#   8. что шаблон реально компилируется.
 
 . "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/lib.sh"
 
@@ -70,7 +71,24 @@ for d in template shared bib src scripts; do
 done
 
 echo
-echo "== 4. лекции из course.typ =="
+echo "== 4. титул курса =="
+# Пустое поле титул не роняет: шаблон просто не печатает блок. Так institute и
+# department пустовали восемь выпусков, и комплект раздавался обезличенным —
+# проверять приходится здесь, потому что сборка об этом не скажет.
+TITLE="$(course_titlepage)" || die "не удалось прочитать поля титула из course.typ"
+while IFS="$(printf '\t')" read -r name value; do
+  [ -z "${name:-}" ] && continue
+  if [ -n "${value:-}" ]; then
+    ok "$(printf '%-11s' "$name") $value"
+  else
+    fail "$(printf '%-11s' "$name") пусто — блок не напечатается на титуле"
+  fi
+done <<EOF
+$TITLE
+EOF
+
+echo
+echo "== 5. лекции из course.typ =="
 LECT="$(list_lectures)" || die "не удалось прочитать course.typ — проверьте синтаксис"
 while IFS="$(printf '\t')" read -r id n title; do
   [ -z "${id:-}" ] && continue
@@ -120,7 +138,7 @@ else
 fi
 
 echo
-echo "== 5. пути к картинкам и коду =="
+echo "== 6. пути к картинкам и коду =="
 python3 - "$ROOT" >"$FAILFILE.paths" <<'PY' || true
 import os, re, sys
 root = sys.argv[1]
@@ -156,7 +174,7 @@ fi
 rm -f "$FAILFILE.paths"
 
 echo
-echo "== 6. пакеты @preview =="
+echo "== 7. пакеты @preview =="
 if grep -rqs '@preview/' "$ROOT/template" "$ROOT/src" 2>/dev/null; then
   warn "используются внешние пакеты:"
   grep -rhoE '@preview/[a-z0-9-]+:[0-9.]+' "$ROOT/template" "$ROOT/src" | sort -u | sed 's/^/       /'
@@ -173,7 +191,7 @@ else
 fi
 
 echo
-echo "== 7. пробная компиляция =="
+echo "== 8. пробная компиляция =="
 typst_args
 if [ -f "$SRC_DIR/_template/main.typ" ]; then
   if "$TYPST_BIN" compile "${TYPST_ARGS[@]}" -f pdf \

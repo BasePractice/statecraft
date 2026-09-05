@@ -110,3 +110,29 @@ course_version() {
     course.version
   }' | python3 -c 'import json,sys; sys.stdout.write(json.load(sys.stdin) + "\n")'
 }
+
+# Поля титульного листа — «имя<TAB>значение», по строке на поле.
+#
+# Пустое поле титул не ломает: шаблон просто не печатает блок (см.
+# template/frontmatter.typ, `if course.institute != ""`). Именно поэтому
+# institute и department пустовали восемь релизов — ни сборка, ни check.sh на
+# это не ругались, и комплект раздавался обезличенным (запись о выпуске 1.9.0
+# в CLAUDE.md). Проверка на заполненность разбирается в check.sh.
+course_titlepage() {
+  typst_args
+  "$TYPST_BIN" eval "${TYPST_ARGS[@]}" --format json '{
+    import "/course.typ": course
+    (
+      discipline: course.discipline,
+      short:      course.short,
+      institute:  course.institute,
+      department: course.department,
+      city:       course.city,
+      authors:    course.authors.join(", "),
+      email:      course.email,
+      version:    course.version,
+    )
+  }' | python3 -c 'import json, sys
+for name, value in json.load(sys.stdin).items():
+    sys.stdout.write("%s\t%s\n" % (name, value))'
+}
