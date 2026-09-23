@@ -16,4 +16,5 @@ compile_commands.json
 # не кладутся (файл на 9 МБ и его исходники живут вне git)
 apsu-course.pptx
 PRESENTATION.md
+PLAN45.md
 lectures/.figtmp/
